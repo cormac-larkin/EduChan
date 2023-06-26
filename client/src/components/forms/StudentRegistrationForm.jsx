@@ -40,7 +40,7 @@ function StudentRegistrationForm() {
   };
 
   return (
-    <form className={styles.registrationForm} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={handleSubmit}>
       <h1>Register as a Student</h1>
       <label htmlFor="firstName">First Name</label>
       <input

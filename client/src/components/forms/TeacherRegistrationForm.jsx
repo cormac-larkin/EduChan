@@ -40,7 +40,7 @@ function TeacherRegistrationForm() {
   };
 
   return (
-    <form className={styles.registrationForm} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={handleSubmit}>
       <h1>Register as a Teacher</h1>
       <label htmlFor="firstName">First Name</label>
       <input

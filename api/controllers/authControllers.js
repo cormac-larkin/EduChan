@@ -1,5 +1,5 @@
 import pool from "../database/config.js";
-import { hash } from "bcrypt";
+import { hash, compare } from "bcrypt";
 
 const registerTeacher = async (req, res) => {
   try {
@@ -92,4 +92,35 @@ const registerStudent = async (req, res) => {
   }
 };
 
-export {registerTeacher, registerStudent};
+const login = async (req, res) => {
+  try {
+    const {email, password} = req.body;
+
+    // Check if a user with the supplied credentials exists
+    const findUserQuery = "SELECT * FROM member WHERE email = $1";
+    const result = await pool.query(findUserQuery, [email]);
+
+    // Return 401 status if no user exists with the email
+    if(!result.rowCount) {
+      return res.status(401).json({ error: "Login Failed: Invalid Credentials" })
+    }
+
+    // If user exists, compare their stored password hash with the password supplied in the login form
+    const passwordIsMatch = await compare(password, result.rows[0].password_hash);
+    if (!passwordIsMatch) {
+      return res.status(401).json({ error: "Login Failed: Invalid Credentials" })
+    }
+
+    // User is authenticated, update their 'last_login' date to the current date
+    const updateLastLoginQuery = "UPDATE member SET last_login = $1 WHERE email = $2";
+    await pool.query(updateLastLoginQuery, [new Date(), email]);
+
+    return res.status(200).json({ message: "Login Successful", user: result.rows[0].email });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500);
+  }
+}
+
+export { registerTeacher, registerStudent, login };
