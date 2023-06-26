@@ -20,10 +20,13 @@ function LoginForm() {
     event.preventDefault(); // Prevent page reload
 
     try {
-      axios.post("http://localhost:5000/auth/login", formData);
+      axios.post("http://localhost:5000/auth/login", formData, {
+        withCredentials: true
+      });
 
       // TODO
       // Registration successful, redirect to Student or Teacher Dashboard, depending on User type
+      
     } catch (error) {
       console.error(error.response.data.error); // Log the error message from the API
     }

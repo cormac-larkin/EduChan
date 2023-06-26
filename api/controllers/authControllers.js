@@ -115,6 +115,9 @@ const login = async (req, res) => {
     const updateLastLoginQuery = "UPDATE member SET last_login = $1 WHERE email = $2";
     await pool.query(updateLastLoginQuery, [new Date(), email]);
 
+    // Authenticate the client for future requests
+    req.session.isAuthenticated = true;
+    
     return res.status(200).json({ message: "Login Successful", user: result.rows[0].email });
 
   } catch (error) {
