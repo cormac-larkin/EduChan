@@ -3,8 +3,8 @@ import { hash, compare } from "bcrypt";
 
 const registerTeacher = async (req, res) => {
   try {
-
-    const { firstName, lastName, email, password, passwordConfirmation } = req.body;
+    const { firstName, lastName, email, password, passwordConfirmation } =
+      req.body;
 
     // Check that password & password confirmation fields match (also performed at client side)
     if (password !== passwordConfirmation) {
@@ -20,7 +20,10 @@ const registerTeacher = async (req, res) => {
     if (existingUsers.rowCount) {
       return res
         .status(409)
-        .json({ error: "Registration Failed. An account with that email address already exists" });
+        .json({
+          error:
+            "Registration Failed. An account with that email address already exists",
+        });
     }
 
     const hashedPassword = await hash(password, 10); //Hash the plaintext password before inserting into DB
@@ -48,8 +51,14 @@ const registerTeacher = async (req, res) => {
 
 const registerStudent = async (req, res) => {
   try {
-
-    const { firstName, lastName, email, studentNumber, password, passwordConfirmation } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      studentNumber,
+      password,
+      passwordConfirmation,
+    } = req.body;
 
     // Check that password & password confirmation fields match (also performed at client side)
     if (password !== passwordConfirmation) {
@@ -65,7 +74,10 @@ const registerStudent = async (req, res) => {
     if (existingUsers.rowCount) {
       return res
         .status(409)
-        .json({ error: "Registration Failed. An account with that email address already exists" });
+        .json({
+          error:
+            "Registration Failed. An account with that email address already exists",
+        });
     }
 
     const hashedPassword = await hash(password, 10); //Hash the plaintext password before inserting into DB
@@ -94,36 +106,58 @@ const registerStudent = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
     // Check if a user with the supplied credentials exists
     const findUserQuery = "SELECT * FROM member WHERE email = $1";
     const result = await pool.query(findUserQuery, [email]);
 
     // Return 401 status if no user exists with the email
-    if(!result.rowCount) {
-      return res.status(401).json({ error: "Login Failed: Invalid Credentials" })
+    if (!result.rowCount) {
+      return res
+        .status(401)
+        .json({ error: "Login Failed: Invalid Credentials" });
     }
 
     // If user exists, compare their stored password hash with the password supplied in the login form
-    const passwordIsMatch = await compare(password, result.rows[0].password_hash);
+    const passwordIsMatch = await compare(
+      password,
+      result.rows[0].password_hash
+    );
     if (!passwordIsMatch) {
-      return res.status(401).json({ error: "Login Failed: Invalid Credentials" })
+      return res
+        .status(401)
+        .json({ error: "Login Failed: Invalid Credentials" });
     }
 
     // User is authenticated, update their 'last_login' date to the current date
-    const updateLastLoginQuery = "UPDATE member SET last_login = $1 WHERE email = $2";
+    const updateLastLoginQuery =
+      "UPDATE member SET last_login = $1 WHERE email = $2";
     await pool.query(updateLastLoginQuery, [new Date(), email]);
 
-    // Authenticate the client for future requests
-    req.session.isAuthenticated = true;
-    
-    return res.status(200).json({ message: "Login Successful", user: result.rows[0].email });
+    // Attach the User's data to the session
+    req.session.user = { email: email, isTeacher: result.rows[0].is_admin };
 
+    return res
+      .status(200)
+      .json(req.session.user);
   } catch (error) {
     console.error(error);
     return res.status(500);
   }
-}
+};
 
-export { registerTeacher, registerStudent, login };
+
+// The React AuthProvider makes a request to this endpoint whene the React App is loaded. If a valid session cookie is included with the request, 
+// We know that the user is authenticated. We send a 200 response and the User Object as the response body. This user object is stored in the react App
+// And used to determine the role of the User and which part of the App they should see (Teacher or Student)
+const checkAuth = async (req, res) => {
+
+  if (req.session.user) { // If 'user' object is attached to the session, we know the client is authenticated (user object attached to session upon successful login)
+    return res.status(200).json(req.session.user);
+  } else {
+    return res.sendStatus(401);
+  }
+};
+
+export { registerTeacher, registerStudent, login, checkAuth };

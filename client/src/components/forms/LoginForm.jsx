@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "./registrationForm.module.css";
 
 function LoginForm() {
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -20,12 +24,16 @@ function LoginForm() {
     event.preventDefault(); // Prevent page reload
 
     try {
-      axios.post("http://localhost:5000/auth/login", formData, {
+      const response = await axios.post("http://localhost:5000/auth/login", formData, {
         withCredentials: true
       });
 
-      // TODO
-      // Registration successful, redirect to Student or Teacher Dashboard, depending on User type
+    if(response.status === 200 && response.data.isTeacher) {
+      navigate("/dashboard/teacher")
+    } else if(response.status === 200 && !response.data.isTeacher) {
+      navigate("/dashboard/student")
+    }
+      
       
     } catch (error) {
       console.error(error.response.data.error); // Log the error message from the API
