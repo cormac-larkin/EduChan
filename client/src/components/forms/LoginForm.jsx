@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "./registrationForm.module.css";
+import { AuthContext } from "../context/AuthProvider";
 
 function LoginForm() {
-
+  const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  // Updates the formData object when the form inputs are modified
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -24,18 +27,25 @@ function LoginForm() {
     event.preventDefault(); // Prevent page reload
 
     try {
-      const response = await axios.post("http://localhost:5000/auth/login", formData, {
-        withCredentials: true
-      });
+      const response = await axios.post(
+        "http://localhost:5000/auth/login",
+        formData,
+        {
+          withCredentials: true,
+        }
+      );
 
-    if(response.status === 200 && response.data.isTeacher) {
-      navigate("/dashboard/teacher")
-    } else if(response.status === 200 && !response.data.isTeacher) {
-      navigate("/dashboard/student")
-    }
-      
-      
+      setUser(response.data); // Use the API response to set the global Auth Context (So we know which user is logged in and their role/permissions)
+
+      if (response.data.isTeacher) {
+        navigate("/dashboard/teacher");
+      }
+
+      if (!response.data.isTeacher) {
+        navigate("/dashboard/student");
+      }
     } catch (error) {
+      setError(error.response.data.error);
       console.error(error.response.data.error); // Log the error message from the API
     }
   };
@@ -62,6 +72,7 @@ function LoginForm() {
         onChange={(e) => handleInputChange(e)}
       />
       <button type="submit">Log In</button>
+      {error && <p className={styles.errorMessage}>{error}</p>}
     </form>
   );
 }

@@ -1,8 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "./registrationForm.module.css";
 
 function StudentRegistrationForm() {
+
+  const navigate = useNavigate();
+
+  const [error, setError] = useState();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -32,9 +37,9 @@ function StudentRegistrationForm() {
     try {
       await axios.post("http://localhost:5000/auth/register/student", formData);
 
-      // TODO
-      // Registration successful, redirect to Teacher Dashboard
+      navigate("/login");
     } catch (error) {
+      setError(error.response.data.error);
       console.error(error.response.data.error); // Log the error message from the API
     }
   };
@@ -97,6 +102,7 @@ function StudentRegistrationForm() {
         onChange={(e) => handleInputChange(e)}
       />
       <button type="submit">Register</button>
+      {error && <p className={styles.errorMessage}>{error}</p>}
     </form>
   );
 }

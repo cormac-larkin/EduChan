@@ -33,3 +33,8 @@ button:hover {
   cursor: pointer;
   background-color: #00ab00;
 }
+
+.errorMessage {
+  text-align: center;
+  color: red;
+}

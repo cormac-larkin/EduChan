@@ -148,7 +148,7 @@ const login = async (req, res) => {
 };
 
 
-// The React AuthProvider makes a request to this endpoint whene the React App is loaded. If a valid session cookie is included with the request, 
+// The React AuthProvider makes a request to this endpoint when the React App is loaded. If a valid session cookie is included with the request, 
 // We know that the user is authenticated. We send a 200 response and the User Object as the response body. This user object is stored in the react App
 // And used to determine the role of the User and which part of the App they should see (Teacher or Student)
 const checkAuth = async (req, res) => {

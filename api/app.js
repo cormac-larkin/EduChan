@@ -4,11 +4,15 @@ import "dotenv/config";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 
-const PORT = 5000;
 const app = express();
 
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// Allow incoming requests from React App on localhost
+app.use(cors({ credentials: true, origin: "http://localhost:3000" })); 
+
+// Allows parsing JSON data from incoming requests
 app.use(express.json());
+
+// Configuration for session cookies
 app.use(
   session({
     cookie: { maxAge: 86400000 }, // Cookies expire after 24 hours
@@ -20,6 +24,6 @@ app.use(
 
 app.use("/auth", authRoutes);
 
-app.listen(PORT, () => {
-  console.log(`*** Server listening on Port ${PORT} ***`);
-});
+
+export default app;
+

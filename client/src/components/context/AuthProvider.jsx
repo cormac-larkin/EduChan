@@ -15,15 +15,13 @@ const AuthProvider = ({ children }) => {
         withCredentials: true
       });
 
-      if (response.status === 200) {
-        console.log(response.data)
+      
         setUser(response.data);
         console.log(`Logged in as: ${response.data.email}`);
-      }
+      
       } catch (error) {
         console.error("No active session found. Please log in.")
       }
-     
     }
   
       checkAuth();
@@ -31,7 +29,7 @@ const AuthProvider = ({ children }) => {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user, setUser }}>
       {children}
     </AuthContext.Provider>
   );
