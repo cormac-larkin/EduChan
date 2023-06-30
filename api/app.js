@@ -2,7 +2,9 @@ import express from "express";
 import session from "express-session";
 import "dotenv/config";
 import cors from "cors";
+
 import authRoutes from "./routes/authRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
@@ -23,7 +25,7 @@ app.use(
 );
 
 app.use("/auth", authRoutes);
-
+app.use("/chat", chatRoutes);
 
 export default app;
 

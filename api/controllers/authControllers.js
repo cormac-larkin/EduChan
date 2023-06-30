@@ -109,8 +109,8 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if a user with the supplied credentials exists
-    const findUserQuery = "SELECT * FROM member WHERE email = $1";
-    const result = await pool.query(findUserQuery, [email]);
+    const findUser = "SELECT * FROM member WHERE email = $1";
+    const result = await pool.query(findUser, [email]);
 
     // Return 401 status if no user exists with the email
     if (!result.rowCount) {
@@ -131,12 +131,12 @@ const login = async (req, res) => {
     }
 
     // User is authenticated, update their 'last_login' date to the current date
-    const updateLastLoginQuery =
+    const updateLastLogin =
       "UPDATE member SET last_login = $1 WHERE email = $2";
-    await pool.query(updateLastLoginQuery, [new Date(), email]);
+    await pool.query(updateLastLogin, [new Date(), email]);
 
     // Attach the User's data to the session
-    req.session.user = { email: email, isTeacher: result.rows[0].is_admin };
+    req.session.user = { id: result.rows[0].member_id, email: email, isTeacher: result.rows[0].is_admin };
 
     return res
       .status(200)

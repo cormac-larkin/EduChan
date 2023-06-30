@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import styles from "./registrationForm.module.css";
+import styles from "./form.module.css";
 
 function StudentRegistrationForm() {
-
   const navigate = useNavigate();
 
-  const [error, setError] = useState();
+  const [error, setError] = useState(); // State to track any errors returned from the API
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -17,6 +16,12 @@ function StudentRegistrationForm() {
     passwordConfirmation: "",
   });
 
+  /**
+   * Handles input change events and updates the formData state accordingly.
+   *
+   * @param {Event} e - The input change event.
+   * @returns {void}
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -25,10 +30,16 @@ function StudentRegistrationForm() {
     }));
   };
 
+  /**
+   * Handles form submission for Student registrations via the API.
+   *
+   * @param {Event} event - The form submission event.
+   * @returns {Promise<void>} A Promise that resolves after handling the form submission.
+   */
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent page reload
+    event.preventDefault();
 
-    // Check password and password confirmation inputs match
+    // Check that password and password confirmation inputs match
     if (formData.password !== formData.passwordConfirmation) {
       alert("Passwords must match");
       return;
@@ -36,11 +47,10 @@ function StudentRegistrationForm() {
 
     try {
       await axios.post("http://localhost:5000/auth/register/student", formData);
-
       navigate("/login");
     } catch (error) {
       setError(error.response.data.error);
-      console.error(error.response.data.error); // Log the error message from the API
+      console.error(error.response.data.error);
     }
   };
 

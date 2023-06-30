@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import styles from "./registrationForm.module.css";
+import styles from "./form.module.css";
 import { AuthContext } from "../context/AuthProvider";
 
 function LoginForm() {
