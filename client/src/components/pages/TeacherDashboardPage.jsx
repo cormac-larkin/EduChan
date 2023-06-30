@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ChatCreationForm from "../forms/ChatCreationForm";
+import { Link } from "react-router-dom";
 
 function TeacherDashboardPage() {
   const [error, setError] = useState();
@@ -57,6 +58,7 @@ function TeacherDashboardPage() {
           <button onClick={() => handleChatDeletion(chat.room_id)}>
             Delete Room
           </button>
+          <Link to={`/chat/${chat.room_id}`}>View</Link>
         </div>
       ))}
 

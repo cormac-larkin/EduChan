@@ -48,7 +48,7 @@ const deleteRoom = async (req, res) => {
     try {
         
         const userID = req.session.user.id;
-        const roomID = req.params.id;
+        const roomID = req.params.roomID;
 
         // Check that the user owns the room they are attempting to delete, return 401 if they do not.
         const checkOwnership = "SELECT * FROM room WHERE room_id = $1 AND member_id = $2";
@@ -57,7 +57,7 @@ const deleteRoom = async (req, res) => {
             return res.status(401).json();
         }
 
-        // Delete the room and send 204
+        // Delete the room and return 204
         const deleteRoom = "DELETE FROM room WHERE room_id = $1 AND member_id = $2";
         await pool.query(deleteRoom, [roomID, userID]);
 
@@ -69,4 +69,36 @@ const deleteRoom = async (req, res) => {
     }
 }
 
-export { getOwnedRooms, createRoom, deleteRoom };
+const getMessages = async (req, res) => {
+  try {
+    const roomID = req.params.roomID;
+
+    const getMessagesQuery = "SELECT * FROM message WHERE room_id = $1";
+    const result = await pool.query(getMessagesQuery, [roomID]);
+
+    return res.status(200).json(result.rows);
+
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+}
+
+const postMessage = async (req, res) => {
+  try {
+
+    const roomID = req.params.roomID;
+    const {content, authorID} = req.body;
+
+    const addMessageQuery = "INSERT INTO message (content, timestamp, room_id, member_id) VALUES ($1, $2, $3, $4)";
+    const result = await pool.query(addMessageQuery, [content, new Date(), roomID, authorID]);
+
+    return res.sendStatus(204);
+
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+}
+
+export { getOwnedRooms, getMessages, postMessage, createRoom, deleteRoom };
