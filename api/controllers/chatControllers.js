@@ -54,7 +54,7 @@ const deleteRoom = async (req, res) => {
         const checkOwnership = "SELECT * FROM room WHERE room_id = $1 AND member_id = $2";
         const result = await pool.query(checkOwnership, [roomID, userID]);
         if (!result.rowCount) {
-            return res.status(401).json();
+            return res.sendStatus(401);
         }
 
         // Delete the room and return 204
@@ -91,7 +91,7 @@ const postMessage = async (req, res) => {
     const {content, authorID} = req.body;
 
     const addMessageQuery = "INSERT INTO message (content, timestamp, room_id, member_id) VALUES ($1, $2, $3, $4)";
-    const result = await pool.query(addMessageQuery, [content, new Date(), roomID, authorID]);
+    await pool.query(addMessageQuery, [content, new Date(), roomID, authorID]);
 
     return res.sendStatus(204);
 
@@ -101,4 +101,30 @@ const postMessage = async (req, res) => {
   }
 }
 
-export { getOwnedRooms, getMessages, postMessage, createRoom, deleteRoom };
+const deleteMessage = async (req, res) => {
+  try {
+
+    const userID = req.session.user.id;
+    const messageID = req.params.messageID;
+
+    // If the user is a Student, verify that the message they wish to delete is their own (Students may only delete their own messages)
+    if (!req.session.user.isTeacher) {
+      const confirmOwnershipQuery = "SELECT * FROM message WHERE message_id = $1 AND member_id = $2";
+      const result = await pool.query(confirmOwnershipQuery, [messageID, userID]);
+      if(!result.rowCount) {
+        return res.sendStatus(401);
+      }
+    }
+
+    const deleteMessageQuery = "DELETE FROM message WHERE message_id = $1";
+    await pool.query(deleteMessageQuery, [messageID]);
+
+    return res.sendStatus(204);
+    
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+}
+
+export { getOwnedRooms, getMessages, postMessage, deleteMessage, createRoom, deleteRoom };

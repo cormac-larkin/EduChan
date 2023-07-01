@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ChatCreationForm from "../forms/ChatCreationForm";
 import { Link } from "react-router-dom";
+import styles from "./teacherDashboardPage.module.css";
 
 function TeacherDashboardPage() {
   const [error, setError] = useState();
@@ -23,23 +24,23 @@ function TeacherDashboardPage() {
     }
   };
 
-
   /**
    * Sends a DELETE request to the API to delete a specific chatroom
-   * 
+   *
    * @param {Number} roomID - The room_id of the chatroom to delete
    */
   const handleChatDeletion = async (roomID) => {
+    
     try {
       await axios.delete(`http://localhost:5000/chat/delete/${roomID}`, {
-        withCredentials: true
+        withCredentials: true,
       });
       fetchChats();
     } catch (error) {
       setError(error.response.data.error);
       console.error(error.response.data.error);
     }
-  }
+  };
 
   // On first render, fetch all this Teacher's chats from the database
   useEffect(() => {
@@ -53,12 +54,19 @@ function TeacherDashboardPage() {
       {error && <p>{error}</p>}
 
       {chats.map((chat, index) => (
-        <div key={index}>
+        <div key={index} className={styles.chat}>
           <h3>{chat.title}</h3>
-          <button onClick={() => handleChatDeletion(chat.room_id)}>
-            Delete Room
-          </button>
-          <Link to={`/chat/${chat.room_id}`}>View</Link>
+          <div className={styles.buttonContainer}>
+            <button>
+              <Link to={`/chat/${chat.room_id}`}>View</Link>
+            </button>
+            <button
+              className={styles.delete}
+              onClick={() => handleChatDeletion(chat.room_id)}
+            >
+              Delete Room
+            </button>
+          </div>
         </div>
       ))}
 

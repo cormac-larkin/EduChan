@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { ThreeCircles } from "react-loader-spinner";
 import TeacherRegistrationPage from "./components/pages/TeacherRegistrationPage";
@@ -16,14 +16,16 @@ function App() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // User is undefined until AuthProvider API call is finished, show loading spinner while waiting for API response
-  if (user === undefined) { 
-    return <ThreeCircles />;
-  }
-
+  useEffect(() => {
   // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login. 
   if (user === null) {
     navigate("/login");
+  }
+  }, [user, navigate]);
+
+  // User is undefined until AuthProvider API call is finished, show loading spinner while waiting for API response
+  if (user === undefined) { 
+    return <ThreeCircles />;
   }
 
   // Otherwise, user is authenticated, render App

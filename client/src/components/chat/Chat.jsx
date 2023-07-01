@@ -1,11 +1,10 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import axios from "axios";
 import styles from "./chat.module.css";
 import io from "socket.io-client";
 
 function Chat({ roomID }) {
-
   const { user } = useContext(AuthContext);
 
   const [currentMessage, setCurrentMessage] = useState("");
@@ -13,26 +12,39 @@ function Chat({ roomID }) {
   const [socket, setSocket] = useState(null);
   const [error, setError] = useState();
 
+  const chatBody = useRef();
+
+  /**
+   * Scrolls to the bottom of the chat, so the latest messages are in view
+   */
+  const scrollToBottom = () => {
+    chatBody.current.scrollTop = chatBody.current.scrollHeight;
+  };
+
   /**
    * Fetches the latest messages for this chatroom from the database
    */
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/chat/${roomID}/messages`, {
-        withCredentials: true
-      });
+      const response = await axios.get(
+        `http://localhost:5000/chat/${roomID}/messages`,
+        {
+          withCredentials: true,
+        }
+      );
       setMessageList(response.data);
     } catch (error) {
-      setError(error.response.data.error)
+      setError(error.response.data.error);
       console.error(error.response.data.error);
     }
-  }
+  };
 
   /**
-   * Handles sending messages via WebSocket and also via the REST API
+   * POSTS a message to the REST API and emits a 'send-message' event which tells other clients to refresh their chat.
    */
   const sendMessage = async () => {
     if (currentMessage !== "") {
+      // Ensure empty messages are not sent
       const messageData = {
         authorID: user.id,
         content: currentMessage,
@@ -40,17 +52,38 @@ function Chat({ roomID }) {
 
       // POST the message to the API
       try {
-        await axios.post(`http://localhost:5000/chat/${roomID}/messages`, messageData, {
-          withCredentials: true
-        })
+        await axios.post(
+          `http://localhost:5000/chat/${roomID}/messages`,
+          messageData,
+          {
+            withCredentials: true,
+          }
+        );
+        // Emit 'send-message' event to WS server and fetch latest messages from the API
+        // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
+        await socket.emit("send-message", messageData);
+        fetchMessages();
+        setCurrentMessage(""); // Clear the message input field
       } catch (error) {
         setError(error.response.data.error);
         console.error(error.response.data.error);
       }
+    }
+  };
 
-      // Emit 'send-message' event to chat server and fetch latest messages from the API
-      await socket.emit("send-message", messageData);
+  /**
+   * Deletes a message via the API and emits a 'delete-message' event to tell other clients to refresh their chat
+   */
+  const deleteMessage = async (messageID) => {
+    try {
+      await axios.delete(`http://localhost:5000/chat/messages/${messageID}`, {
+        withCredentials: true,
+      });
+      await socket.emit("delete-message");
       fetchMessages();
+    } catch (error) {
+      setError(error.response.data.error);
+      console.error(error.response.data.error);
     }
   };
 
@@ -60,40 +93,57 @@ function Chat({ roomID }) {
     const newSocket = io.connect("http://localhost:4000");
     setSocket(newSocket);
 
-    // Listen for the 'receive-message' event and retrieve the latest messages from the API
-    newSocket.on('receive-message', () => {
-      console.log("RECEIVED")
+    // Listen for the 'receive-message' event from the WS server which signals that another WS client has posted a message.
+    // Retrieve the latest messages from the API when this event is detected
+    newSocket.on("receive-message", () => {
       fetchMessages();
     });
 
+    newSocket.on("delete-message", () => {
+      fetchMessages();
+    })
+
+    // Clean up the event listener and close the socket connection when this component unmounts.
     return () => {
-      newSocket.off('receive-message', () =>{
+      newSocket.off("receive-message", () => {
         fetchMessages();
-      }); // Clean up event listener when component unmounts
-      newSocket.disconnect(); // Close the socket connection when the component unmounts
+      });
+      newSocket.disconnect();
     };
   }, []);
+
+  // When the messageList state is updated, scroll to the bottom of the chat window
+  useEffect(() => {
+    scrollToBottom();
+  }, [messageList]);
 
   return (
     <div className={styles.chatWindow}>
       <div className={styles.chatHeader}>
         <p>Live Chat</p>
       </div>
-      <div className={styles.chatBody}>
+      <div className={styles.chatBody} ref={chatBody}>
         {messageList.map((messageObj, index) => {
           return (
             <div
               key={index}
-              className="message"
-              id={user.id === messageObj.authorID ? "you" : "other"}
+              className={styles.message}
+              id={user.id === messageObj.member_id ? styles.you : styles.other}
             >
               <div>
                 <div className={styles.messageContent}>
                   <p>{messageObj.content}</p>
                 </div>
                 <div className={styles.messageMeta}>
-                  <p id="time">{messageObj.timestamp}</p>
-                  <p id="author">{messageObj.authorID}</p>
+                  <p id="time">{messageObj.timestamp.slice(11, 16)}</p>
+                  {user.id === messageObj.member_id && (
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => deleteMessage(messageObj.message_id)}
+                    >
+                      &#10006;
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -103,7 +153,9 @@ function Chat({ roomID }) {
       <div className={styles.chatFooter}>
         <input
           type="text"
+          className={styles.messageInput}
           placeholder="Message..."
+          value={currentMessage}
           onChange={(event) => {
             setCurrentMessage(event.target.value);
           }}
