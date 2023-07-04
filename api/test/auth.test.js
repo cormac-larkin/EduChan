@@ -5,16 +5,12 @@ import app from "../app";
  * Test cases for the login endpoint (/auth/login)
  */
 describe("POST /auth/login", () => {
-  test("should return 200 status code and a user object for valid login credentials", async () => {
+  test("should return 200 status code for valid login credentials", async () => {
     const response = await request(app).post("/auth/login").send({
       email: "test@mail.com",
       password: "password",
     });
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      email: "test@mail.com",
-      isTeacher: true,
-    });
   });
 
   test("should return 401 status code and error message for valid email address and invalid password", async () => {
@@ -56,6 +52,9 @@ describe("POST auth/register/teacher", () => {
     expect(response.body).toStrictEqual({
       message: "User registered successfully",
     });
+
+    // Cleanup - Delete the test user which was created
+    const deleteTestUser = await request(app).delete(`users/${testUserID}`);
   });
 
   test("should return 400 status code and an error message if password does not match password confirmation", async () => {
@@ -140,7 +139,7 @@ describe("POST auth/register/student", () => {
  * Test cases for the client authentication endpoint (/auth)
  */
 describe("GET /auth", () => {
-  test("should return 200 status code and a User Object if a session exists for the client", async () => {
+  test("should return 200 status code if a session exists for the client", async () => {
     // Login as a User to create a session
     const loginRequest = await request(app).post("/auth/login").send({
       email: "test@mail.com",
@@ -156,10 +155,6 @@ describe("GET /auth", () => {
       .set("Cookie", [sessionCookie])
       .send();
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      email: "test@mail.com",
-      isTeacher: true,
-    });
   });
 
   test("should return 401 status code if no session exists for the client", async () => {

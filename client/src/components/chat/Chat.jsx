@@ -43,31 +43,33 @@ function Chat({ roomID }) {
    * POSTS a message to the REST API and emits a 'send-message' event which tells other clients to refresh their chat.
    */
   const sendMessage = async () => {
-    if (currentMessage !== "") {
-      // Ensure empty messages are not sent
-      const messageData = {
-        authorID: user.id,
-        content: currentMessage,
-      };
+    // Ensure empty messages are not sent
+    if (currentMessage === "") {
+      return;
+    }
 
-      // POST the message to the API
-      try {
-        await axios.post(
-          `http://localhost:5000/chat/${roomID}/messages`,
-          messageData,
-          {
-            withCredentials: true,
-          }
-        );
-        // Emit 'send-message' event to WS server and fetch latest messages from the API
-        // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
-        await socket.emit("send-message", messageData);
-        fetchMessages();
-        setCurrentMessage(""); // Clear the message input field
-      } catch (error) {
-        setError(error.response.data.error);
-        console.error(error.response.data.error);
-      }
+    const messageData = {
+      authorID: user.id,
+      content: currentMessage,
+    };
+
+    // POST the message to the API
+    try {
+      await axios.post(
+        `http://localhost:5000/chat/${roomID}/messages`,
+        messageData,
+        {
+          withCredentials: true,
+        }
+      );
+      // Emit 'send-message' event to WS server and fetch latest messages from the API
+      // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
+      await socket.emit("send-message", messageData);
+      fetchMessages();
+      setCurrentMessage(""); // Clear the message input field
+    } catch (error) {
+      setError(error.response.data.error);
+      console.error(error.response.data.error);
     }
   };
 
@@ -99,9 +101,11 @@ function Chat({ roomID }) {
       fetchMessages();
     });
 
+    // Listen for the 'delete-message' event from the WS server which signals that another WS client has posted a message.
+    // Retrieve the latest messages from the API when this event is detected
     newSocket.on("delete-message", () => {
       fetchMessages();
-    })
+    });
 
     // Clean up the event listener and close the socket connection when this component unmounts.
     return () => {

@@ -13,7 +13,6 @@ const getOwnedRooms = async (req, res) => {
         console.error(error);
         return res.sendStatus(500);
     }
-
 }
 
 const createRoom = async (req, res) => {
