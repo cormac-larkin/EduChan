@@ -104,19 +104,20 @@ const deleteMessage = async (req, res) => {
   try {
 
     const userID = req.session.user.id;
+    const roomID = req.params.roomID;
     const messageID = req.params.messageID;
 
     // If the user is a Student, verify that the message they wish to delete is their own (Students may only delete their own messages)
     if (!req.session.user.isTeacher) {
-      const confirmOwnershipQuery = "SELECT * FROM message WHERE message_id = $1 AND member_id = $2";
-      const result = await pool.query(confirmOwnershipQuery, [messageID, userID]);
+      const confirmOwnershipQuery = "SELECT * FROM message WHERE message_id = $1 AND room_id = $2 member_id = $3";
+      const result = await pool.query(confirmOwnershipQuery, [messageID, roomID, userID]);
       if(!result.rowCount) {
         return res.sendStatus(401);
       }
     }
 
-    const deleteMessageQuery = "DELETE FROM message WHERE message_id = $1";
-    await pool.query(deleteMessageQuery, [messageID]);
+    const deleteMessageQuery = "DELETE FROM message WHERE message_id = $1 AND room_id = $2";
+    await pool.query(deleteMessageQuery, [messageID, roomID]);
 
     return res.sendStatus(204);
     

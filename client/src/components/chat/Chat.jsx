@@ -27,7 +27,7 @@ function Chat({ roomID }) {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/chat/${roomID}/messages`,
+        `http://localhost:5000/chats/${roomID}/messages`,
         {
           withCredentials: true,
         }
@@ -56,7 +56,7 @@ function Chat({ roomID }) {
     // POST the message to the API
     try {
       await axios.post(
-        `http://localhost:5000/chat/${roomID}/messages`,
+        `http://localhost:5000/chats/${roomID}/messages`,
         messageData,
         {
           withCredentials: true,
@@ -78,7 +78,7 @@ function Chat({ roomID }) {
    */
   const deleteMessage = async (messageID) => {
     try {
-      await axios.delete(`http://localhost:5000/chat/messages/${messageID}`, {
+      await axios.delete(`http://localhost:5000/chats/${roomID}/messages/${messageID}`, {
         withCredentials: true,
       });
       await socket.emit("delete-message");

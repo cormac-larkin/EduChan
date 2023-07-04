@@ -4,6 +4,7 @@ import "dotenv/config";
 import cors from "cors";
 
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
@@ -25,7 +26,8 @@ app.use(
 );
 
 app.use("/auth", authRoutes);
-app.use("/chat", chatRoutes);
+app.use("/users", userRoutes)
+app.use("/chats", chatRoutes);
 
 export default app;
 

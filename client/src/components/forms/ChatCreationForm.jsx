@@ -32,7 +32,7 @@ function ChatCreationForm({ fetchChats }) {
     event.preventDefault();
 
     try {
-      await axios.post("http://localhost:5000/chat/create", formData, {
+      await axios.post("http://localhost:5000/chats/", formData, {
         withCredentials: true,
       });
       fetchChats(); // Fetch the latest chat data and update the 'chats' state on the TeacherDashboardPage

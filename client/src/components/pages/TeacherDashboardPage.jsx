@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import ChatCreationForm from "../forms/ChatCreationForm";
 import { Link } from "react-router-dom";
 import styles from "./teacherDashboardPage.module.css";
+import { AuthContext } from "../context/AuthProvider";
 
 function TeacherDashboardPage() {
+
+  const {user} = useContext(AuthContext);
+
   const [error, setError] = useState();
   const [chats, setChats] = useState([]);
 
@@ -14,7 +18,7 @@ function TeacherDashboardPage() {
    */
   const fetchChats = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/chat", {
+      const response = await axios.get(`http://localhost:5000/users/${user.id}/chats`, {
         withCredentials: true,
       });
       setChats(response.data);
@@ -32,7 +36,7 @@ function TeacherDashboardPage() {
   const handleChatDeletion = async (roomID) => {
     
     try {
-      await axios.delete(`http://localhost:5000/chat/delete/${roomID}`, {
+      await axios.delete(`http://localhost:5000/chats/${roomID}`, {
         withCredentials: true,
       });
       fetchChats();

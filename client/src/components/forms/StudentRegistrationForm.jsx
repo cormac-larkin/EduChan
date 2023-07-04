@@ -46,7 +46,7 @@ function StudentRegistrationForm() {
     }
 
     try {
-      await axios.post("http://localhost:5000/auth/register/student", formData);
+      await axios.post("http://localhost:5000/users/student", formData);
       navigate("/login");
     } catch (error) {
       setError(error.response.data.error);

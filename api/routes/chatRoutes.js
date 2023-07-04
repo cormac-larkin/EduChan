@@ -4,11 +4,10 @@ import { getOwnedRooms, getMessages, postMessage, deleteMessage, createRoom, del
 
 const router = Router();
 
-router.get("/", verifyTeacherRole, getOwnedRooms); // Returns the list of active rooms a Teacher has created
-router.post("/create", verifyTeacherRole, createRoom);
-router.delete("/delete/:roomID", verifyTeacherRole, deleteRoom);
+router.post("/", verifyTeacherRole, createRoom);
+router.delete("/:roomID", verifyTeacherRole, deleteRoom);
 router.get("/:roomID/messages", getMessages);
 router.post("/:roomID/messages", postMessage);
-router.delete("/messages/:messageID", deleteMessage);
+router.delete("/:roomID/messages/:messageID", deleteMessage);
 
 export default router;
