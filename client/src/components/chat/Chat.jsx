@@ -4,7 +4,7 @@ import axios from "axios";
 import styles from "./chat.module.css";
 import io from "socket.io-client";
 
-function Chat({ roomID }) {
+function Chat({ room }) {
   const { user } = useContext(AuthContext);
 
   const [currentMessage, setCurrentMessage] = useState("");
@@ -27,7 +27,7 @@ function Chat({ roomID }) {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/chats/${roomID}/messages`,
+        `http://localhost:5000/chats/${room.room_id}/messages`,
         {
           withCredentials: true,
         }
@@ -56,7 +56,7 @@ function Chat({ roomID }) {
     // POST the message to the API
     try {
       await axios.post(
-        `http://localhost:5000/chats/${roomID}/messages`,
+        `http://localhost:5000/chats/${room.room_id}/messages`,
         messageData,
         {
           withCredentials: true,
@@ -78,7 +78,7 @@ function Chat({ roomID }) {
    */
   const deleteMessage = async (messageID) => {
     try {
-      await axios.delete(`http://localhost:5000/chats/${roomID}/messages/${messageID}`, {
+      await axios.delete(`http://localhost:5000/chats/${room.room_id}/messages/${messageID}`, {
         withCredentials: true,
       });
       await socket.emit("delete-message");
