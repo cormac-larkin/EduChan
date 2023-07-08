@@ -1,5 +1,5 @@
 .chatWindow {
-  width: 300px;
+  width: 90%;
   height: 420px;
   color: black;
 }
@@ -99,7 +99,7 @@
 }
 
 .messageInput {
-  width: 82%;
+  width: 94%;
   padding-top: 0.7rem;
   padding-bottom: 0.55rem;
 }

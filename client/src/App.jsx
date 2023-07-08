@@ -5,12 +5,14 @@ import TeacherRegistrationPage from "./components/pages/TeacherRegistrationPage"
 import StudentRegistrationPage from "./components/pages/StudentRegistrationPage";
 import TeacherDashboardPage from "./components/pages/TeacherDashboardPage";
 import StudentDashboardPage from "./components/pages/StudentDashboardPage";
+import ChatEnrollmentPage from "./components/pages/ChatEnrollmentPage";
 import LoginPage from "./components/pages/LoginPage";
 import ChatPage from "./components/pages/ChatPage";
 
 import { AuthContext } from "./components/context/AuthProvider";
 
 import "./App.css";
+import Error404Page from "./components/pages/Error404Page";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -19,7 +21,7 @@ function App() {
   useEffect(() => {
   // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login. 
   if (user === null) {
-    //navigate("/");
+    navigate("/login");
     console.log("Please Log In");
   }
   }, [user, navigate]);
@@ -38,6 +40,9 @@ function App() {
       <Route path="/dashboard/teacher" element={<TeacherDashboardPage />} />
       <Route path="/dashboard/student" element={<StudentDashboardPage />} />
       <Route path="/chat/:roomID" element={<ChatPage />} />
+      <Route path="/chat/:roomID/enrol" element={<ChatEnrollmentPage />} />
+
+      <Route path="*" element={<Error404Page />} />
     </Routes>
   );
 }

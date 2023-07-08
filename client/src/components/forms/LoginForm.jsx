@@ -62,7 +62,7 @@ function LoginForm() {
         value={formData.email}
         onChange={(e) => handleInputChange(e)}
       />
-      <label htmlFor="lastName">Password</label>
+      <label htmlFor="password">Password</label>
       <input
         type="password"
         name="password"

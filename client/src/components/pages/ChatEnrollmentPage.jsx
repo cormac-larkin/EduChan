@@ -1,16 +1,12 @@
-import Chat from "../chat/Chat";
-import { Link, useParams } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import ChatEnrollmentForm from "../chat/ChatEnrollmentForm";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { ThreeCircles } from "react-loader-spinner";
-import axios from "axios";
 import Error404Page from "./Error404Page";
+import axios from "axios";
 
-
-function ChatPage() {
+function ChatEnrollmentPage() {
   const { roomID } = useParams(); // Get the room ID from the URL
-  const { user } = useContext(AuthContext);
-
   const [room, setRoom] = useState();
 
   /**
@@ -32,7 +28,7 @@ function ChatPage() {
   };
 
   useEffect(() => {
-      fetchRoom();
+    fetchRoom();
   }, []);
 
   if (room === undefined) {
@@ -40,19 +36,10 @@ function ChatPage() {
   }
 
   if (room === null) {
-    return <Error404Page />
+    return <Error404Page />;
   }
 
-  return (
-    <>
-     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "80%" }}>
-        <h1><u>{room.title} Module Chat</u></h1>
-        {user.isTeacher && <button><Link to={`/chat/${room.room_id}/enrol`} state={room}>Add Members to Chat-Room</Link></button>}
-        <Chat room={room} />
-      </div>
-      
-    </>
-  );
+  return <ChatEnrollmentForm room={room} />;
 }
 
-export default ChatPage;
+export default ChatEnrollmentPage;

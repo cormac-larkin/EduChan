@@ -135,13 +135,20 @@ const getChatByID = async (req, res) => {
   try {
     const roomID = req.params.roomID;
 
+    // Regular expression to validate if roomID is a number before processing the request
+    const numberRegex = /^[0-9]+$/;
+
+    if(!numberRegex.test(roomID)) {
+      return res.sendStatus(400);
+    }
+
     // Verify that the chatroom exists
     const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
     const result = await pool.query(findRoomQuery, [roomID]);
 
     // If no chatroom with the specified ID is found, return 404
     if (!result.rowCount) {
-      return res.sendStatus(404).json({error: `Chatroom with ID '${roomID}' not found`});
+      return res.status(404).json({error: `Chatroom with ID '${roomID}' not found`});
     }
 
     // Otherwise, return room details
