@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import ChatCreationForm from "../forms/ChatCreationForm";
 import { Link } from "react-router-dom";
-import styles from "./teacherDashboardPage.module.css";
+import styles from "./dashboardPage.module.css";
 import { AuthContext } from "../context/AuthProvider";
 
 function TeacherDashboardPage() {
@@ -18,7 +18,7 @@ function TeacherDashboardPage() {
    */
   const fetchChats = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/users/${user.id}/chats`, {
+      const response = await axios.get(`http://localhost:5000/users/${user.id}/chats/owned`, {
         withCredentials: true,
       });
       setChats(response.data);

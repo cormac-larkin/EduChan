@@ -1,19 +1,86 @@
 import request from "supertest";
+import pool from "../database/config";
 import app from "../app";
 
-/**
- * Test cases for the login endpoint (/auth/login)
- */
+describe("GET /auth", () => {
+  it("should return 200 status code and a User object if request contains a valid session cookie", async () => {
+    // Log In to create a session
+    const loginResponse = await request(app).post("/auth/login").send({
+      email: "test@mail.com",
+      password: "password",
+    });
+
+    // Retrieve the session cookie from the response
+    const sessionCookie = loginResponse.header["set-cookie"][0];
+
+    // Once the session is created, call the /auth endpoint and attach the session cookie to the request
+    const response = await request(app)
+      .get("/auth")
+      .set("Cookie", [sessionCookie])
+      .send();
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toStrictEqual({
+      id: 1,
+      email: "test@mail.com",
+      isTeacher: true,
+    });
+
+    // Test Cleanup - Reset the 'last_login' field of this user to its original value
+    try {
+      await pool.query(
+        "UPDATE member SET last_login = $1 WHERE email = 'test@mail.com'",
+        [new Date(2023, 6, 9)]
+      );
+    } catch (error) {
+      console.error("*** TEST CLEANUP FAILED ***");
+      console.error(error);
+    }
+  });
+
+  it("should return 401 status code if request contains an invalid session cookie", async () => {
+    const response = await request(app)
+      .get("/auth")
+      .set("Cookie", ["invalidSessionCookie"])
+      .send();
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("should return 401 status code if request contains no session cookie", async () => {
+    const response = await request(app).get("/auth").send();
+
+    expect(response.statusCode).toBe(401);
+  });
+});
+
 describe("POST /auth/login", () => {
-  test("should return 200 status code for valid login credentials", async () => {
+  it("should return 200 status code and a User object for valid email and valid password", async () => {
     const response = await request(app).post("/auth/login").send({
       email: "test@mail.com",
       password: "password",
     });
+
     expect(response.statusCode).toBe(200);
+    expect(response.body).toStrictEqual({
+      id: 1,
+      email: "test@mail.com",
+      isTeacher: true,
+    });
+
+    // Test Cleanup - Reset the 'last_login' field of this user to its original value
+    try {
+      await pool.query(
+        "UPDATE member SET last_login = $1 WHERE email = 'test@mail.com'",
+        [new Date(2023, 6, 9)]
+      );
+    } catch (error) {
+      console.error("*** TEST CLEANUP FAILED ***");
+      console.error(error);
+    }
   });
 
-  test("should return 401 status code and error message for valid email address and invalid password", async () => {
+  it("should return 401 status code and error message for valid email and invalid password", async () => {
     const response = await request(app).post("/auth/login").send({
       email: "test@mail.com",
       password: "invalid",
@@ -24,7 +91,7 @@ describe("POST /auth/login", () => {
     });
   });
 
-  test("should return 401 status code and error message for invalid email address and invalid password", async () => {
+  it("should return 401 status code and error message for invalid email and invalid password", async () => {
     const response = await request(app).post("/auth/login").send({
       email: "invalid@mail.com",
       password: "invalid",
@@ -33,133 +100,5 @@ describe("POST /auth/login", () => {
     expect(response.body).toStrictEqual({
       error: "Login Failed: Invalid Credentials",
     });
-  });
-});
-
-/**
- * Test cases for Teacher registration endpoint (auth/register/teacher)
- */
-describe("POST auth/register/teacher", () => {
-  test("should return 200 status code and a success message for valid registration details", async () => {
-    const response = await request(app).post("/auth/register/teacher").send({
-      firstName: "Test",
-      lastName: "Teacher",
-      email: "testTeacher@test.com",
-      password: "password",
-      passwordConfirmation: "password",
-    });
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "User registered successfully",
-    });
-
-    // Cleanup - Delete the test user which was created
-    const deleteTestUser = await request(app).delete(`users/${testUserID}`);
-  });
-
-  test("should return 400 status code and an error message if password does not match password confirmation", async () => {
-    const response = await request(app).post("/auth/register/teacher").send({
-      firstName: "Test",
-      lastName: "Teacher",
-      email: "testTeacherEmail@test.com",
-      password: "password",
-      passwordConfirmation: "password123",
-    });
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toStrictEqual({
-      error: "Password and password confirmation do not match",
-    });
-  });
-
-  test("should return 409 status code and an error message if email address is already registered", async () => {
-    const response = await request(app).post("/auth/register/teacher").send({
-      firstName: "Test",
-      lastName: "Teacher",
-      email: "testTeacher@test.com",
-      password: "password",
-      passwordConfirmation: "password",
-    });
-    expect(response.statusCode).toBe(409);
-    expect(response.body).toStrictEqual({
-      error:
-        "Registration Failed. An account with that email address already exists",
-    });
-  });
-});
-
-/**
- * Test cases for Student registration endpoint (auth/register/student)
- */
-describe("POST auth/register/student", () => {
-  test("should return 200 status code and a success message for valid registration details", async () => {
-    const response = await request(app).post("/auth/register/student").send({
-      firstName: "Test",
-      lastName: "Student",
-      email: "testStudent@test.com",
-      password: "password",
-      passwordConfirmation: "password",
-    });
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "User registered successfully",
-    });
-  });
-
-  test("should return 400 status code and an error message if password does not match password confirmation", async () => {
-    const response = await request(app).post("/auth/register/student").send({
-      firstName: "Test",
-      lastName: "Student",
-      email: "testStudentEmail@test.com",
-      password: "password",
-      passwordConfirmation: "password123",
-    });
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toStrictEqual({
-      error: "Password and password confirmation do not match",
-    });
-  });
-
-  test("should return 409 status code and an error message if email address is already registered", async () => {
-    const response = await request(app).post("/auth/register/student").send({
-      firstName: "Test",
-      lastName: "Student",
-      email: "testStudent@test.com",
-      password: "password",
-      passwordConfirmation: "password",
-    });
-    expect(response.statusCode).toBe(409);
-    expect(response.body).toStrictEqual({
-      error:
-        "Registration Failed. An account with that email address already exists",
-    });
-  });
-});
-
-/**
- * Test cases for the client authentication endpoint (/auth)
- */
-describe("GET /auth", () => {
-  test("should return 200 status code if a session exists for the client", async () => {
-    // Login as a User to create a session
-    const loginRequest = await request(app).post("/auth/login").send({
-      email: "test@mail.com",
-      password: "password",
-    });
-
-    // Retrieve the session cookie from the response
-    const sessionCookie = loginRequest.header["set-cookie"][0];
-
-    // Once the session is created, call the /auth endpoint and attach the session cookie to the request
-    const response = await request(app)
-      .get("/auth")
-      .set("Cookie", [sessionCookie])
-      .send();
-    expect(response.statusCode).toBe(200);
-  });
-
-  test("should return 401 status code if no session exists for the client", async () => {
-    // Call the /auth endpoint with no session cookie
-    const response = await request(app).get("/auth").send();
-    expect(response.statusCode).toBe(401);
   });
 });

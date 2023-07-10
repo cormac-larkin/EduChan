@@ -1,10 +1,16 @@
 import pool from "../database/config.js";
 import { hash, compare } from "bcrypt";
+import isNumber from "../utils/isNumber.js";
 
 const registerTeacher = async (req, res) => {
   try {
     const { firstName, lastName, email, password, passwordConfirmation } =
       req.body;
+ 
+    // Ensure all required properties are present in the request body
+    if (!firstName || !lastName || !email || !password || !passwordConfirmation) {
+       return res.status(400).json({ error: "Request body is missing required properties" });
+    }
 
     // Check that password & password confirmation fields match (also performed at client side)
     if (password !== passwordConfirmation) {
@@ -58,6 +64,11 @@ const registerStudent = async (req, res) => {
       passwordConfirmation,
     } = req.body;
 
+    // Ensure all required properties are present in the request body
+    if (!firstName || !lastName || !email || !studentNumber || !password || !passwordConfirmation) {
+      return res.status(400).json({ error: "Request body is missing required properties" });
+    }
+
     // Check that password & password confirmation fields match (also performed at client side)
     if (password !== passwordConfirmation) {
       return res
@@ -105,6 +116,11 @@ const getUser = async (req, res) => {
     // Get userID from URL parameters
     const userID = req.params.userID;
 
+    // Verify that the userID contains only digits
+    if (!isNumber(userID)) {
+      return res.sendStatus(400);
+    }
+
     // If User doesn't exist, return 404
     const findUserQuery =
       "SELECT member_id, first_name, last_name, email, is_admin, join_date, last_login, student_number FROM member WHERE member_id = $1";
@@ -114,7 +130,7 @@ const getUser = async (req, res) => {
     }
 
     // Otherwise return their data (excluding the password hash)
-    return res.status(200).json(result.rows);
+    return res.status(200).json(result.rows[0]);
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -126,9 +142,14 @@ const getOwnedChats = async (req, res) => {
     // Get userID from URL parameters
     const userID = req.params.userID;
 
+    // Verify that the userID contains only digits
+    if (!isNumber(userID)) {
+      return res.sendStatus(400);
+    }
+
     // Verify that the client has permission to retrieve this data (users can only retrieve their own chats)
     if (userID != req.session.user.id) {
-        return res.sendStatus(401);
+      return res.sendStatus(401);
     }
 
     // Find and return any chats owned by the user
@@ -136,11 +157,48 @@ const getOwnedChats = async (req, res) => {
     const result = await pool.query(findOwnedChats, [userID]);
 
     return res.status(200).json(result.rows);
-
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
   }
 };
 
-export { registerStudent, registerTeacher, getUser, getOwnedChats };
+const getJoinedChats = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    // Validate that the roomID parameter contains only digits
+    if (!isNumber(userID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify userID exists
+    const verifyUserQuery = "SELECT * FROM member WHERE member_id = $1";
+    const verifyUserResult = await pool.query(verifyUserQuery, [userID]);
+
+    // Return 404 if no user with the ID exists
+    if (!verifyUserResult.rowCount) {
+      return res
+        .status(404)
+        .json({ error: `User with ID '${userID}' not found` });
+    }
+
+    const getJoinedChatsQuery = `SELECT room.room_id, room.title, room.creation_date, room.member_id FROM room INNER JOIN room_member ON room.room_id = room_member.room_id WHERE room_member.member_id = $1`;
+    const getJoinedChatsResult = await pool.query(getJoinedChatsQuery, [
+      userID,
+    ]);
+
+    return res.status(200).json(getJoinedChatsResult.rows);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+export {
+  registerStudent,
+  registerTeacher,
+  getUser,
+  getOwnedChats,
+  getJoinedChats,
+};

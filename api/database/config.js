@@ -5,7 +5,7 @@ const {Pool} = pg;
 
 const pool = new Pool({
   host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
+  database: process.env.NODE_ENV === "test" ? process.env.TEST_DB : process.env.DEV_DB,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   max: 20,

@@ -45,7 +45,7 @@ function TeacherRegistrationForm() {
     }
 
     try {
-      await axios.post("http://localhost:5000/users/teacher", formData);
+      await axios.post("http://localhost:5000/users/teachers", formData);
       navigate("/login");
     } catch (error) {
       setError(error.response.data.error);

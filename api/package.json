@@ -5,8 +5,8 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "npx nodemon server.js",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest"
+    "dev": "cross-env NODE_ENV=development npx nodemon server.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test npx jest --runInBand"
   },
   "author": "Cormac Larkin",
   "license": "ISC",

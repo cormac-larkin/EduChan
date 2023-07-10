@@ -1,25 +1,18 @@
 import pool from "../database/config.js";
-import pg from "pg";
+import isNumber from "../utils/isNumber.js";
 import "dotenv/config";
-
-const getOwnedRooms = async (req, res) => {
-  try {
-    const userID = req.session.user.id;
-
-    const getOwnedRooms = "SELECT * FROM room WHERE member_id = $1";
-    const result = await pool.query(getOwnedRooms, [userID]);
-
-    return res.status(200).json(result.rows);
-  } catch (error) {
-    console.error(error);
-    return res.sendStatus(500);
-  }
-};
 
 const createRoom = async (req, res) => {
   try {
     const userID = req.session.user.id;
     const { roomName } = req.body;
+
+    // Verify that the request body contains the roomName property
+    if(!roomName) {
+      return res.status(400).json({
+        error: "Request body is missing required properties",
+      })
+    }
 
     // Check that this user does not already have a room with the same name
     const findDuplicateRooms =
@@ -51,12 +44,23 @@ const deleteRoom = async (req, res) => {
     const userID = req.session.user.id;
     const roomID = req.params.roomID;
 
-    // Check that the user owns the room they are attempting to delete, return 401 if they do not.
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that a room with the specified roomID exists, return 404 if not
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if(!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Check that the user owns the room they are attempting to delete, return 403 if they do not.
     const checkOwnership =
       "SELECT * FROM room WHERE room_id = $1 AND member_id = $2";
     const result = await pool.query(checkOwnership, [roomID, userID]);
     if (!result.rowCount) {
-      return res.sendStatus(401);
+      return res.sendStatus(403);
     }
 
     // Delete the room and return 204
@@ -74,6 +78,19 @@ const getMessages = async (req, res) => {
   try {
     const roomID = req.params.roomID;
 
+    // Verify that the roomID parameter contains only digits
+    if(!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that a room with the specified roomID exists, return 404 if not
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if(!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+
     const getMessagesQuery = "SELECT * FROM message WHERE room_id = $1";
     const result = await pool.query(getMessagesQuery, [roomID]);
 
@@ -88,6 +105,23 @@ const postMessage = async (req, res) => {
   try {
     const roomID = req.params.roomID;
     const { content, authorID } = req.body;
+
+    // Verify that the roomID parameter contains only digits
+    if(!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the request body contains the required properties
+    if(!content || !authorID) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that a room with the specified roomID exists, return 404 if not
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if(!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
 
     const addMessageQuery =
       "INSERT INTO message (content, timestamp, room_id, member_id) VALUES ($1, $2, $3, $4)";
@@ -105,6 +139,18 @@ const deleteMessage = async (req, res) => {
     const userID = req.session.user.id;
     const roomID = req.params.roomID;
     const messageID = req.params.messageID;
+
+    // Verify that the roomID and messageID parameters only contain digits
+    if(!isNumber(roomID) || !isNumber(messageID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified messageID exists
+    const findMessageQuery = "SELECT * FROM message WHERE message_id = $1";
+    const findMessageResult = await pool.query(findMessageQuery, [messageID]);
+    if(!findMessageResult.rowCount) {
+      return res.sendStatus(400);
+    }
 
     // If the user is a Student, verify that the message they wish to delete is their own (Students may only delete their own messages)
     if (!req.session.user.isTeacher) {
@@ -135,10 +181,9 @@ const getChatByID = async (req, res) => {
   try {
     const roomID = req.params.roomID;
 
-    // Regular expression to validate if roomID is a number before processing the request
-    const numberRegex = /^[0-9]+$/;
-
-    if(!numberRegex.test(roomID)) {
+   
+    // Verify that the roomID parameter contains only numbers
+    if(!isNumber(roomID)) {
       return res.sendStatus(400);
     }
 
@@ -170,6 +215,16 @@ const addUsersToChat = async (req, res) => {
     const roomID = req.params.roomID;
     const userID = req.session.user.id;
     const newMembers = req.body;
+
+    // Verify that the roomID contains only digits
+    if(!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the request body is not empty
+    if(!newMembers.length) {
+      return res.sendStatus(400)
+    }
   
     // Verify that the chatroom exists
     const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
@@ -185,9 +240,9 @@ const addUsersToChat = async (req, res) => {
     const verifyOwnershipQuery = "SELECT * FROM room WHERE room_id = $1 AND member_id = $2";
     const verifyOwnershipResult = await pool.query(verifyOwnershipQuery, [roomID, userID]);
 
-    // If the requesting client does not own the chatroom, return 401
+    // If the requesting client does not own the chatroom, return 403
     if (!verifyOwnershipResult.rowCount) {
-      return res.status(401).json({error: "Users may only be added to chats by the Teacher who owns the chat"});
+      return res.status(403).json({error: "You do not have permission to add users to this chatroom"});
     }
 
     // Otherwise, add the users to the chatroom and return 204 (Transaction is used for these INSERT statements)
@@ -229,7 +284,6 @@ const addUsersToChat = async (req, res) => {
 
 export {
   getChatByID,
-  getOwnedRooms,
   getMessages,
   postMessage,
   deleteMessage,
