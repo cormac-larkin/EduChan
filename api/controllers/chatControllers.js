@@ -90,7 +90,6 @@ const getMessages = async (req, res) => {
       return res.sendStatus(404);
     }
 
-
     const getMessagesQuery = "SELECT * FROM message WHERE room_id = $1";
     const result = await pool.query(getMessagesQuery, [roomID]);
 
@@ -149,7 +148,7 @@ const deleteMessage = async (req, res) => {
     const findMessageQuery = "SELECT * FROM message WHERE message_id = $1";
     const findMessageResult = await pool.query(findMessageQuery, [messageID]);
     if(!findMessageResult.rowCount) {
-      return res.sendStatus(400);
+      return res.sendStatus(404);
     }
 
     // If the user is a Student, verify that the message they wish to delete is their own (Students may only delete their own messages)

@@ -321,17 +321,61 @@ describe("POST /chats/:roomID/messages", () => {
 
   it("should return 404 status code if no room with the specified roomID exists", async () => {
     const response = await request(app)
-    .post("/chats/999999/messages")
-    .set("Cookie", [sessionCookie])
-    .send({
-      content: "test",
-      authorID: 1,
-    });
+      .post("/chats/999999/messages")
+      .set("Cookie", [sessionCookie])
+      .send({
+        content: "test",
+        authorID: 1,
+      });
 
-  expect(response.status).toBe(404);
-  })
+    expect(response.status).toBe(404);
+  });
 });
 
-// describe("DELETE /chats/:roomID/messages/:messageID", () => {
-//     it("should return 204 status code")
-// });
+describe("DELETE /chats/:roomID/messages/:messageID", () => {
+  it("should return 204 status code if the message is successfully deleted", async () => {
+    // Test setup, insert test message into DB for deletion
+    try {
+      const insertTestData =
+        "INSERT INTO message (message_id, content, timestamp, room_id, member_id) VALUES ($1, $2, $3, $4, $5)";
+      await pool.query(insertTestData, [9999, "test", new Date(), 1, 1]);
+    } catch (error) {
+      console.error(error);
+    }
+
+    // Send DELETE request for the inserted message
+    const response = await request(app)
+      .delete("/chats/1/messages/9999")
+      .set("Cookie", [sessionCookie])
+      .send();
+
+      expect(response.status).toBe(204);
+  });
+
+  it("should return 400 status code if the roomID parameter is invalid", async () => {
+    const response = await request(app)
+    .delete("/chats/InvalidParameter/messages/9999")
+    .set("Cookie", [sessionCookie])
+    .send();
+
+    expect(response.status).toBe(400);
+  })
+
+  it("should return 400 status code if the messageID parameter is invalid", async () => {
+    const response = await request(app)
+    .delete("/chats/1/messages/invalidParameter")
+    .set("Cookie", [sessionCookie])
+    .send();
+
+    expect(response.status).toBe(400);
+  })
+
+  it("should return 404 status code if the supplied messageID does not exist", async () => {
+    const response = await request(app)
+    .delete("/chats/1/messages/9999999")
+    .set("Cookie", [sessionCookie])
+    .send();
+
+    expect(response.status).toBe(404);
+  })
+});

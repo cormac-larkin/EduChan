@@ -21,7 +21,7 @@ function App() {
   useEffect(() => {
   // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login. 
   if (user === null) {
-    navigate("/login");
+    // navigate("/login");
     console.log("Please Log In");
   }
   }, [user, navigate]);
