@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { ThreeCircles } from "react-loader-spinner";
 import TeacherRegistrationPage from "./components/pages/TeacherRegistrationPage";
@@ -10,40 +10,61 @@ import LoginPage from "./components/pages/LoginPage";
 import ChatPage from "./components/pages/ChatPage";
 
 import { AuthContext } from "./components/context/AuthProvider";
+import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline, createTheme } from "@mui/material";
 
 import "./App.css";
 import Error404Page from "./components/pages/Error404Page";
+import Layout from "./components/layout/Layout";
 
 function App() {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const [darkTheme, setDarkTheme] = useState(false);
+
+  const theme = createTheme({
+    palette: {
+      mode: darkTheme ? "dark" : "light", // Set the theme mode based on the 'darkTheme' state
+    },
+  });
 
   useEffect(() => {
-  // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login. 
-  if (user === null) {
-    // navigate("/login");
-    console.log("Please Log In");
-  }
+    // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login.
+    if (user === null) {
+      // navigate("/login");
+      console.log("Please Log In");
+    }
   }, [user, navigate]);
 
   // User is undefined until AuthProvider API call is finished, show loading spinner while waiting for API response
-  if (user === undefined) { 
+  if (user === undefined) {
     return <ThreeCircles />;
   }
 
   // Otherwise, user is authenticated, render App
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register/teacher" element={<TeacherRegistrationPage />} />
-      <Route path="/register/student" element={<StudentRegistrationPage />} />
-      <Route path="/dashboard/teacher" element={<TeacherDashboardPage />} />
-      <Route path="/dashboard/student" element={<StudentDashboardPage />} />
-      <Route path="/chat/:roomID" element={<ChatPage />} />
-      <Route path="/chat/:roomID/enrol" element={<ChatEnrollmentPage />} />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Layout onThemeChange={setDarkTheme}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/register/teacher"
+            element={<TeacherRegistrationPage />}
+          />
+          <Route
+            path="/register/student"
+            element={<StudentRegistrationPage />}
+          />
+          <Route path="/dashboard/teacher" element={<TeacherDashboardPage />} />
+          <Route path="/dashboard/student" element={<StudentDashboardPage />} />
+          <Route path="/chat/:roomID" element={<ChatPage />} />
+          <Route path="/chat/:roomID/enrol" element={<ChatEnrollmentPage />} />
 
-      <Route path="*" element={<Error404Page />} />
-    </Routes>
+          <Route path="*" element={<Error404Page />} />
+        </Routes>
+      </Layout>
+    </ThemeProvider>
   );
 }
 
