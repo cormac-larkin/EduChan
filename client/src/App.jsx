@@ -31,7 +31,7 @@ function App() {
   useEffect(() => {
     // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login.
     if (user === null) {
-      // navigate("/login");
+      navigate("/login");
       console.log("Please Log In");
     }
   }, [user, navigate]);
@@ -56,10 +56,9 @@ function App() {
             path="/register/student"
             element={<StudentRegistrationPage />}
           />
-          <Route path="/dashboard/teacher" element={<TeacherDashboardPage />} />
-          <Route path="/dashboard/student" element={<StudentDashboardPage />} />
-          <Route path="/chat/:roomID" element={<ChatPage />} />
-          <Route path="/chat/:roomID/enrol" element={<ChatEnrollmentPage />} />
+          <Route path="/dashboard/" element={ user.isTeacher ? <TeacherDashboardPage /> : <StudentDashboardPage />} />
+          <Route path="/chats/:roomID" element={<ChatPage />} />
+          <Route path="/chats/:roomID/enrol" element={<ChatEnrollmentPage />} />
 
           <Route path="*" element={<Error404Page />} />
         </Routes>

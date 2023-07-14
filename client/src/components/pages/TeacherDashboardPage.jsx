@@ -1,29 +1,69 @@
-import { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import ChatCreationForm from "../forms/ChatCreationForm";
-import { Link } from "react-router-dom";
-import styles from "./dashboardPage.module.css";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthProvider";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChatCardContainer from "../UI/ChatCardContainer";
+import {
+  Accordion,
+  Paper,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+  Stack
+} from "@mui/material";
+import Fab from "@mui/material/Fab";
+import AddIcon from "@mui/icons-material/Add";
 
 function TeacherDashboardPage() {
+  const { user } = useContext(AuthContext);
 
-  const {user} = useContext(AuthContext);
-
-  const [error, setError] = useState();
-  const [chats, setChats] = useState([]);
+  const [ownedChats, setOwnedChats] = useState([]);
+  const [joinedChats, setJoinedChats] = useState([]);
+  const [ownedChatsError, setOwnedChatsError] = useState(null);
+  const [joinedChatsError, setJoinedChatsError] = useState(null);
+  const [chatDeletionError, setChatDeletionError] = useState(null);
+  const [expandAccordion, setExpandAccordion] = useState(true);
 
   /**
-   * Sends a GET request to the API to retrieve all chats owned by this Teacher.
+   * Sends a GET request to the API to retrieve all chats owned by a User.
    * Updates the 'chats' state with the latest data returned by the API.
    */
-  const fetchChats = async () => {
+  const fetchOwnedChats = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/users/${user.id}/chats/owned`, {
-        withCredentials: true,
-      });
-      setChats(response.data);
+      const response = await axios.get(
+        `http://localhost:5000/users/${user.id}/chats/owned`,
+        {
+          withCredentials: true,
+        }
+      );
+      setOwnedChats(response.data);
     } catch (error) {
-      setError(error.response.data.error);
+      setOwnedChatsError(
+        error.response.data.error ||
+          "An error occurred when fetching the chat data"
+      );
+      console.error(error);
+    }
+  };
+
+  /**
+   * Sends a GET request to the API to retrieve all chats joined by a User.
+   * Updates the 'chats' state with the latest data returned by the API.
+   */
+  const fetchJoinedChats = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/users/${user.id}/chats/joined`,
+        {
+          withCredentials: true,
+        }
+      );
+      setJoinedChats(response.data);
+    } catch (error) {
+      setJoinedChatsError(
+        error.response.data.error ||
+          "An error occurred when fetching the chat data"
+      );
       console.error(error);
     }
   };
@@ -34,48 +74,81 @@ function TeacherDashboardPage() {
    * @param {Number} roomID - The room_id of the chatroom to delete
    */
   const handleChatDeletion = async (roomID) => {
-    
     try {
       await axios.delete(`http://localhost:5000/chats/${roomID}`, {
         withCredentials: true,
       });
-      fetchChats();
+      fetchOwnedChats();
     } catch (error) {
-      setError(error.response.data.error);
+      setChatDeletionError(error.response.data.error);
       console.error(error.response.data.error);
     }
   };
 
   // On first render, fetch all this Teacher's chats from the database
   useEffect(() => {
-    fetchChats();
+    fetchOwnedChats();
+    fetchJoinedChats();
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <h1>Teacher Dashboard</h1>
+    <Paper
+      elevation={6}
+      sx={{
+        padding: "1rem",
+        marginTop: "1rem",
+        maxWidth: "1000px",
+        minWidth: "90%",
+      }}
+    >
+      <Typography component="h1" variant="h4" align="center">
+        Teacher Dashboard
+      </Typography>
 
-      {error && <p>{error}</p>}
+      <Accordion
+        expanded={expandAccordion}
+        onChange={() => setExpandAccordion((prevState) => !prevState)}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+        >
+          <Typography
+            component="h1"
+            variant="h5"
+          >{`Owned Chats (${ownedChats.length})`}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <ChatCardContainer
+            chats={ownedChats}
+            user={user}
+            onChatDelete={handleChatDeletion}
+            error={ownedChatsError}
+          />
+        </AccordionDetails>
+      </Accordion>
 
-      {chats.map((chat, index) => (
-        <div key={index} className={styles.chat}>
-          <h3>{chat.title}</h3>
-          <div className={styles.buttonContainer}>
-            <button>
-              <Link to={`/chat/${chat.room_id}`}>View</Link>
-            </button>
-            <button
-              className={styles.delete}
-              onClick={() => handleChatDeletion(chat.room_id)}
-            >
-              Delete Room
-            </button>
-          </div>
-        </div>
-      ))}
-
-      <ChatCreationForm fetchChats={fetchChats} />
-    </div>
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+        >
+          <Typography
+            component="h1"
+            variant="h5"
+          >{`Joined Chats (${joinedChats.length})`}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <ChatCardContainer
+            chats={joinedChats}
+            user={user}
+            error={joinedChatsError}
+          />
+        </AccordionDetails>
+      </Accordion>
+    </Paper>
   );
 }
 

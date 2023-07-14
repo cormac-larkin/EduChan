@@ -67,9 +67,17 @@ function TeacherRegistrationForm() {
         password,
         passwordConfirmation,
       });
-      navigate("/login");
+      navigate("/login", {
+        state: {
+          registrationSuccessMessage: "Registration Successful! Please Log In", // Pass success message to the login page so we can display notification
+        },
+      });
     } catch (error) {
-      setNetworkError(error.response.data.error);
+      setNetworkError(
+        error.response
+          ? error.response.data.error
+          : "An error occurred while registering"
+      );
       setShowAlert(true);
       console.error(error.response.data.error); // Log the error message from the API
     }

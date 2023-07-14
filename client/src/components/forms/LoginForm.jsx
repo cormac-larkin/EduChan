@@ -52,17 +52,17 @@ function LoginForm() {
           withCredentials: true,
         }
       );
-
       setUser(response.data); // Use the API response to set the global Auth Context (So we know which user is logged in and their role/permissions)
 
-      // Upon successful login, redirect user to the appropriate Dashboard page
-      if (response.data.isTeacher) {
-        navigate("/dashboard/teacher");
-      } else {
-        navigate("/dashboard/student");
-      }
+      // Upon successful login, redirect user to their Dashboard page
+        navigate("/dashboard");
+
     } catch (error) {
-      setNetworkError(error.response.data.error);
+      setNetworkError(
+        error.response
+          ? error.response.data.error
+          : "An error occurred while Signing In"
+      ); // If the Error contains a 'response' object, get the error message. Otherwise use a generic message
       setShowAlert(true);
       console.error(error.response.data.error); // Log the error message from the API
     }
