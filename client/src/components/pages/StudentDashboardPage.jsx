@@ -2,7 +2,7 @@ import axios from "axios";
 import styles from "./dashboardPage.module.css";
 import { Link } from "react-router-dom";
 import { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../authentication/AuthProvider";
 
 function StudentDashboardPage() {
   const { user } = useContext(AuthContext);

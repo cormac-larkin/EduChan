@@ -33,27 +33,39 @@ const login = async (req, res) => {
     await pool.query(updateLastLogin, [new Date(), email]);
 
     // Attach the User's data to the session
-    req.session.user = { id: result.rows[0].member_id, email: email, isTeacher: result.rows[0].is_admin };
+    req.session.user = {
+      id: result.rows[0].member_id,
+      email: email,
+      isTeacher: result.rows[0].is_admin,
+    };
 
-    return res
-      .status(200)
-      .json(req.session.user);
+    return res.status(200).json(req.session.user);
   } catch (error) {
     console.error(error);
     return res.status(500);
   }
 };
 
-// The React AuthProvider makes a request to this endpoint when the React App is loaded. If a valid session cookie is included with the request, 
+const logout = async (req, res) => {
+  try {
+    req.session.destroy();
+    return res.status(200).json({ message: "Logout successful!" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500);
+  }
+};
+
+// The React AuthProvider makes a request to this endpoint when the React App is loaded. If a valid session cookie is included with the request,
 // We know that the user is authenticated. We send a 200 response and the User Object as the response body. This user object is stored in the react App
 // And used to determine the role of the User and which part of the App they should see (Teacher or Student)
 const checkAuth = async (req, res) => {
-
-  if (req.session.user) { // If 'user' object is attached to the session, we know the client is authenticated (user object attached to session upon successful login)
+  if (req.session.user) {
+    // If 'user' object is attached to the session, we know the client is authenticated (user object attached to session upon successful login)
     return res.status(200).json(req.session.user);
   } else {
     return res.sendStatus(401);
   }
 };
 
-export { login, checkAuth };
+export { login, logout, checkAuth };

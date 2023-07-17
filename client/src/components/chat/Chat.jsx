@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useRef } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../authentication/AuthProvider";
 import axios from "axios";
 import styles from "./chat.module.css";
 import io from "socket.io-client";

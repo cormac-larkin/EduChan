@@ -11,10 +11,10 @@ function LoginPage() {
   const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
-    // On first render, check if a success message was passed from the RegistrationPage component
+    // On first render, check if a success message was passed from the previous page
     // If so, save it in the 'succcessMessage' state, then set the 'showSuccessMessage' state to true so it will be displayed
-    if (location.state && location.state.registrationSuccessMessage) {
-      setSuccessMessage(location.state.registrationSuccessMessage);
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
       setShowSuccessMessage(true);
       window.history.replaceState(null, ''); // Clear the history state after the message is retrieved
     }

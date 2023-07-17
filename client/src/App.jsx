@@ -1,25 +1,21 @@
-import { useContext, useEffect, useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { ThreeCircles } from "react-loader-spinner";
+import { useState } from "react";
+import { Route, Routes } from "react-router-dom";
 import TeacherRegistrationPage from "./components/pages/TeacherRegistrationPage";
 import StudentRegistrationPage from "./components/pages/StudentRegistrationPage";
 import TeacherDashboardPage from "./components/pages/TeacherDashboardPage";
-import StudentDashboardPage from "./components/pages/StudentDashboardPage";
 import ChatEnrollmentPage from "./components/pages/ChatEnrollmentPage";
 import LoginPage from "./components/pages/LoginPage";
 import ChatPage from "./components/pages/ChatPage";
-
-import { AuthContext } from "./components/context/AuthProvider";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline, createTheme } from "@mui/material";
 
 import "./App.css";
 import Error404Page from "./components/pages/Error404Page";
 import Layout from "./components/layout/Layout";
+import ProtectedRoute from "./components/authentication/ProtectedRoute";
 
 function App() {
-  const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+
   const [darkTheme, setDarkTheme] = useState(false);
 
   const theme = createTheme({
@@ -28,20 +24,6 @@ function App() {
     },
   });
 
-  useEffect(() => {
-    // If AuthProvider API call completes and user is not authenticated, the User is set to null. In this case, we redirect to /login.
-    if (user === null) {
-      navigate("/login");
-      console.log("Please Log In");
-    }
-  }, [user, navigate]);
-
-  // User is undefined until AuthProvider API call is finished, show loading spinner while waiting for API response
-  if (user === undefined) {
-    return <ThreeCircles />;
-  }
-
-  // Otherwise, user is authenticated, render App
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -56,9 +38,30 @@ function App() {
             path="/register/student"
             element={<StudentRegistrationPage />}
           />
-          <Route path="/dashboard/" element={ user.isTeacher ? <TeacherDashboardPage /> : <StudentDashboardPage />} />
-          <Route path="/chats/:roomID" element={<ChatPage />} />
-          <Route path="/chats/:roomID/enrol" element={<ChatEnrollmentPage />} />
+          <Route
+            path="/dashboard/"
+            element={
+              <ProtectedRoute>
+                <TeacherDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chats/:roomID"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chats/:roomID/enrol"
+            element={
+              <ProtectedRoute>
+                <ChatEnrollmentPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<Error404Page />} />
         </Routes>

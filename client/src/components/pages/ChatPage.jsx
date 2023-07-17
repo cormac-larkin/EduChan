@@ -1,7 +1,7 @@
 import Chat from "../chat/Chat";
 import { Link, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../authentication/AuthProvider";
 import { ThreeCircles } from "react-loader-spinner";
 import axios from "axios";
 import Error404Page from "./Error404Page";

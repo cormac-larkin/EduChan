@@ -1,7 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../authentication/AuthProvider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import {
@@ -19,7 +18,7 @@ import TextField from "@mui/material/TextField";
 import validateEmailAddress from "../../utils/validateEmailAddress";
 
 function LoginForm() {
-  const { setUser } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -42,29 +41,15 @@ function LoginForm() {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent page reload
+    event.preventDefault();
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/auth/login",
-        { email, password },
-        {
-          withCredentials: true,
-        }
-      );
-      setUser(response.data); // Use the API response to set the global Auth Context (So we know which user is logged in and their role/permissions)
-
-      // Upon successful login, redirect user to their Dashboard page
-        navigate("/dashboard");
-
+      await login(email, password);
+      navigate("/dashboard");
     } catch (error) {
-      setNetworkError(
-        error.response
-          ? error.response.data.error
-          : "An error occurred while Signing In"
-      ); // If the Error contains a 'response' object, get the error message. Otherwise use a generic message
+      console.error(error);
+      setNetworkError(error.message);
       setShowAlert(true);
-      console.error(error.response.data.error); // Log the error message from the API
     }
   };
 

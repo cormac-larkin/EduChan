@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../authentication/AuthProvider";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChatCardContainer from "../UI/ChatCardContainer";
 import {
@@ -9,10 +9,7 @@ import {
   Typography,
   AccordionSummary,
   AccordionDetails,
-  Stack
 } from "@mui/material";
-import Fab from "@mui/material/Fab";
-import AddIcon from "@mui/icons-material/Add";
 
 function TeacherDashboardPage() {
   const { user } = useContext(AuthContext);

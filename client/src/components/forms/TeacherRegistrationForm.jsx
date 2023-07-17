@@ -69,7 +69,7 @@ function TeacherRegistrationForm() {
       });
       navigate("/login", {
         state: {
-          registrationSuccessMessage: "Registration Successful! Please Log In", // Pass success message to the login page so we can display notification
+          message: "Registration Successful! Please Log In", // Pass success message to the login page so we can display notification
         },
       });
     } catch (error) {
