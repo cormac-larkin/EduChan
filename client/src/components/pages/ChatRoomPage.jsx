@@ -1,4 +1,4 @@
-import Chat from "../chat/Chat";
+import ChatBox from "../chat/ChatBox";
 import { useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ThreeCircles } from "react-loader-spinner";
@@ -93,7 +93,7 @@ function ChatRoomPage() {
           paddingTop: "0.5rem",
         }}
       >
-        <Chat room={room} />
+        <ChatBox room={room} />
       </Paper>
 
       {/* Success Message Notification if redirected from ChatCreationPage */}

@@ -46,7 +46,7 @@ function LoginForm() {
     try {
       await login(email, password);
       navigate("/dashboard", {
-        state: { message: "Login Successful" },
+        state: { message: "Login Successful!" },
       });
     } catch (error) {
       console.error(error);

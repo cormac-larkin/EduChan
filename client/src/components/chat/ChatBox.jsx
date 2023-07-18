@@ -3,23 +3,26 @@ import { AuthContext } from "../authentication/AuthProvider";
 import axios from "axios";
 import styles from "./chat.module.css";
 import io from "socket.io-client";
+import { Box, Stack } from "@mui/material";
+import { useTheme } from "@emotion/react";
 
-function Chat({ room }) {
+function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
+  const theme = useTheme();
 
   const [currentMessage, setCurrentMessage] = useState("");
-  const [messageList, setMessageList] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
   const [error, setError] = useState();
 
-  const chatBody = useRef();
+  // const chatBody = useRef();
 
-  /**
-   * Scrolls to the bottom of the chat, so the latest messages are in view
-   */
-  const scrollToBottom = () => {
-    chatBody.current.scrollTop = chatBody.current.scrollHeight;
-  };
+  // /**
+  //  * Scrolls to the bottom of the chat, so the latest messages are in view
+  //  */
+  // const scrollToBottom = () => {
+  //   chatBody.current.scrollTop = chatBody.current.scrollHeight;
+  // };
 
   /**
    * Fetches the latest messages for this chatroom from the database
@@ -32,7 +35,7 @@ function Chat({ room }) {
           withCredentials: true,
         }
       );
-      setMessageList(response.data);
+      setMessages(response.data);
     } catch (error) {
       setError(error.response.data.error);
       console.error(error.response.data.error);
@@ -78,9 +81,12 @@ function Chat({ room }) {
    */
   const deleteMessage = async (messageID) => {
     try {
-      await axios.delete(`http://localhost:5000/chats/${room.room_id}/messages/${messageID}`, {
-        withCredentials: true,
-      });
+      await axios.delete(
+        `http://localhost:5000/chats/${room.room_id}/messages/${messageID}`,
+        {
+          withCredentials: true,
+        }
+      );
       await socket.emit("delete-message");
       fetchMessages();
     } catch (error) {
@@ -118,60 +124,91 @@ function Chat({ room }) {
 
   // When the messageList state is updated, scroll to the bottom of the chat window
   useEffect(() => {
-    scrollToBottom();
-  }, [messageList]);
+    // scrollToBottom();
+  }, [messages]);
 
   return (
-    <div className={styles.chatWindow}>
-      <div className={styles.chatHeader}>
-        <p>Live Chat</p>
-      </div>
-      <div className={styles.chatBody} ref={chatBody}>
-        {messageList.map((messageObj, index) => {
-          return (
-            <div
-              key={index}
-              className={styles.message}
-              id={user.id === messageObj.member_id ? styles.you : styles.other}
-            >
-              <div>
-                <div className={styles.messageContent}>
-                  <p>{messageObj.content}</p>
-                </div>
-                <div className={styles.messageMeta}>
-                  <p id="time">{messageObj.timestamp.slice(11, 16)}</p>
-                  {user.id === messageObj.member_id && (
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => deleteMessage(messageObj.message_id)}
-                    >
-                      &#10006;
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className={styles.chatFooter}>
-        <input
-          type="text"
-          className={styles.messageInput}
-          placeholder="Message..."
-          value={currentMessage}
-          onChange={(event) => {
-            setCurrentMessage(event.target.value);
-          }}
-          onKeyDown={(event) => {
-            event.key === "Enter" && sendMessage();
-          }}
-        />
-        <button onClick={sendMessage}>&#9658;</button>
-      </div>
-      {error && <p>{error}</p>}
-    </div>
+    <Stack width="100%" maxHeight="68vh" overflow="auto">
+      {messages.map((message) => (
+        <Box
+          key={message.message_id}
+          display="flex"
+          justifyContent={
+            message.member_id === user.id ? "flex-end" : "flex-start"
+          }
+          color={"black"}
+          m="0.5rem"
+        >
+          <Box
+            maxWidth="80%"
+            borderRadius="50px"
+            p="1rem"
+            bgcolor={
+              message.member_id === user.id
+                ? theme.palette.success.light
+                : theme.palette.primary.light
+            }
+            sx={{
+              borderTopRightRadius: message.member_id === user.id && "0",
+              borderTopLeftRadius: message.member_id !== user.id && "0",
+            }}
+          >
+            {message.content}
+          </Box>
+        </Box>
+      ))}
+    </Stack>
+
+    // <div className={styles.chatWindow}>
+    //   <div className={styles.chatHeader}>
+    //     <p>Live Chat</p>
+    //   </div>
+    //   <div className={styles.chatBody} >
+    //     {messages.map((messageObj, index) => {
+    //       return (
+    //         <div
+    //           key={index}
+    //           className={styles.message}
+    //           id={user.id === messageObj.member_id ? styles.you : styles.other}
+    //         >
+    //           <div>
+    //             <div className={styles.messageContent}>
+    //               <p>{messageObj.content}</p>
+    //             </div>
+    //             <div className={styles.messageMeta}>
+    //               <p id="time">{messageObj.timestamp.slice(11, 16)}</p>
+    //               {user.id === messageObj.member_id && (
+    //                 <button
+    //                   className={styles.deleteButton}
+    //                   onClick={() => deleteMessage(messageObj.message_id)}
+    //                 >
+    //                   &#10006;
+    //                 </button>
+    //               )}
+    //             </div>
+    //           </div>
+    //         </div>
+    //       );
+    //     })}
+    //   </div>
+    //   <div className={styles.chatFooter}>
+    //     <input
+    //       type="text"
+    //       className={styles.messageInput}
+    //       placeholder="Message..."
+    //       value={currentMessage}
+    //       onChange={(event) => {
+    //         setCurrentMessage(event.target.value);
+    //       }}
+    //       onKeyDown={(event) => {
+    //         event.key === "Enter" && sendMessage();
+    //       }}
+    //     />
+    //     <button onClick={sendMessage}>&#9658;</button>
+    //   </div>
+    //   {error && <p>{error}</p>}
+    // </div>
   );
 }
 
-export default Chat;
+export default ChatBox;

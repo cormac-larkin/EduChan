@@ -91,7 +91,8 @@ const getMessages = async (req, res) => {
       return res.sendStatus(404);
     }
 
-    const getMessagesQuery = "SELECT * FROM message WHERE room_id = $1";
+    // Retrieve all messages for the specified chat room, ordered by their insertion so they can be displayed chronologically on the frontend.
+    const getMessagesQuery = "SELECT * FROM message WHERE room_id = $1 ORDER BY message_id ASC";
     const result = await pool.query(getMessagesQuery, [roomID]);
 
     return res.status(200).json(result.rows);
