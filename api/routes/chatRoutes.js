@@ -1,11 +1,13 @@
 import { Router } from "express";
-import verifyTeacherRole from "../middleware/verifyTeacherRole.js";
+import verifyAuthStatus from "../middleware/verifyAuthStatus.js";
 import { getChatByID, getMessages, postMessage, deleteMessage, createRoom, deleteRoom, addUsersToChat } from "../controllers/chatControllers.js";
 
 const router = Router();
 
-router.post("/", verifyTeacherRole, createRoom);
-router.delete("/:roomID", verifyTeacherRole, deleteRoom);
+router.use(verifyAuthStatus); // All '/chat' endpoints require authorization.
+
+router.post("/", createRoom);
+router.delete("/:roomID", deleteRoom);
 router.post("/:roomID/members", addUsersToChat);
 router.get("/:roomID", getChatByID);
 router.get("/:roomID/messages", getMessages);

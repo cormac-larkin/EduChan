@@ -63,7 +63,7 @@ function NavBar({ onThemeChange }) {
   };
 
   return (
-    <AppBar position="sticky" sx={{ maxWidth: "100%" }}>
+    <AppBar position="sticky" sx={{ maxWidth: "100%", zIndex: (theme) => theme.zIndex.drawer + 1 }}> 
       <Container maxWidth="xl">
         <Toolbar
           disableGutters

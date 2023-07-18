@@ -7,7 +7,7 @@ import axios from "axios";
 import Error404Page from "./Error404Page";
 
 
-function ChatPage() {
+function ChatRoomPage() {
   const { roomID } = useParams(); // Get the room ID from the URL
   const { user } = useContext(AuthContext);
 
@@ -55,4 +55,4 @@ function ChatPage() {
   );
 }
 
-export default ChatPage;
+export default ChatRoomPage;

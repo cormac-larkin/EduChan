@@ -1,11 +1,5 @@
 import {
-  Card,
   Grid,
-  Typography,
-  CardMedia,
-  CardActionArea,
-  CardContent,
-  CardActions,
   Button,
   Dialog,
   Snackbar,
@@ -15,10 +9,10 @@ import {
   DialogActions,
   DialogContentText,
 } from "@mui/material";
-import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import ChatCard from "./ChatCard";
 
-function ChatCardContainer({ chats, user, onChatDelete, error }) {
+function CardContainer({ chats, onChatDelete, error }) {
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const [chatToDelete, setChatToDelete] = useState({});
   const [confirmationInput, setConfirmationInput] = useState("");
@@ -129,44 +123,11 @@ function ChatCardContainer({ chats, user, onChatDelete, error }) {
 
       {chats.map((chat) => (
         <Grid item xs={2} sm={4} md={4} key={chat.room_id}>
-          <Card sx={{ maxWidth: 345 }}>
-            <Link
-              to={`/chats/${chat.room_id}`}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://picsum.photos/300"
-                  alt="pic"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {chat.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    A brief description of the Chat Room
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Link>
-            <CardActions>
-              {user.id === chat.member_id && (
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={() => handleDeleteSelection(chat)}
-                >
-                  Delete Room
-                </Button>
-              )}
-            </CardActions>
-          </Card>
+          <ChatCard chat={chat} onDeleteSelection={handleDeleteSelection} />
         </Grid>
       ))}
     </Grid>
   );
 }
 
-export default ChatCardContainer;
+export default CardContainer;

@@ -1,7 +1,13 @@
 import NavBar from "./NavBar";
 import Footer from "./Footer";
+import SideBar from "./SideBar";
+import { Box, useMediaQuery } from "@mui/material";
+
 
 function Layout({ children, onThemeChange }) {
+
+  const collapseSideBar = useMediaQuery("(max-width:900px)");
+
   return (
     <div
       className="layoutWrapper"
@@ -15,15 +21,11 @@ function Layout({ children, onThemeChange }) {
       }}
     >
       <NavBar onThemeChange={onThemeChange} />
-      <main
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        {children}
-      </main>
+      <Box sx={{ display: "flex", width:"100%" }}>
+        <SideBar collapseSideBar={collapseSideBar} />
+
+        <main style={{width: collapseSideBar ? "100%" : "80%", transition: "width 0.4s ease"}}>{children}</main>
+      </Box>
       <Footer />
     </div>
   );

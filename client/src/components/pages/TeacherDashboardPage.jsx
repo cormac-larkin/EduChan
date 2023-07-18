@@ -1,151 +1,84 @@
-import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChatCardContainer from "../UI/ChatCardContainer";
-import {
-  Accordion,
-  Paper,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from "@mui/material";
+import SpaceDashboardRoundedIcon from "@mui/icons-material/SpaceDashboardRounded";
+import chatBubbleIcon from "../../assets/chatBubble.svg";
+import newChatIcon from "../../assets/newChat.svg";
+import analyticsIcon from "../../assets/analytics.svg";
+import quizIcon from "../../assets/quiz.svg";
+import settingsIcon from "../../assets/settings.svg";
+import logoutIcon from "../../assets/logout.svg";
+
+import { Container, Divider, Stack, Typography, Grid } from "@mui/material";
+import DashboardCard from "../UI/DashboardCard";
 
 function TeacherDashboardPage() {
   const { user } = useContext(AuthContext);
 
-  const [ownedChats, setOwnedChats] = useState([]);
-  const [joinedChats, setJoinedChats] = useState([]);
-  const [ownedChatsError, setOwnedChatsError] = useState(null);
-  const [joinedChatsError, setJoinedChatsError] = useState(null);
-  const [chatDeletionError, setChatDeletionError] = useState(null);
-  const [expandAccordion, setExpandAccordion] = useState(true);
-
-  /**
-   * Sends a GET request to the API to retrieve all chats owned by a User.
-   * Updates the 'chats' state with the latest data returned by the API.
-   */
-  const fetchOwnedChats = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/users/${user.id}/chats/owned`,
-        {
-          withCredentials: true,
-        }
-      );
-      setOwnedChats(response.data);
-    } catch (error) {
-      setOwnedChatsError(
-        error.response.data.error ||
-          "An error occurred when fetching the chat data"
-      );
-      console.error(error);
-    }
-  };
-
-  /**
-   * Sends a GET request to the API to retrieve all chats joined by a User.
-   * Updates the 'chats' state with the latest data returned by the API.
-   */
-  const fetchJoinedChats = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/users/${user.id}/chats/joined`,
-        {
-          withCredentials: true,
-        }
-      );
-      setJoinedChats(response.data);
-    } catch (error) {
-      setJoinedChatsError(
-        error.response.data.error ||
-          "An error occurred when fetching the chat data"
-      );
-      console.error(error);
-    }
-  };
-
-  /**
-   * Sends a DELETE request to the API to delete a specific chatroom
-   *
-   * @param {Number} roomID - The room_id of the chatroom to delete
-   */
-  const handleChatDeletion = async (roomID) => {
-    try {
-      await axios.delete(`http://localhost:5000/chats/${roomID}`, {
-        withCredentials: true,
-      });
-      fetchOwnedChats();
-    } catch (error) {
-      setChatDeletionError(error.response.data.error);
-      console.error(error.response.data.error);
-    }
-  };
-
-  // On first render, fetch all this Teacher's chats from the database
-  useEffect(() => {
-    fetchOwnedChats();
-    fetchJoinedChats();
-  }, []);
+  const cards = [
+    {
+      title: "Browse Chats",
+      description: "View your chats",
+      imageURI: chatBubbleIcon,
+    },
+    {
+      title: "Create New Chat",
+      description: "Create a new chat and enrol Students",
+      imageURI: newChatIcon,
+    },
+    {
+      title: "Analytics",
+      description: "View word clouds, sentiment analysis and more",
+      imageURI: analyticsIcon,
+    },
+    {
+      title: "Create Quizzes",
+      description: "Create new quizzes to test your Students",
+      imageURI: quizIcon,
+    },
+    {
+      title: "My Account",
+      description: "Manage your account",
+      imageURI: settingsIcon,
+    },
+    {
+      title: "Logout",
+      description: "Log out of your account",
+      imageURI: logoutIcon,
+    },
+  ];
 
   return (
-    <Paper
-      elevation={6}
-      sx={{
-        padding: "1rem",
-        marginTop: "1rem",
-        maxWidth: "1000px",
-        minWidth: "90%",
-      }}
-    >
-      <Typography component="h1" variant="h4" align="center">
-        Teacher Dashboard
-      </Typography>
-
-      <Accordion
-        expanded={expandAccordion}
-        onChange={() => setExpandAccordion((prevState) => !prevState)}
+    <Stack>
+      <Stack p="1rem" direction="row">
+        <Stack justifyContent="center">
+          <SpaceDashboardRoundedIcon />
+        </Stack>
+        <Typography component="h1" variant="h5" align="left" pl="0.5rem">
+          Teacher Dashboard
+        </Typography>
+      </Stack>
+      <Divider />
+      <Grid
+        container
+        spacing={{ xs: 2, md: 3 }}
+        columns={{ xs: 4, sm: 8, md: 12 }}
+        pt="1rem"
       >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography
-            component="h1"
-            variant="h5"
-          >{`Owned Chats (${ownedChats.length})`}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <ChatCardContainer
-            chats={ownedChats}
-            user={user}
-            onChatDelete={handleChatDeletion}
-            error={ownedChatsError}
-          />
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography
-            component="h1"
-            variant="h5"
-          >{`Joined Chats (${joinedChats.length})`}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <ChatCardContainer
-            chats={joinedChats}
-            user={user}
-            error={joinedChatsError}
-          />
-        </AccordionDetails>
-      </Accordion>
-    </Paper>
+        {cards.map((card, index) => (
+          <Grid
+            item
+            xs={2}
+            sm={4}
+            md={4}
+            key={index}
+            display={"flex"}
+            justifyContent={"center"}
+          >
+            <DashboardCard card={card} />
+          </Grid>
+        ))}
+      </Grid>
+    </Stack>
   );
 }
 
