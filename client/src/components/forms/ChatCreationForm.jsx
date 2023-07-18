@@ -1,25 +1,28 @@
 import { useState } from "react";
 import axios from "axios";
-import styles from "./form.module.css";
+import {
+  Typography,
+  Box,
+  TextField,
+  InputAdornment,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import AbcIcon from "@mui/icons-material/Abc";
+import { useNavigate } from "react-router-dom";
 
-function ChatCreationForm({ fetchChats }) {
-  const [error, setError] = useState(); // State to track any errors returned from the API
-  const [formData, setFormData] = useState({
-    roomName: "",
-  });
+function ChatCreationForm() {
+  const navigate = useNavigate();
 
-  /**
-   * Handles input change events and updates the formData state accordingly.
-   *
-   * @param {Event} e - The input change event.
-   * @returns {void}
-   */
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+  const [roomName, setRoomName] = useState("");
+  const [error, setError] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+
+  const handleRoomNameChange = (e) => {
+    const value = e.target.value;
+
+    setRoomName(value);
   };
 
   /**
@@ -32,30 +35,83 @@ function ChatCreationForm({ fetchChats }) {
     event.preventDefault();
 
     try {
-      await axios.post("http://localhost:5000/chats/", formData, {
-        withCredentials: true,
+      const response = await axios.post(
+        "http://localhost:5000/chats/",
+        { roomName },
+        {
+          withCredentials: true,
+        }
+      );
+      const newRoomId = response?.data?.room?.room_id;
+      console.log(response);
+      navigate(`/chats/${newRoomId}`, {
+        state: {
+          message: `Room created successfully!`, // Pass success message to the ChatRoomPage so we can display notification upon redirect
+        },
       });
-      fetchChats(); // Fetch the latest chat data and update the 'chats' state on the TeacherDashboardPage
-      setFormData({roomName: ""}); // Clear input field
     } catch (error) {
-      setError(error.response.data.error);
-      console.error(error.response.data.error);
+      setError(
+        error?.response?.data?.error || "Error: Unable to create chat room"
+      );
+      setShowAlert(true);
+      console.error(error);
     }
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <h1>Create a new Chatroom</h1>
-      <label htmlFor="roomName">Room Name</label>
-      <input
-        type="text"
-        name="roomName"
-        value={formData.roomName}
-        onChange={(e) => handleInputChange(e)}
-      />
-      <button type="submit">Create Room</button>
-      {error && <p className={styles.errorMessage}>{error}</p>}
-    </form>
+    <>
+      <Typography
+        component="h1"
+        variant="h4"
+        align="center"
+        paddingBottom="1rem"
+      >
+        New Chat Room
+      </Typography>
+      <Box component="form" onSubmit={handleSubmit}>
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="roomName"
+          label="Room Name"
+          name="roomName"
+          type="text"
+          autoFocus
+          value={roomName}
+          onChange={(e) => handleRoomNameChange(e)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AbcIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3, mb: 2 }}
+        >
+          Create Room
+        </Button>
+      </Box>
+      <Snackbar
+        open={showAlert}
+        autoHideDuration={6000}
+        onClose={() => setShowAlert(false)}
+      >
+        <Alert
+          severity="error"
+          sx={{ width: "100%" }}
+          onClose={() => setShowAlert(false)}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

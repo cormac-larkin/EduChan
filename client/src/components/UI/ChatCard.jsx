@@ -12,13 +12,16 @@ import { Link } from "react-router-dom";
 import { AuthContext } from "../authentication/AuthProvider";
 
 function ChatCard({ chat, onDeleteSelection }) {
-
   const { user } = useContext(AuthContext);
+  const { room_id, title, creation_date, member_id } = chat;
 
   return (
-    <Card sx={{ maxWidth: 345 }} elevation={6}>
+    <Card
+      sx={{ maxWidth: 345, width: "100%", cursor: "pointer" }}
+      elevation={6}
+    >
       <Link
-        to={`/chats/${chat.room_id}`}
+        to={`/chats/${room_id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <CardActionArea>
@@ -30,16 +33,17 @@ function ChatCard({ chat, onDeleteSelection }) {
           />
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">
-              {chat.title}
+              {title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              A brief description of the Chat Room
+              {`Created: ${creation_date.slice(0, 10)}`}
             </Typography>
           </CardContent>
         </CardActionArea>
       </Link>
       <CardActions>
-        {user.id === chat.member_id && (
+        {/* Include a 'Delete' button if the current User owns this chat */}
+        {user.id === member_id && (
           <Button
             size="small"
             color="error"

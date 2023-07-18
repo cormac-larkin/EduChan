@@ -45,7 +45,9 @@ function LoginForm() {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/dashboard", {
+        state: { message: "Login Successful" },
+      });
     } catch (error) {
       console.error(error);
       setNetworkError(error.message);
@@ -133,7 +135,10 @@ function LoginForm() {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Error message if API call fails */}
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showAlert}
         autoHideDuration={6000}
         onClose={() => setShowAlert(false)}

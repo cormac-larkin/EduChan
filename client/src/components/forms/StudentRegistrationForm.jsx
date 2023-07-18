@@ -241,7 +241,10 @@ function StudentRegistrationForm() {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Error message if API call fails */}
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showAlert}
         autoHideDuration={6000}
         onClose={() => setShowAlert(false)}

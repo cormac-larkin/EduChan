@@ -1,10 +1,26 @@
-import { Toolbar, Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box } from "@mui/material";
-import MailIcon from '@mui/icons-material/Mail';
+import {
+  Toolbar,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Box,
+} from "@mui/material";
+import MailIcon from "@mui/icons-material/Mail";
 
-function SideBar({collapseSideBar}) {
-
+function SideBar({ collapseSideBar }) {
   return (
-    <Box sx={{width: collapseSideBar ? "0%" : "20%", transition: "width 0.4s ease", borderRight: collapseSideBar ? "none" : "1px solid grey", overflow: "hidden"}}>
+    <Box
+      sx={{
+        width: collapseSideBar ? "0%" : "20%",
+        transition: "width 0.4s ease",
+        borderRight: collapseSideBar ? "none" : "1px solid grey",
+        overflow: "hidden",
+        marginRight: collapseSideBar ? "0" : "0.5rem"
+      }}
+    >
       <Toolbar />
       <Divider />
       <List>
@@ -12,7 +28,7 @@ function SideBar({collapseSideBar}) {
           <ListItem key={text} disablePadding>
             <ListItemButton>
               <ListItemIcon>
-                 <MailIcon />
+                <MailIcon />
               </ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>

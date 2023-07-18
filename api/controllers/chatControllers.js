@@ -25,14 +25,15 @@ const createRoom = async (req, res) => {
       });
     }
 
-    // Insert new room into the DB
+    // Insert new room into the DB and retrieve the room_id
     const insertNewRoom =
-      "INSERT INTO room (title, creation_date, member_id) VALUES ($1, $2, $3)";
-    await pool.query(insertNewRoom, [roomName, new Date(), userID]);
+      "INSERT INTO room (title, creation_date, member_id) VALUES ($1, $2, $3) RETURNING *";
+    const newRoom = await pool.query(insertNewRoom, [roomName, new Date(), userID]);
 
+    // Return success message and an object containing the newly inserted room data
     return res
       .status(200)
-      .json({ message: `Room '${roomName}' created successfully` });
+      .json({ message: `Room '${roomName}' created successfully`, room: newRoom.rows[0] });
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
