@@ -2,11 +2,13 @@ import { useEffect, useState, useContext, useRef } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
 import axios from "axios";
 import io from "socket.io-client";
-import { Box, Stack } from "@mui/material";
+import { Box, Alert, Snackbar, Stack, Tooltip, Typography } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import Fab from "@mui/material/Fab";
 import { useTheme } from "@emotion/react";
 import MessageInputBox from "./MessageInputBox";
+import formatTimestamp from "../../utils/formatTimestamp";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 
 function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
@@ -14,17 +16,16 @@ function ChatBox({ room }) {
   const cursorPositionRef = useRef(0);
   const theme = useTheme();
 
-  const [newMessage, setNewMessage] = useState(""); 
+  const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
   const [error, setError] = useState();
-
+  const [showDeletionMessage, setShowDeletionMessage] = useState(false);
 
   const handleInputChange = (e) => {
     const { value, selectionStart } = e.target;
     setNewMessage(value);
     cursorPositionRef.current = selectionStart;
-
   };
 
   /**
@@ -98,6 +99,7 @@ function ChatBox({ room }) {
         }
       );
       await socket.emit("delete-message");
+      setShowDeletionMessage(true);
       fetchMessages();
     } catch (error) {
       setError(error.response.data.error);
@@ -139,7 +141,11 @@ function ChatBox({ room }) {
 
   return (
     <Stack width="100%" height="75vh">
-      <Stack overflow="auto" ref={chatBox}>
+      <Stack
+        overflow="auto"
+        ref={chatBox}
+        sx={{ overscrollBehavior: "contain" }}
+      >
         {messages.map((message) => (
           <Box
             id="chatBubbleContainer"
@@ -166,13 +172,40 @@ function ChatBox({ room }) {
                 borderTopLeftRadius: message.member_id !== user.id && "0",
               }}
             >
-              {message.content}
+              <Stack>
+                {message.content}
+                <Stack direction="row" justifyContent="flex-end">
+                  <Typography
+                    align="right"
+                    component="p"
+                    fontSize="small"
+                    fontWeight="700"
+                    color="grey.800"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    {formatTimestamp(message.timestamp)}
+                  </Typography>
+                  {message.member_id === user.id && (
+                    <Tooltip title="Delete message">
+                      <DeleteForeverIcon
+                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        onClick={() => deleteMessage(message.message_id)}
+                      />
+                    </Tooltip>
+                  )}
+                </Stack>
+              </Stack>
             </Box>
           </Box>
         ))}
       </Stack>
       <Stack direction="row" paddingTop="0.5rem" alignItems="center">
-        <MessageInputBox onChange={handleInputChange} value={newMessage} cursorPositionRef={cursorPositionRef} />
+        <MessageInputBox
+          onChange={handleInputChange}
+          value={newMessage}
+          cursorPositionRef={cursorPositionRef}
+        />
         <Fab
           size="medium"
           color="primary"
@@ -182,6 +215,23 @@ function ChatBox({ room }) {
           <SendRoundedIcon />
         </Fab>
       </Stack>
+
+      {/* Success Message Notification for successful message deletion */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showDeletionMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowDeletionMessage(false)}
+        message={"Message deleted successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setShowDeletionMessage(false)}
+        >
+          {"Message deleted successfully!"}
+        </Alert>
+      </Snackbar>
     </Stack>
 
     // <div className={styles.chatWindow}>

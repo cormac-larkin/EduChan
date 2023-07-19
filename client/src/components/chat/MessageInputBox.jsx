@@ -84,6 +84,7 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef }) 
       onChange={onChange}
       value={value}
       autoFocus={true}
+      id="messageInput"
     />
   );
 }
