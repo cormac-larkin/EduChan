@@ -98,7 +98,10 @@ function ChatCreationForm() {
           Create Room
         </Button>
       </Box>
+
+      {/* Error notification if API call fails */}
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showAlert}
         autoHideDuration={6000}
         onClose={() => setShowAlert(false)}

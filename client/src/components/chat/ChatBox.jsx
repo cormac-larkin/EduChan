@@ -1,28 +1,38 @@
 import { useEffect, useState, useContext, useRef } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
 import axios from "axios";
-import styles from "./chat.module.css";
 import io from "socket.io-client";
 import { Box, Stack } from "@mui/material";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import Fab from "@mui/material/Fab";
 import { useTheme } from "@emotion/react";
+import MessageInputBox from "./MessageInputBox";
 
 function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
+  const chatBox = useRef();
+  const cursorPositionRef = useRef(0);
   const theme = useTheme();
 
-  const [currentMessage, setCurrentMessage] = useState("");
+  const [newMessage, setNewMessage] = useState(""); 
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
   const [error, setError] = useState();
 
-  // const chatBody = useRef();
 
-  // /**
-  //  * Scrolls to the bottom of the chat, so the latest messages are in view
-  //  */
-  // const scrollToBottom = () => {
-  //   chatBody.current.scrollTop = chatBody.current.scrollHeight;
-  // };
+  const handleInputChange = (e) => {
+    const { value, selectionStart } = e.target;
+    setNewMessage(value);
+    cursorPositionRef.current = selectionStart;
+
+  };
+
+  /**
+   * Scrolls to the bottom of the chat, so the latest messages are in view
+   */
+  const scrollToBottom = () => {
+    chatBox.current.scrollTop = chatBox.current.scrollHeight;
+  };
 
   /**
    * Fetches the latest messages for this chatroom from the database
@@ -47,13 +57,13 @@ function ChatBox({ room }) {
    */
   const sendMessage = async () => {
     // Ensure empty messages are not sent
-    if (currentMessage === "") {
+    if (newMessage === "") {
       return;
     }
 
     const messageData = {
       authorID: user.id,
-      content: currentMessage,
+      content: newMessage,
     };
 
     // POST the message to the API
@@ -69,7 +79,7 @@ function ChatBox({ room }) {
       // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
       await socket.emit("send-message", messageData);
       fetchMessages();
-      setCurrentMessage(""); // Clear the message input field
+      setNewMessage(""); // Clear the message input field
     } catch (error) {
       setError(error.response.data.error);
       console.error(error.response.data.error);
@@ -124,39 +134,54 @@ function ChatBox({ room }) {
 
   // When the messageList state is updated, scroll to the bottom of the chat window
   useEffect(() => {
-    // scrollToBottom();
+    scrollToBottom();
   }, [messages]);
 
   return (
-    <Stack width="100%" maxHeight="68vh" overflow="auto">
-      {messages.map((message) => (
-        <Box
-          key={message.message_id}
-          display="flex"
-          justifyContent={
-            message.member_id === user.id ? "flex-end" : "flex-start"
-          }
-          color={"black"}
-          m="0.5rem"
-        >
+    <Stack width="100%" height="75vh">
+      <Stack overflow="auto" ref={chatBox}>
+        {messages.map((message) => (
           <Box
-            maxWidth="80%"
-            borderRadius="50px"
-            p="1rem"
-            bgcolor={
-              message.member_id === user.id
-                ? theme.palette.success.light
-                : theme.palette.primary.light
+            id="chatBubbleContainer"
+            key={message.message_id}
+            display="flex"
+            justifyContent={
+              message.member_id === user.id ? "flex-end" : "flex-start"
             }
-            sx={{
-              borderTopRightRadius: message.member_id === user.id && "0",
-              borderTopLeftRadius: message.member_id !== user.id && "0",
-            }}
+            color={"black"}
+            m="0.5rem"
           >
-            {message.content}
+            <Box
+              id="chatBubble"
+              maxWidth="80%"
+              borderRadius="30px"
+              p="0.2rem 1rem"
+              bgcolor={
+                message.member_id === user.id
+                  ? theme.palette.success.light
+                  : theme.palette.primary.light
+              }
+              sx={{
+                borderTopRightRadius: message.member_id === user.id && "0",
+                borderTopLeftRadius: message.member_id !== user.id && "0",
+              }}
+            >
+              {message.content}
+            </Box>
           </Box>
-        </Box>
-      ))}
+        ))}
+      </Stack>
+      <Stack direction="row" paddingTop="0.5rem" alignItems="center">
+        <MessageInputBox onChange={handleInputChange} value={newMessage} cursorPositionRef={cursorPositionRef} />
+        <Fab
+          size="medium"
+          color="primary"
+          aria-label="add"
+          onClick={sendMessage}
+        >
+          <SendRoundedIcon />
+        </Fab>
+      </Stack>
     </Stack>
 
     // <div className={styles.chatWindow}>
