@@ -1,26 +1,59 @@
 import axios from "axios";
 import { useState } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  Stack,
+  Tooltip,
+  useMediaQuery,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import SchoolIcon from "@mui/icons-material/School";
+import AddIcon from "@mui/icons-material/Add";
+import ClearIcon from "@mui/icons-material/Clear";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import TagIcon from "@mui/icons-material/Tag";
 
 function ChatEnrollmentForm({ room }) {
-  const [emailInput, setEmailInput] = useState("");
-  const [emails, setEmails] = useState([]);
+  const smallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
+
+  const [studentNumberInput, setStudentNumberInput] = useState("");
+  const [studentNumbers, setStudentNumbers] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
 
   /**
    * Sends a POST request to the API to add new members to the chat room.
-   * @param {*} event 
+   * @param {*} event
    */
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Ensure empty request is not sent
+    if (studentNumbers.length === 0) {
+      return;
+    }
+
     try {
-      await axios.post(
-        `http://localhost:5000/chats/${room.room_id}/members`,
-        emails,
+      const response = await axios.post(
+        `http://localhost:5000/chats/${room.room_id}/students`,
+        studentNumbers,
         {
           withCredentials: true,
         }
       );
-      setEmails([]);
+      setStudentNumbers([]);
+      if (response.status === 207) {
+        setApiResponse(
+          `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled: [${response?.data?.successfulEnrolments}]\n\nThe following students could not found on the system: [${response?.data?.failedEnrolments}]`
+        );
+      }
+
+      setShowAlert(true);
     } catch (error) {
       console.error(error);
     }
@@ -28,73 +61,192 @@ function ChatEnrollmentForm({ room }) {
 
   /**
    * Handles adding new email addresses to the enrolment list
-   * 
-   * @param {String} email 
+   *
+   * @param {String} email
    * @returns {void}
    */
-  const addEmailToList = (email) => {
-
-    if (email === "") {
+  const addToEnrolment = () => {
+    if (studentNumberInput === "") {
       return;
     }
 
-    if (emails.includes(email)) {
-      alert("That email has already been added to the list!");
+    if (studentNumbers.includes(studentNumberInput)) {
+      alert("That Student has already been added to this enrolment!");
       return;
     }
 
-    setEmails((prevEmails) => [...prevEmails, emailInput]);
-    setEmailInput("");
+    setStudentNumbers((prevNumbers) => [...prevNumbers, studentNumberInput]);
+    setStudentNumberInput("");
   };
 
-  const deleteEmail = (emailToDelete) => {
-    setEmails((prevEmails) => prevEmails.filter(email => email != emailToDelete));
+  const handleDelete = (numberToDelete) => {
+    setStudentNumbers((prevNumbers) =>
+      prevNumbers.filter((number) => number != numberToDelete)
+    );
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <form
-        style={{ display: "flex", flexDirection: "column" }}
+    <Stack
+      width="100%"
+      direction={smallScreen ? "column" : "row"}
+      justifyContent={!smallScreen && "space-evenly"}
+    >
+      <Box
+        component="form"
         onSubmit={handleSubmit}
+        onKeyUp={(e) => {
+          e.key === "Enter" && e.preventDefault();
+        }}
       >
-        <h1>Add members to the {room.title} Chat-Room </h1>
-        <label htmlFor="email">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          placeholder="Type the email address of the member you wish to add"
-          value={emailInput}
-          onChange={(e) => setEmailInput(e.target.value)}
-        />
-        <button type="button" onClick={() => addEmailToList(emailInput)}>
-          Add Email to List
-        </button>
-        <button type="submit">Enrol Members</button>
-      </form>
-      {emails.length > 0 && (
-        <div
-          className="emailContainer"
-          style={{
+        <Stack direction="row" justifyContent="center">
+          <SchoolIcon sx={{ marginTop: "0.2rem", marginRight: "0.2rem" }} />
+          <Typography
+            component="h1"
+            variant="h5"
+            align="center"
+            paddingBottom="1rem"
+          >
+            Enrol Students
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" alignItems="center">
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="roomName"
+            label="Student Number"
+            name="roomName"
+            type="number"
+            autoFocus
+            value={studentNumberInput}
+            onChange={(e) => setStudentNumberInput(e.target.value)}
+            InputProps={{
+              sx: { borderTopRightRadius: "0", borderBottomRightRadius: "0" },
+              startAdornment: (
+                <InputAdornment position="start">
+                  <TagIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Tooltip title="Add to enrolment">
+            <Button
+              variant="contained"
+              sx={{
+                height: "3.5rem",
+                marginTop: "0.45rem",
+                borderTopLeftRadius: "0",
+                borderBottomLeftRadius: "0",
+              }}
+              onClick={addToEnrolment}
+            >
+              <AddIcon />
+            </Button>
+          </Tooltip>
+        </Stack>
+
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3, mb: 2 }}
+          onClick={handleSubmit}
+        >
+          Submit Enrolment
+        </Button>
+      </Box>
+
+      {/* List of Student Numbers saved to this enrolment */}
+      {studentNumbers.length > 0 && (
+        <Box
+          sx={{
+            margin: "0",
+            width: smallScreen ? "100%" : "50%",
+            borderTop: smallScreen && "1px solid black",
+            paddingTop: smallScreen && "0.5rem",
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            backgroundColor: "rgba(111, 111, 111)",
-            borderRadius: "5px",
+            justifyContent: "center",
           }}
         >
-          <h3>Emails to add</h3>
-          {emails.map((email, index) => (
-            <div
-              key={index}
-              style={{ display: "flex", justifyContent: "center" }}
-            >
-              <p>{email}</p>
-              <button onClick={() => deleteEmail(email)} style={{backgroundColor: "red"}}>Remove</button>
-            </div>
-          ))}
-        </div>
+          <Stack width="23rem">
+            <Stack direction="row" justifyContent="center">
+              <FormatListNumberedIcon
+                sx={{ marginTop: "0.2rem", marginRight: "0.2rem" }}
+              />
+              <Typography
+                component="h1"
+                variant="h5"
+                align="center"
+                paddingBottom="1rem"
+              >
+                Enrolment List
+              </Typography>
+            </Stack>
+
+            {studentNumbers.map((studentNumber) => {
+              return (
+                <Stack
+                  key={studentNumber}
+                  direction="row"
+                  justifyContent="center"
+                >
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    width="95%"
+                    m="0.2rem"
+                    pl="0.5rem"
+                    border="1px solid grey"
+                    borderRadius="5px"
+                  >
+                    <Typography
+                      align="center"
+                      display="flex"
+                      justifyContent="center"
+                      flexGrow={1}
+                    >
+                      {studentNumber}
+                    </Typography>
+                    <Tooltip title="Remove from enrolment">
+                      <Button
+                        color="warning"
+                        variant="contained"
+                        sx={{
+                          borderBottomLeftRadius: "0",
+                          borderTopLeftRadius: "0",
+                        }}
+                        onClick={() => handleDelete(studentNumber)}
+                      >
+                        <ClearIcon />
+                      </Button>
+                    </Tooltip>
+                  </Stack>
+                </Stack>
+              );
+            })}
+          </Stack>
+        </Box>
       )}
-    </div>
+
+      {/* Notification containing API response after enrollment is submitted */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showAlert}
+        onClose={() => setShowAlert(false)}
+        sx={{whiteSpace: "pre-wrap"}}
+      >
+        <Alert
+          severity="info"
+          sx={{ width: "100%" }}
+          onClose={() => setShowAlert(false)}
+        >
+          {apiResponse}
+        </Alert>
+      </Snackbar>
+    </Stack>
   );
 }
 

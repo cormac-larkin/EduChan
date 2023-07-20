@@ -200,7 +200,7 @@ function BrowseChatsPage() {
         elevation={6}
         disableGutters
         expanded={expandSecondAccordion}
-          onChange={() => setExpandSecondAccordion((prevState) => !prevState)}
+        onChange={() => setExpandSecondAccordion((prevState) => !prevState)}
         sx={{ ...paperStyles, borderRadius: "5px" }}
       >
         <AccordionSummary
@@ -241,7 +241,10 @@ function BrowseChatsPage() {
       {/* Confirmation dialog for chat deletion */}
       <Dialog
         open={showConfirmationDialog}
-        onClose={() => setShowConfirmationDialog(false)}
+        onClose={() => {
+          setShowConfirmationDialog(false);
+          setConfirmationInput("");
+        }}
         sx={{ paddingLeft: "0.5rem" }}
       >
         <DialogTitle sx={{ paddingLeft: "0.5rem" }}>

@@ -1,7 +1,8 @@
 import ChatBox from "../chat/ChatBox";
-import { useParams, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
 import { ThreeCircles } from "react-loader-spinner";
+import { useTheme } from "@emotion/react";
 import {
   Stack,
   Typography,
@@ -9,14 +10,20 @@ import {
   Paper,
   Snackbar,
   Alert,
+  Fab,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
+import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import Error404Page from "./Error404Page";
 import paperStyles from "../../styles/paperStyles";
+import { AuthContext } from "../authentication/AuthProvider";
 
 function ChatRoomPage() {
+  const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const { user } = useContext(AuthContext);
   const { roomID } = useParams(); // Get the room ID from the URL
 
   const [room, setRoom] = useState();
@@ -76,9 +83,29 @@ function ChatRoomPage() {
           <ChatIcon />
         </Stack>
 
-        <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{room.title}</b>
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" flexGrow={1}>
+          <Typography
+            component="h1"
+            variant="h5"
+            align="left"
+            pl="0.5rem"
+            display="flex"
+            alignItems="center"
+          >
+            <b>{room.title}</b>
+          </Typography>
+          {user.id === room.member_id && (
+            <Link
+              style={{ textDecoration: "none", color: "white" }}
+              to={`/chats/${roomID}/enrol`}
+            >
+              <Fab color="success" variant="extended">
+                <Typography fontSize="md">Add Users</Typography>
+                <AddIcon />
+              </Fab>
+            </Link>
+          )}
+        </Stack>
       </Stack>
       <Divider />
 
@@ -91,6 +118,8 @@ function ChatRoomPage() {
           justifyContent: "center",
           alignItems: "center",
           paddingTop: "0.5rem",
+          backgroundColor:
+            theme.palette.mode === "light" && theme.palette.grey[100],
         }}
       >
         <ChatBox room={room} />

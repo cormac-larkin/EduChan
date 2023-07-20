@@ -29,6 +29,7 @@ function NavBar({ onThemeChange }) {
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
+
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -55,6 +56,11 @@ function NavBar({ onThemeChange }) {
     }
   };
 
+  const handleDashboardNavigate = () => {
+    handleCloseUserMenu();
+    navigate("/dashboard");
+  };
+
   /**
    * Toggle the Dark Theme on/off
    */
@@ -63,7 +69,11 @@ function NavBar({ onThemeChange }) {
   };
 
   return (
-    <AppBar position="sticky" sx={{ maxWidth: "100%", zIndex: (theme) => theme.zIndex.drawer + 1 }} elevation={6}> 
+    <AppBar
+      position="sticky"
+      sx={{ maxWidth: "100%", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      elevation={6}
+    >
       <Container maxWidth="xl">
         <Toolbar
           disableGutters
@@ -195,9 +205,18 @@ function NavBar({ onThemeChange }) {
               {settings.map((setting) => (
                 <MenuItem
                   key={setting}
-                  onClick={
-                    setting === "Logout" ? handleLogout : handleCloseUserMenu
-                  }
+                  onClick={() => {
+                    switch (setting) {
+                      case "Dashboard":
+                        handleDashboardNavigate();
+                        break;
+                      case "Logout":
+                        handleLogout();
+                        break;
+                      default:
+                        handleCloseUserMenu();
+                    }
+                  }}
                 >
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>

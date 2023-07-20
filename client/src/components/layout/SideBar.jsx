@@ -24,8 +24,8 @@ function SideBar({ collapseSideBar }) {
       <Toolbar />
       <Divider />
       <List>
-        {["Inbox", "Starred", "Send email", "Drafts"].map((text) => (
-          <ListItem key={text} disablePadding>
+        {["Placeholder", "Placeholder", "Placeholder", "Placeholder"].map((text, index) => (
+          <ListItem key={index} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <MailIcon />
@@ -37,8 +37,8 @@ function SideBar({ collapseSideBar }) {
       </List>
       <Divider />
       <List>
-        {["All mail", "Trash", "Spam"].map((text) => (
-          <ListItem key={text} disablePadding>
+        {["Placeholder", "Placeholder", "Placeholder"].map((text, index) => (
+          <ListItem key={index} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <MailIcon />

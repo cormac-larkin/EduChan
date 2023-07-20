@@ -13,7 +13,7 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef }) 
       textAreaRef.current.selectionStart = textAreaRef.current.selectionEnd =
         cursorPositionRef.current;
     }
-  }, [value, cursorPositionRef]);
+  }, [value]);
 
   const blue = {
     100: "#DAECFF",

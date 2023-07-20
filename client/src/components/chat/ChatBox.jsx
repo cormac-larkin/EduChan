@@ -2,13 +2,26 @@ import { useEffect, useState, useContext, useRef } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
 import axios from "axios";
 import io from "socket.io-client";
-import { Box, Alert, Snackbar, Stack, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Alert,
+  Snackbar,
+  Stack,
+  Tooltip,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import Fab from "@mui/material/Fab";
 import { useTheme } from "@emotion/react";
 import MessageInputBox from "./MessageInputBox";
 import formatTimestamp from "../../utils/formatTimestamp";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import ReplyIcon from '@mui/icons-material/Reply';
 
 function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
@@ -19,9 +32,16 @@ function ChatBox({ room }) {
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [error, setError] = useState();
+  const [error, setError] = useState(null);
+  const [messageToDelete, setMessageToDelete] = useState(null);
   const [showDeletionMessage, setShowDeletionMessage] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
+  /**
+   * Handles changes to the message input box
+   * 
+   * @param {} e - The HTML form change event
+   */
   const handleInputChange = (e) => {
     const { value, selectionStart } = e.target;
     setNewMessage(value);
@@ -29,7 +49,27 @@ function ChatBox({ room }) {
   };
 
   /**
-   * Scrolls to the bottom of the chat, so the latest messages are in view
+   * Handles User replies to a message
+   * 
+   * @param {Object} message - The message object containing the message being replied to.
+   */
+  const handleReply = (message) => {
+    setNewMessage(`*** Replying to #${message.message_id} ***\n\n`);
+    cursorPositionRef.current = 50;
+  }
+
+  /**
+   * Records the ID of the message that the user wishes to delete, and opens a confirmation dialog. 
+   * 
+   * @param {String} messageID 
+   */
+  const handleDeleteSelection = (messageID) => {
+    setMessageToDelete(messageID);
+    setShowConfirmationDialog(true);
+  };
+
+  /**
+   * Scrolls to the bottom of the chat
    */
   const scrollToBottom = () => {
     chatBox.current.scrollTop = chatBox.current.scrollHeight;
@@ -58,7 +98,7 @@ function ChatBox({ room }) {
    */
   const sendMessage = async () => {
     // Ensure empty messages are not sent
-    if (newMessage === "") {
+    if (newMessage === "" || newMessage.startsWith(" ")) {
       return;
     }
 
@@ -99,8 +139,9 @@ function ChatBox({ room }) {
         }
       );
       await socket.emit("delete-message");
-      setShowDeletionMessage(true);
       fetchMessages();
+      setShowConfirmationDialog(false);
+      setShowDeletionMessage(true);
     } catch (error) {
       setError(error.response.data.error);
       console.error(error.response.data.error);
@@ -140,7 +181,7 @@ function ChatBox({ room }) {
   }, [messages]);
 
   return (
-    <Stack width="100%" height="75vh">
+    <Stack width="100%" height="75vh" justifyContent="space-between">
       <Stack
         overflow="auto"
         ref={chatBox}
@@ -152,20 +193,21 @@ function ChatBox({ room }) {
             key={message.message_id}
             display="flex"
             justifyContent={
-              message.member_id === user.id ? "flex-end" : "flex-start"
+              message.member_id === user.id ? "flex-end" : "flex-start" // Owned messages appear on right, un-owned messages appear on left
             }
             color={"black"}
             m="0.5rem"
           >
             <Box
               id="chatBubble"
-              maxWidth="80%"
+              maxWidth="90%"
               borderRadius="30px"
               p="0.2rem 1rem"
+              // Use different colours for owned/un-owned messages
               bgcolor={
                 message.member_id === user.id
-                  ? theme.palette.success.light
-                  : theme.palette.primary.light
+                  ? theme.palette.success.main
+                  : theme.palette.primary.main
               }
               sx={{
                 borderTopRightRadius: message.member_id === user.id && "0",
@@ -173,24 +215,48 @@ function ChatBox({ room }) {
               }}
             >
               <Stack>
-                {message.content}
+                <Typography
+                  color={
+                    message.member_id === user.id
+                      ? theme.palette.success.contrastText
+                      : theme.palette.primary.contrastText
+                  }
+                  borderBottom="1px solid black"
+                  whiteSpace="pre-line" // Preserves newline characters in the message
+                >
+                  {message.content}
+                </Typography>
                 <Stack direction="row" justifyContent="flex-end">
                   <Typography
                     align="right"
                     component="p"
                     fontSize="small"
                     fontWeight="700"
-                    color="grey.800"
+                    color="black"
                     display="flex"
                     alignItems="center"
                   >
+                    {`#${message.message_id} | `}
                     {formatTimestamp(message.timestamp)}
                   </Typography>
-                  {message.member_id === user.id && (
+                   {/* If the user is not the author of the message, render a 'Reply' icon on the chat bubble */}
+                  {(message.member_id !== user.id) && (
+                    <Tooltip title="Reply">
+                      <ReplyIcon
+                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        onClick={() => handleReply(message)}
+                      />
+                    </Tooltip>
+                  )}
+                  {/* If the user is the author of the message, or the owner of the chat room, render a 'Delete' icon on the chat bubble */}
+                  {(message.member_id === user.id ||
+                    user.id === room.member_id) && (
                     <Tooltip title="Delete message">
                       <DeleteForeverIcon
                         sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        onClick={() => deleteMessage(message.message_id)}
+                        onClick={() =>
+                          handleDeleteSelection(message.message_id)
+                        }
                       />
                     </Tooltip>
                   )}
@@ -216,6 +282,28 @@ function ChatBox({ room }) {
         </Fab>
       </Stack>
 
+      {/* Confirmation dialog for message deletion */}
+      <Dialog
+        open={showConfirmationDialog}
+        onClose={() => setShowConfirmationDialog(false)}
+        sx={{ paddingLeft: "0.5rem" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          Confirm Message Deletion
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to delete this message? Once deleted, a message cannot be recovered!`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmationDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => deleteMessage(messageToDelete)} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Success Message Notification for successful message deletion */}
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -233,56 +321,6 @@ function ChatBox({ room }) {
         </Alert>
       </Snackbar>
     </Stack>
-
-    // <div className={styles.chatWindow}>
-    //   <div className={styles.chatHeader}>
-    //     <p>Live Chat</p>
-    //   </div>
-    //   <div className={styles.chatBody} >
-    //     {messages.map((messageObj, index) => {
-    //       return (
-    //         <div
-    //           key={index}
-    //           className={styles.message}
-    //           id={user.id === messageObj.member_id ? styles.you : styles.other}
-    //         >
-    //           <div>
-    //             <div className={styles.messageContent}>
-    //               <p>{messageObj.content}</p>
-    //             </div>
-    //             <div className={styles.messageMeta}>
-    //               <p id="time">{messageObj.timestamp.slice(11, 16)}</p>
-    //               {user.id === messageObj.member_id && (
-    //                 <button
-    //                   className={styles.deleteButton}
-    //                   onClick={() => deleteMessage(messageObj.message_id)}
-    //                 >
-    //                   &#10006;
-    //                 </button>
-    //               )}
-    //             </div>
-    //           </div>
-    //         </div>
-    //       );
-    //     })}
-    //   </div>
-    //   <div className={styles.chatFooter}>
-    //     <input
-    //       type="text"
-    //       className={styles.messageInput}
-    //       placeholder="Message..."
-    //       value={currentMessage}
-    //       onChange={(event) => {
-    //         setCurrentMessage(event.target.value);
-    //       }}
-    //       onKeyDown={(event) => {
-    //         event.key === "Enter" && sendMessage();
-    //       }}
-    //     />
-    //     <button onClick={sendMessage}>&#9658;</button>
-    //   </div>
-    //   {error && <p>{error}</p>}
-    // </div>
   );
 }
 

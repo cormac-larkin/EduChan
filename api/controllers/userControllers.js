@@ -183,7 +183,7 @@ const getJoinedChats = async (req, res) => {
         .json({ error: `User with ID '${userID}' not found` });
     }
 
-    const getJoinedChatsQuery = `SELECT room.room_id, room.title, room.creation_date, room.member_id FROM room INNER JOIN room_member ON room.room_id = room_member.room_id WHERE room_member.member_id = $1`;
+    const getJoinedChatsQuery = `SELECT DISTINCT room.room_id, room.title, room.creation_date, room.member_id FROM room INNER JOIN room_member ON room.room_id = room_member.room_id WHERE room_member.member_id = $1`;
     const getJoinedChatsResult = await pool.query(getJoinedChatsQuery, [
       userID,
     ]);
