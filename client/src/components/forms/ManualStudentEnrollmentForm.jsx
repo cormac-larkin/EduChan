@@ -48,9 +48,16 @@ function ManualStudentEnrollmentForm({ room }) {
       );
       setStudentNumbers([]);
       if (response.status === 207) {
-        setApiResponse(
-          `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled: [${response?.data?.successfulEnrolments}]\n\nThe following students were already enrolled in this chat: [${response?.data?.duplicateEnrolments}]\n\nThe following students could not found on the system: [${response?.data?.failedEnrolments}]`
-        );
+
+        // Construct the string to be shown in the information dialog box
+        const failedEnrolmentsStr = response.data.failedEnrolments.join("\t");
+        const successfulEnrolmentsStr =
+          response.data.successfulEnrolments.join("\t");
+        const duplicateEnrolmentsStr =
+          response.data.duplicateEnrolments.join("\t");
+
+        const result = `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled:\n${successfulEnrolmentsStr}\n\nThe following students were already enrolled in this chat:\n${duplicateEnrolmentsStr}\n\nThe following students could not be found on the system:\n${failedEnrolmentsStr}`;
+        setApiResponse(result);
       }
       if (response.status === 200) {
         setApiResponse(response?.data?.message);
@@ -238,13 +245,19 @@ function ManualStudentEnrollmentForm({ room }) {
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showAlert}
-        onClose={() => {setShowAlert(false); setApiResponse("")}}
-        sx={{whiteSpace: "pre-wrap"}}
+        onClose={() => {
+          setShowAlert(false);
+          setApiResponse("");
+        }}
+        sx={{ whiteSpace: "pre-wrap" }}
       >
         <Alert
           severity="info"
           sx={{ width: "100%" }}
-          onClose={() => {setShowAlert(false); setApiResponse("")}}
+          onClose={() => {
+            setShowAlert(false);
+            setApiResponse("");
+          }}
         >
           {apiResponse}
         </Alert>

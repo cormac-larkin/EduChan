@@ -13,7 +13,6 @@ import { useState } from "react";
 import axios from "axios";
 
 function BatchEnrolmentForm({ room }) {
-
   const [csvFile, setCsvFile] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [apiResponse, setApiResponse] = useState(null);
@@ -25,8 +24,8 @@ function BatchEnrolmentForm({ room }) {
 
   /**
    * Handles the submission of the file upload form and displays the resulting API response.
-   * 
-   * @param {*} e 
+   *
+   * @param {*} e
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,9 +47,15 @@ function BatchEnrolmentForm({ room }) {
         }
       );
       if (response.status === 207) {
-        setApiResponse(
-          `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled: [${response?.data?.successfulEnrolments}]\n\nThe following students were already enrolled in this chat: [${response?.data?.duplicateEnrolments}]\n\nThe following students could not found on the system: [${response?.data?.failedEnrolments}]`
-        );
+        // Construct the string to be shown in the information dialog box
+        const failedEnrolmentsStr = response.data.failedEnrolments.join("  ");
+        const successfulEnrolmentsStr =
+          response.data.successfulEnrolments.join("  ");
+        const duplicateEnrolmentsStr =
+          response.data.duplicateEnrolments.join("  ");
+
+        const result = `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled:\n${successfulEnrolmentsStr}\n\nThe following students were already enrolled in this chat:\n${duplicateEnrolmentsStr}\n\nThe following students could not be found on the system:\n${failedEnrolmentsStr}`;
+        setApiResponse(result);
       }
       if (response.status === 200) {
         setApiResponse(response?.data?.message);
