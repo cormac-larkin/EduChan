@@ -18,7 +18,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import TagIcon from "@mui/icons-material/Tag";
 
-function ChatEnrollmentForm({ room }) {
+function ManualStudentEnrollmentForm({ room }) {
   const smallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [studentNumberInput, setStudentNumberInput] = useState("");
@@ -49,10 +49,12 @@ function ChatEnrollmentForm({ room }) {
       setStudentNumbers([]);
       if (response.status === 207) {
         setApiResponse(
-          `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled: [${response?.data?.successfulEnrolments}]\n\nThe following students could not found on the system: [${response?.data?.failedEnrolments}]`
+          `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled: [${response?.data?.successfulEnrolments}]\n\nThe following students were already enrolled in this chat: [${response?.data?.duplicateEnrolments}]\n\nThe following students could not found on the system: [${response?.data?.failedEnrolments}]`
         );
       }
-
+      if (response.status === 200) {
+        setApiResponse(response?.data?.message);
+      }
       setShowAlert(true);
     } catch (error) {
       console.error(error);
@@ -90,6 +92,7 @@ function ChatEnrollmentForm({ room }) {
       width="100%"
       direction={smallScreen ? "column" : "row"}
       justifyContent={!smallScreen && "space-evenly"}
+      paddingTop="0.5rem"
     >
       <Box
         component="form"
@@ -106,7 +109,7 @@ function ChatEnrollmentForm({ room }) {
             align="center"
             paddingBottom="1rem"
           >
-            Enrol Students
+            Enrol Students Manually
           </Typography>
         </Stack>
 
@@ -235,13 +238,13 @@ function ChatEnrollmentForm({ room }) {
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showAlert}
-        onClose={() => setShowAlert(false)}
+        onClose={() => {setShowAlert(false); setApiResponse("")}}
         sx={{whiteSpace: "pre-wrap"}}
       >
         <Alert
           severity="info"
           sx={{ width: "100%" }}
-          onClose={() => setShowAlert(false)}
+          onClose={() => {setShowAlert(false); setApiResponse("")}}
         >
           {apiResponse}
         </Alert>
@@ -250,4 +253,4 @@ function ChatEnrollmentForm({ room }) {
   );
 }
 
-export default ChatEnrollmentForm;
+export default ManualStudentEnrollmentForm;

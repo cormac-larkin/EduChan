@@ -161,6 +161,7 @@ function BrowseChatsPage() {
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1bh-content"
             id="panel1bh-header"
+            sx={{borderBottom: "1px solid grey"}}
           >
             <Typography
               sx={{ width: "75%", flexShrink: 0 }}
@@ -207,6 +208,7 @@ function BrowseChatsPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1bh-content"
           id="panel1bh-header"
+          sx={{borderBottom: "1px solid grey"}}
         >
           <Typography
             sx={{ width: "75%", flexShrink: 0 }}

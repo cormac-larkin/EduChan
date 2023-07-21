@@ -1,12 +1,20 @@
-import ChatEnrollmentForm from "../chat/ChatEnrollmentForm";
+import ManualStudentEnrollmentForm from "../forms/ManualStudentEnrollmentForm";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ThreeCircles } from "react-loader-spinner";
-import { Stack, Typography, Divider, Paper } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  Divider,
+  Accordion,
+  AccordionSummary,
+} from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Error404Page from "./Error404Page";
 import axios from "axios";
 import paperStyles from "../../styles/paperStyles";
+import BatchEnrolmentForm from "../forms/BatchEnrolmentForm";
 
 function ChatEnrollmentPage() {
   const { roomID } = useParams(); // Get the room ID from the URL
@@ -54,9 +62,52 @@ function ChatEnrollmentPage() {
         </Typography>
       </Stack>
       <Divider />
-      <Paper elevation={6} sx={{...paperStyles, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", paddingTop: "0.5rem"}} >
-        <ChatEnrollmentForm room={room} />
-      </Paper>
+
+      <Accordion
+        elevation={6}
+        disableGutters
+        sx={{ ...paperStyles, borderRadius: "5px" }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1bh-content"
+          id="panel1bh-header"
+          sx={{ borderBottom: "1px solid grey" }}
+        >
+          <Typography
+            sx={{ width: "75%", flexShrink: 0 }}
+            component="h1"
+            variant="h5"
+          >
+            Manual Student Enrolment
+          </Typography>
+        </AccordionSummary>
+        <ManualStudentEnrollmentForm room={room} />
+      </Accordion>
+
+      <Accordion
+        elevation={6}
+        disableGutters
+        sx={{ ...paperStyles, borderRadius: "5px" }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1bh-content"
+          id="panel1bh-header"
+          sx={{ borderBottom: "1px solid grey" }}
+        >
+          <Typography
+            sx={{ width: "75%", flexShrink: 0 }}
+            component="h1"
+            variant="h5"
+          >
+            Batch Enrolment via file upload
+          </Typography>
+        </AccordionSummary>
+
+        <BatchEnrolmentForm room={room} />
+
+      </Accordion>
     </Stack>
   );
 }

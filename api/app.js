@@ -1,5 +1,6 @@
 import express from "express";
 import session from "express-session";
+import fileUpload from "express-fileupload";
 import "dotenv/config";
 import cors from "cors";
 
@@ -12,8 +13,11 @@ const app = express();
 // Allow incoming requests from React App on localhost
 app.use(cors({ credentials: true, origin: "http://localhost:3000" })); 
 
-// Allows parsing JSON data from incoming requests
+// Allow parsing JSON data from incoming requests
 app.use(express.json());
+
+// Allow file uploads
+app.use(fileUpload());
 
 // Configuration for session cookies
 app.use(
