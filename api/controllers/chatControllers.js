@@ -3,11 +3,12 @@ import isNumber from "../utils/isNumber.js";
 import "dotenv/config";
 import parseEnrolmentCsv from "../utils/parseEnrolmentCsv.js";
 import validateCsv from "../utils/validateCsv.js";
+import defaultCardImages from "../utils/defaultCardImages.js";
 
 const createRoom = async (req, res) => {
   try {
     const userID = req.session.user.id;
-    const { roomName } = req.body;
+    let { roomName, description, imageURL } = req.body;
 
     // Verify that the request body contains the roomName property
     if (!roomName) {
@@ -27,11 +28,18 @@ const createRoom = async (req, res) => {
       });
     }
 
+    // If no imageURL was provided by the user, pick a random image for this room
+    if (!imageURL) {
+      imageURL = defaultCardImages[Math.round(Math.random() * (defaultCardImages.length - 1))];
+    }
+
     // Insert new room into the DB and retrieve the room_id
     const insertNewRoom =
-      "INSERT INTO room (title, creation_date, member_id) VALUES ($1, $2, $3) RETURNING *";
+      "INSERT INTO room (title, description, image_url, creation_date, member_id) VALUES ($1, $2, $3, $4, $5) RETURNING *";
     const newRoom = await pool.query(insertNewRoom, [
       roomName,
+      description,
+      imageURL,
       new Date(),
       userID,
     ]);
@@ -366,12 +374,10 @@ const batchEnrolStudents = async (req, res) => {
 
     // Validate the CSV file to ensure the format is correct
     if (!(await validateCsv(csvFile))) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "The CSV file failed validation. Please visit the 'Help' page for the correct CSV file structure.",
-        });
+      return res.status(400).json({
+        error:
+          "The CSV file failed validation. Please visit the 'Help' page for the correct CSV file structure.",
+      });
     }
 
     // Parse the student numbers from the csv file
@@ -491,7 +497,10 @@ const enrolTeachers = async (req, res) => {
       // Verify that the Teacher exists
       const findUserQuery =
         "SELECT member_id FROM member WHERE email = $1 AND is_admin = $2";
-      const findUserResult = await pool.query(findUserQuery, [teacherEmail, true]);
+      const findUserResult = await pool.query(findUserQuery, [
+        teacherEmail,
+        true,
+      ]);
 
       // If the Teacher is not found, add their email to the failedEnrolments array and skip to the next iteration
       if (!findUserResult.rowCount) {
@@ -560,25 +569,27 @@ const hideMessage = async (req, res) => {
     if (!findMessageResult.rowCount) {
       return res.sendStatus(404);
     }
-    
+
     const authorID = findMessageResult.rows[0].member_id;
 
     // Verify that the client has permission to un-hide messages (must be a Teacher or the message author)
     if (userID !== authorID && !req.session.user.isTeacher) {
-      return res.status(403).json({error: "You do not have permission to un-hide this message"})
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to un-hide this message" });
     }
 
     // Set the specified message as hidden
-    const hideMessageQuery = "UPDATE message SET hidden = true WHERE message_id = $1";
+    const hideMessageQuery =
+      "UPDATE message SET hidden = true WHERE message_id = $1";
     await pool.query(hideMessageQuery, [messageID]);
 
     return res.sendStatus(204);
-
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
   }
-}
+};
 
 const showMessage = async (req, res) => {
   try {
@@ -602,22 +613,98 @@ const showMessage = async (req, res) => {
 
     // Verify that the client has permission to un-hide messages (must be a Teacher or the message author)
     if (userID !== authorID && !req.session.user.isTeacher) {
-      return res.status(403).json({error: "You do not have permission to un-hide this message"})
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to un-hide this message" });
     }
 
     // Set the specified message as not hidden
-    const hideMessageQuery = "UPDATE message SET hidden = false WHERE message_id = $1";
+    const hideMessageQuery =
+      "UPDATE message SET hidden = false WHERE message_id = $1";
     await pool.query(hideMessageQuery, [messageID]);
 
     return res.sendStatus(204);
-
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
   }
-}
+};
 
+const hideRoom = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
 
+    // Verify that the roomID parameter only contains digits
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    const roomOwnerID = findRoomResult.rows[0].member_id;
+
+    // Verify that the client has permission to hide the room (must be the room owner)
+    if (userID !== roomOwnerID) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to hide this room" });
+    }
+
+    // Set the specified room as hidden
+    const hideRoomQuery =
+      "UPDATE room SET hidden = true WHERE room_id = $1";
+    await pool.query(hideRoomQuery, [roomID]);
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+const showRoom = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
+
+    // Verify that the roomID parameter only contains digits
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    const roomOwnerID = findRoomResult.rows[0].member_id;
+
+    // Verify that the client has permission to un-hide the room (must be the room owner)
+    if (userID !== roomOwnerID) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to un-hide this room" });
+    }
+
+    // Set the specified room as not hidden
+    const unHideRoomQuery =
+      "UPDATE room SET hidden = false WHERE room_id = $1";
+    await pool.query(unHideRoomQuery, [roomID]);
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
 
 export {
   getChatByID,
@@ -630,5 +717,7 @@ export {
   batchEnrolStudents,
   enrolTeachers,
   showMessage,
-  hideMessage
+  hideMessage,
+  showRoom,
+  hideRoom
 };

@@ -136,7 +136,7 @@ function ChatBox({ room }) {
     } catch (error) {
       setError(error?.response?.data?.error || "Error: Unable to send message");
       setShowError(true);
-      console.error(error.response.data.error);
+      console.error(error);
     }
   };
 
@@ -434,7 +434,7 @@ function ChatBox({ room }) {
           Show this message?
         </DialogTitle>
         <DialogContentText paddingLeft="0.5rem">
-          {`Are you sure you want to un-hide this message:\n\n'${messageToUnhide?.content}'?\n\nThe message content will be visible to all users. You may hide the message again later.`}
+          {`Are you sure you want to un-hide this message?\n\n'${messageToUnhide?.content}'\n\nThe message content will be visible to all users. You may hide the message again later.`}
         </DialogContentText>
         <DialogActions>
           <Button onClick={() => setShowUnhideConfirmationDialog(false)}>

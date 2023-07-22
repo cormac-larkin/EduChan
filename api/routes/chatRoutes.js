@@ -1,7 +1,7 @@
 import { Router } from "express";
 import verifyAuthStatus from "../middleware/verifyAuthStatus.js";
 import verifyTeacherRole from "../middleware/verifyTeacherRole.js";
-import { getChatByID, getMessages, postMessage, deleteMessage, createRoom, deleteRoom, enrolStudentsManually, batchEnrolStudents, enrolTeachers, showMessage, hideMessage } from "../controllers/chatControllers.js";
+import { getChatByID, getMessages, postMessage, deleteMessage, createRoom, deleteRoom, enrolStudentsManually, batchEnrolStudents, enrolTeachers, showMessage, hideMessage, showRoom, hideRoom } from "../controllers/chatControllers.js";
 
 const router = Router();
 
@@ -14,6 +14,8 @@ router.post("/:roomID/students/batch", batchEnrolStudents);
 router.post("/:roomID/teachers", enrolTeachers);
 router.get("/:roomID", getChatByID);
 router.get("/:roomID/messages", getMessages);
+router.put("/:roomID/hide", verifyTeacherRole, hideRoom);
+router.put("/:roomID/show", verifyTeacherRole, showRoom);
 router.put("/:roomID/messages/:messageID/hide", hideMessage);
 router.put("/:roomID/messages/:messageID/show", showMessage);
 router.post("/:roomID/messages", postMessage);

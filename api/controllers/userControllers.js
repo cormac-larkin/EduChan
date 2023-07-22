@@ -152,8 +152,8 @@ const getOwnedChats = async (req, res) => {
       return res.sendStatus(401);
     }
 
-    // Find and return any chats owned by the user
-    const findOwnedChats = "SELECT * FROM room WHERE member_id = $1";
+    // Find and return any chats owned by the user (put all archived/hidden chats at the end of the result set)
+    const findOwnedChats = "SELECT * FROM room WHERE member_id = $1 ORDER BY hidden ASC";
     const result = await pool.query(findOwnedChats, [userID]);
 
     return res.status(200).json(result.rows);
@@ -183,7 +183,7 @@ const getJoinedChats = async (req, res) => {
         .json({ error: `User with ID '${userID}' not found` });
     }
 
-    const getJoinedChatsQuery = `SELECT DISTINCT room.room_id, room.title, room.creation_date, room.member_id FROM room INNER JOIN room_member ON room.room_id = room_member.room_id WHERE room_member.member_id = $1`;
+    const getJoinedChatsQuery = `SELECT DISTINCT room.room_id, room.title, room.description, room.image_url, room.creation_date, room.hidden, room.member_id FROM room INNER JOIN room_member ON room.room_id = room_member.room_id WHERE room_member.member_id = $1`;
     const getJoinedChatsResult = await pool.query(getJoinedChatsQuery, [
       userID,
     ]);

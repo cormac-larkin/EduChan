@@ -10,12 +10,17 @@ import {
   Alert,
 } from "@mui/material";
 import AbcIcon from "@mui/icons-material/Abc";
+import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
 import { useNavigate } from "react-router-dom";
 
 function ChatCreationForm() {
   const navigate = useNavigate();
 
   const [roomName, setRoomName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageURL, setImageURL] = useState("");
+
   const [error, setError] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
 
@@ -23,6 +28,18 @@ function ChatCreationForm() {
     const value = e.target.value;
 
     setRoomName(value);
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+
+    setDescription(value);
+  };
+
+  const handleImageURLChange = (e) => {
+    const value = e.target.value;
+
+    setImageURL(value);
   };
 
   /**
@@ -34,17 +51,31 @@ function ChatCreationForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Validate inputs
+    if (
+      roomName.startsWith(" ") ||
+      description.startsWith(" ") ||
+      imageURL.startsWith(" ")
+    ) {
+      alert("Form values may not begin with a whitespace");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:5000/chats/",
-        { roomName },
+        {
+          roomName: roomName,
+          description: description || null,
+          imageURL: imageURL || null
+        },
         {
           withCredentials: true,
         }
       );
-      const newRoomId = response?.data?.room?.room_id;
+      const newRoomID = response?.data?.room?.room_id;
       console.log(response);
-      navigate(`/chats/${newRoomId}`, {
+      navigate(`/chats/${newRoomID}`, {
         state: {
           message: `Room created successfully!`, // Pass success message to the ChatRoomPage so we can display notification upon redirect
         },
@@ -84,6 +115,44 @@ function ChatCreationForm() {
             startAdornment: (
               <InputAdornment position="start">
                 <AbcIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          margin="normal"
+          fullWidth
+          id="description"
+          label="Description (Optional)"
+          name="description"
+          type="text"
+          autoFocus
+          value={description}
+          onChange={(e) => handleDescriptionChange(e)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <DescriptionIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          margin="normal"
+          fullWidth
+          id="imageURL"
+          label="Image URL (Optional)"
+          name="imageURL"
+          type="text"
+          autoFocus
+          value={imageURL}
+          onChange={(e) => handleImageURLChange(e)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <ImageIcon />
               </InputAdornment>
             ),
           }}

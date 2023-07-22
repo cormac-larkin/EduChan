@@ -26,16 +26,37 @@ import paperStyles from "../../styles/paperStyles";
 function BrowseChatsPage() {
   const { user } = useContext(AuthContext);
 
+  // States for holding chats fetched from the API
   const [ownedChats, setOwnedChats] = useState([]);
   const [joinedChats, setJoinedChats] = useState([]);
-  const [error, setError] = useState(null);
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+
+  // States for handling chat room deletion
   const [chatToDelete, setChatToDelete] = useState({});
-  const [confirmationInput, setConfirmationInput] = useState("");
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [showDeleteConfirmationDialog, setShowDeleteConfirmationDialog] =
+    useState(false);
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState("");
+  const [showDeletionSuccessMessage, setShowDeletionSuccessMessage] =
+    useState(false);
+
+  // States for handling hiding of chat rooms
+  const [roomToHide, setRoomToHide] = useState({});
+  const [showRoomHideDialog, setShowRoomHideDialog] = useState(false);
+  const [showRoomHideSuccessMessage, setShowRoomHideSuccessMessage] =
+    useState(false);
+
+  // States for handling un-hiding of chat rooms
+  const [roomToUnhide, setRoomToUnhide] = useState({});
+  const [showRoomUnhideDialog, setShowRoomUnhideDialog] = useState(false);
+  const [showRoomUnhideSuccessMessage, setShowRoomUnhideSuccessMessage] =
+    useState(false);
+
+  // States for controlling opening/closing of 'Accordion' UI elements
   const [expandFirstAccordion, setExpandFirstAccordion] = useState(true);
   const [expandSecondAccordion, setExpandSecondAccordion] = useState(true);
+
+  // States for handling API errors
+  const [error, setError] = useState(null);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   /**
    * Handles the users choice to delete a Chat Room. Stores the chat object in the 'chatToDelete' state, then opens a confirmation dialog.
@@ -45,7 +66,7 @@ function BrowseChatsPage() {
    */
   const handleDeleteSelection = (chat) => {
     setChatToDelete(chat);
-    setShowConfirmationDialog(true);
+    setShowDeleteConfirmationDialog(true);
   };
 
   /**
@@ -53,13 +74,13 @@ function BrowseChatsPage() {
    */
   const handleDeleteConfirmation = () => {
     // Ensure the user has correctly typed the Chat Room name in the confirmation dialog
-    if (confirmationInput !== chatToDelete.title) {
+    if (deleteConfirmationInput !== chatToDelete.title) {
       return;
     }
     handleChatDeletion(chatToDelete.room_id);
-    setShowConfirmationDialog(false);
-    setShowSuccessMessage(true);
-    setConfirmationInput("");
+    setShowDeleteConfirmationDialog(false);
+    setShowDeletionSuccessMessage(true);
+    setDeleteConfirmationInput("");
   };
 
   /**
@@ -124,7 +145,57 @@ function BrowseChatsPage() {
         error?.response?.data?.error || "Error: Unable to delete the chat room"
       );
       setShowErrorMessage(true);
-      console.error(error.response.data.error);
+      console.error(error);
+    }
+  };
+
+  const handleHideSelection = (roomToHide) => {
+    setRoomToHide(roomToHide);
+    setShowRoomHideDialog(true);
+  };
+
+  const hideChat = async (chat) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${chat.room_id}/hide`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      setShowRoomHideSuccessMessage(true);
+      fetchOwnedChats();
+    } catch (error) {
+      setError(
+        error?.response?.data?.error || "Error: Unable to hide the chat room"
+      );
+      setShowErrorMessage(true);
+      console.log(error);
+    }
+  };
+
+  const handleUnhideSelection = (roomToUnhide) => {
+    setRoomToUnhide(roomToUnhide);
+    setShowRoomUnhideDialog(true);
+  };
+
+  const unHideChat = async (chat) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${chat.room_id}/show`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      setShowRoomUnhideSuccessMessage(true);
+      fetchOwnedChats();
+    } catch (error) {
+      setError(
+        error?.response?.data?.error || "Error: Unable to un-hide the chat room"
+      );
+      setShowErrorMessage(true);
+      console.log(error);
     }
   };
 
@@ -136,6 +207,7 @@ function BrowseChatsPage() {
     }
 
     fetchJoinedChats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -161,7 +233,7 @@ function BrowseChatsPage() {
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1bh-content"
             id="panel1bh-header"
-            sx={{borderBottom: "1px solid grey"}}
+            sx={{ borderBottom: "1px solid grey" }}
           >
             <Typography
               sx={{ width: "75%", flexShrink: 0 }}
@@ -190,6 +262,8 @@ function BrowseChatsPage() {
                 <ChatCard
                   chat={chat}
                   onDeleteSelection={handleDeleteSelection}
+                  onHideSelection={handleHideSelection}
+                  onUnhideSelection={handleUnhideSelection}
                 />
               </Grid>
             ))}
@@ -208,14 +282,15 @@ function BrowseChatsPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1bh-content"
           id="panel1bh-header"
-          sx={{borderBottom: "1px solid grey"}}
+          sx={{ borderBottom: "1px solid grey" }}
         >
           <Typography
             sx={{ width: "75%", flexShrink: 0 }}
             component="h1"
             variant="h5"
           >
-            {`Joined Chat Rooms (${joinedChats.length})`}
+            {/* Display the number of joined chats, minus any hidden/archived chats */}
+            {`Joined Chat Rooms (${joinedChats.length && (joinedChats.length - joinedChats.reduce((count, chat) => count + (chat.hidden ? 1 : 0), 0))})`}
           </Typography>
         </AccordionSummary>
         <Grid
@@ -224,28 +299,33 @@ function BrowseChatsPage() {
           columns={{ xs: 4, sm: 8, md: 12 }}
           pt="1rem"
         >
-          {joinedChats.map((chat, index) => (
-            <Grid
-              item
-              xs={2}
-              sm={4}
-              md={4}
-              key={index}
-              display={"flex"}
-              justifyContent={"center"}
-            >
-              <ChatCard chat={chat} onDeleteSelection={handleDeleteSelection} />
-            </Grid>
-          ))}
+          {joinedChats.map((chat, index) =>
+            !chat.hidden ? (
+              <Grid
+                item
+                xs={2}
+                sm={4}
+                md={4}
+                key={index}
+                display={"flex"}
+                justifyContent={"center"}
+              >
+                <ChatCard
+                  chat={chat}
+                  onDeleteSelection={handleDeleteSelection}
+                />
+              </Grid>
+            ) : null
+          )}
         </Grid>
       </Accordion>
 
       {/* Confirmation dialog for chat deletion */}
       <Dialog
-        open={showConfirmationDialog}
+        open={showDeleteConfirmationDialog}
         onClose={() => {
-          setShowConfirmationDialog(false);
-          setConfirmationInput("");
+          setShowDeleteConfirmationDialog(false);
+          setDeleteConfirmationInput("");
         }}
         sx={{ paddingLeft: "0.5rem" }}
       >
@@ -263,14 +343,14 @@ function BrowseChatsPage() {
           label={`Type '${chatToDelete.title}' and click 'Delete' to permanently delete this Chat Room`}
           type="text"
           error={true}
-          value={confirmationInput}
-          onChange={(e) => setConfirmationInput(e.target.value)}
+          value={deleteConfirmationInput}
+          onChange={(e) => setDeleteConfirmationInput(e.target.value)}
           fullWidth
           variant="standard"
           sx={{ margin: "0.5rem", maxWidth: "calc(100% - 1rem)" }}
         />
         <DialogActions>
-          <Button onClick={() => setShowConfirmationDialog(false)}>
+          <Button onClick={() => setShowDeleteConfirmationDialog(false)}>
             Cancel
           </Button>
           <Button onClick={handleDeleteConfirmation} color="error">
@@ -279,20 +359,106 @@ function BrowseChatsPage() {
         </DialogActions>
       </Dialog>
 
+      {/* Confirmation dialog for archiving room */}
+      <Dialog
+        open={showRoomHideDialog}
+        onClose={() => setShowRoomHideDialog(false)}
+        sx={{ paddingLeft: "0.5rem" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+        {`Archive '${roomToHide.title}'?`}
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to archive the '${roomToHide.title}' chat room? The room will be hidden from all other users. You may re-activate the room later.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowRoomHideDialog(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              hideChat(roomToHide);
+              setShowRoomHideDialog(false);
+            }}
+            color="error"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation dialog for message un-hiding */}
+      <Dialog
+        open={showRoomUnhideDialog}
+        onClose={() => setShowRoomUnhideDialog(false)}
+        sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          {`Reactivate '${roomToUnhide.title}'?`}
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to reactivate the '${roomToUnhide.title}' chat room? The room will be visible to all enrolled users. You may archive the room again later.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowRoomUnhideDialog(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              unHideChat(roomToUnhide);
+              setShowRoomUnhideDialog(false);
+            }}
+            color="error"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Success notification upon chat deletion */}
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showSuccessMessage}
+        open={showDeletionSuccessMessage}
         autoHideDuration={6000}
-        onClose={() => setShowSuccessMessage(false)}
+        onClose={() => setShowDeletionSuccessMessage(false)}
         message={"Chat Deleted Successfully!"}
       >
         <Alert
           severity="success"
           sx={{ width: "100%" }}
-          onClose={() => setShowSuccessMessage(false)}
+          onClose={() => setShowDeletionSuccessMessage(false)}
         >
           {"Chat Deleted Successfully!"}
+        </Alert>
+      </Snackbar>
+
+       {/* Success notification upon chat hide/archive */}
+       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showRoomHideSuccessMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowRoomHideSuccessMessage(false)}
+        message={"Chat Archived Successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setShowRoomHideSuccessMessage(false)}
+        >
+          {"Chat Archived Successfully!"}
+        </Alert>
+      </Snackbar>
+
+       {/* Success notification upon chat re-activation/unhide */}
+       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showRoomUnhideSuccessMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowRoomUnhideSuccessMessage(false)}
+        message={"Chat Reactivated Successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setShowRoomUnhideSuccessMessage(false)}
+        >
+          {"Chat Reactivated Successfully!"}
         </Alert>
       </Snackbar>
 
