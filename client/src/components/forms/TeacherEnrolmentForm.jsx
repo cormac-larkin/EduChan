@@ -12,21 +12,29 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
-import TagIcon from "@mui/icons-material/Tag";
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import validateEmailAddress from "../../utils/validateEmailAddress";
 
-function ManualStudentEnrollmentForm({ room }) {
+function TeacherEnrolmentForm({ room }) {
   const smallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
-  const [studentNumberInput, setStudentNumberInput] = useState("");
-  const [studentNumbers, setStudentNumbers] = useState([]);
+  const [teacherEmailInput, setTeacherEmailInput] = useState("");
+  const [teacherEmails, setTeacherEmails] = useState([]);
   const [enrolmentReport, setEnrolmentReport] = useState("");
   const [showEnrolmentReport, setShowEnrolmentReport] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+
+    setTeacherEmailInput(value);
+    setEmailError(!validateEmailAddress(value) && value !== "");
+  };
 
   /**
    * Sends a POST request to the API to add new members to the chat room.
@@ -36,19 +44,19 @@ function ManualStudentEnrollmentForm({ room }) {
     event.preventDefault();
 
     // Ensure empty request is not sent
-    if (studentNumbers.length === 0) {
+    if (teacherEmails.length === 0) {
       return;
     }
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/chats/${room.room_id}/students`,
-        studentNumbers,
+        `http://localhost:5000/chats/${room.room_id}/teachers`,
+        teacherEmails,
         {
           withCredentials: true,
         }
       );
-      setStudentNumbers([]);
+      setTeacherEmails([]);
       if (response.status === 207) {
         // Construct the report to be shown in the information dialog box
         const failedEnrolments = response?.data?.failedEnrolments.join("  ");
@@ -58,9 +66,9 @@ function ManualStudentEnrollmentForm({ room }) {
           response?.data?.duplicateEnrolments.join("  ");
 
         const enrolmentReportText = `${response?.data?.message} See below for details.\n\n
-The following Students were successfully enrolled:\n${successfulEnrolments}\n\n
-The following Students were already enrolled in this chat:\n${duplicateEnrolments}\n\n
-The following Students could not be found on the system:\n${failedEnrolments}`;
+The following Teachers were successfully added:\n${successfulEnrolments}\n\n
+The following Teachers had already been added to this chat:\n${duplicateEnrolments}\n\n
+The following Teachers could not be found on the system:\n${failedEnrolments}`;
 
         setEnrolmentReport(enrolmentReportText);
       }
@@ -84,22 +92,22 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
    * @returns {void}
    */
   const addToEnrolment = () => {
-    if (studentNumberInput === "") {
+    if (teacherEmailInput === "") {
       return;
     }
 
-    if (studentNumbers.includes(studentNumberInput)) {
-      alert("That Student has already been added to this enrolment!");
+    if (teacherEmails.includes(teacherEmailInput)) {
+      alert("That Teacher has already been added to this enrolment!");
       return;
     }
 
-    setStudentNumbers((prevNumbers) => [...prevNumbers, studentNumberInput]);
-    setStudentNumberInput("");
+    setTeacherEmails((prevNumbers) => [...prevNumbers, teacherEmailInput]);
+    setTeacherEmailInput("");
   };
 
-  const handleDelete = (numberToDelete) => {
-    setStudentNumbers((prevNumbers) =>
-      prevNumbers.filter((number) => number != numberToDelete)
+  const handleDelete = (emailToDelete) => {
+    setTeacherEmails((prevEmails) =>
+      prevEmails.filter((email) => email != emailToDelete)
     );
   };
 
@@ -118,14 +126,14 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
         }}
       >
         <Stack direction="row" justifyContent="center">
-          <SchoolIcon sx={{ marginTop: "0.2rem", marginRight: "0.2rem" }} />
+          <AddIcon sx={{ marginTop: "0.2rem", marginRight: "0.2rem" }} />
           <Typography
             component="h1"
             variant="h5"
             align="center"
             paddingBottom="1rem"
           >
-            Enrol Students Manually
+            Add Teachers to Chat
           </Typography>
         </Stack>
 
@@ -134,23 +142,24 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
             margin="normal"
             required
             fullWidth
-            id="roomName"
-            label="Student Number"
-            name="roomName"
-            type="number"
+            id="teacherEmail"
+            label="Teacher Email"
+            name="teacherEmail"
+            type="email"
             autoFocus
-            value={studentNumberInput}
-            onChange={(e) => setStudentNumberInput(e.target.value)}
+            error={emailError}
+            value={teacherEmailInput}
+            onChange={handleEmailChange}
             InputProps={{
               sx: { borderTopRightRadius: "0", borderBottomRightRadius: "0" },
               startAdornment: (
                 <InputAdornment position="start">
-                  <TagIcon />
+                  <AlternateEmailIcon />
                 </InputAdornment>
               ),
             }}
           />
-          <Tooltip title="Add to enrolment">
+          <Tooltip title="Save and continue">
             <Button
               variant="contained"
               sx={{
@@ -160,6 +169,7 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
                 borderBottomLeftRadius: "0",
               }}
               onClick={addToEnrolment}
+              disabled={emailError}
             >
               <AddIcon />
             </Button>
@@ -173,12 +183,12 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
           sx={{ mt: 3, mb: 2 }}
           onClick={handleSubmit}
         >
-          Submit Enrolment
+          Submit
         </Button>
       </Box>
 
-      {/* List of Student Numbers saved to this enrolment */}
-      {studentNumbers.length > 0 && (
+      {/* List of Teacher emails saved to this enrolment */}
+      {teacherEmails.length > 0 && (
         <Box
           sx={{
             margin: "0",
@@ -204,10 +214,10 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
               </Typography>
             </Stack>
 
-            {studentNumbers.map((studentNumber) => {
+            {teacherEmails.map((teacherEmail) => {
               return (
                 <Stack
-                  key={studentNumber}
+                  key={teacherEmail}
                   direction="row"
                   justifyContent="center"
                 >
@@ -227,7 +237,7 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
                       justifyContent="center"
                       flexGrow={1}
                     >
-                      {studentNumber}
+                      {teacherEmail}
                     </Typography>
                     <Tooltip title="Remove from enrolment">
                       <Button
@@ -237,7 +247,7 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
                           borderBottomLeftRadius: "0",
                           borderTopLeftRadius: "0",
                         }}
-                        onClick={() => handleDelete(studentNumber)}
+                        onClick={() => handleDelete(teacherEmail)}
                       >
                         <ClearIcon />
                       </Button>
@@ -297,4 +307,4 @@ The following Students could not be found on the system:\n${failedEnrolments}`;
   );
 }
 
-export default ManualStudentEnrollmentForm;
+export default TeacherEnrolmentForm;

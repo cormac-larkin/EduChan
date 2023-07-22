@@ -9,7 +9,7 @@
  */
 const verifyAuthStatus = (req, res, next) => {
     if (!req.session.user) {
-        return res.sendStatus(401);
+        return res.status(401).json({error: "Please log in to perform this action"});
     }
     next();
 }

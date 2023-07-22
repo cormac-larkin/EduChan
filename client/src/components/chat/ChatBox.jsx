@@ -21,7 +21,9 @@ import { useTheme } from "@emotion/react";
 import MessageInputBox from "./MessageInputBox";
 import formatTimestamp from "../../utils/formatTimestamp";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import ReplyIcon from '@mui/icons-material/Reply';
+import ReplyIcon from "@mui/icons-material/Reply";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
@@ -29,17 +31,36 @@ function ChatBox({ room }) {
   const cursorPositionRef = useRef(0);
   const theme = useTheme();
 
+  // States for handling message sending
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [error, setError] = useState(null);
+
+  // States for handling message deletion
   const [messageToDelete, setMessageToDelete] = useState(null);
   const [showDeletionMessage, setShowDeletionMessage] = useState(false);
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [showDeleteConfirmationDialog, setShowDeleteConfirmationDialog] =
+    useState(false);
+
+  // States for handling message hiding
+  const [messageToHide, setMessageToHide] = useState(null);
+  const [displayHideMessage, setDisplayHideMessage] = useState(false);
+  const [showHideConfirmationDialog, setShowHideConfirmationDialog] =
+    useState(false);
+
+  // States for handling message un-hiding
+  const [messageToUnhide, setMessageToUnhide] = useState(null);
+  const [displayUnhideMessage, setDisplayUnhideMessage] = useState(false);
+  const [showUnhideConfirmationDialog, setShowUnhideConfirmationDialog] =
+    useState(false);
+
+  // States for handling API errors
+  const [error, setError] = useState("");
+  const [showError, setShowError] = useState(false);
 
   /**
    * Handles changes to the message input box
-   * 
+   *
    * @param {} e - The HTML form change event
    */
   const handleInputChange = (e) => {
@@ -50,22 +71,12 @@ function ChatBox({ room }) {
 
   /**
    * Handles User replies to a message
-   * 
+   *
    * @param {Object} message - The message object containing the message being replied to.
    */
   const handleReply = (message) => {
     setNewMessage(`*** Replying to #${message.message_id} ***\n\n`);
     cursorPositionRef.current = 50;
-  }
-
-  /**
-   * Records the ID of the message that the user wishes to delete, and opens a confirmation dialog. 
-   * 
-   * @param {String} messageID 
-   */
-  const handleDeleteSelection = (messageID) => {
-    setMessageToDelete(messageID);
-    setShowConfirmationDialog(true);
   };
 
   /**
@@ -88,8 +99,9 @@ function ChatBox({ room }) {
       );
       setMessages(response.data);
     } catch (error) {
-      setError(error.response.data.error);
-      console.error(error.response.data.error);
+      setError(error?.response?.data?.error || "Error: Unable to retrieve messages");
+      setShowError(true);
+      console.error(error);
     }
   };
 
@@ -122,9 +134,20 @@ function ChatBox({ room }) {
       fetchMessages();
       setNewMessage(""); // Clear the message input field
     } catch (error) {
-      setError(error.response.data.error);
+      setError(error?.response?.data?.error || "Error: Unable to send message");
+      setShowError(true);
       console.error(error.response.data.error);
     }
+  };
+
+  /**
+   * Records the ID of the message that the user wishes to delete, and opens a confirmation dialog.
+   *
+   * @param {String} messageID
+   */
+  const handleDeleteSelection = (messageID) => {
+    setMessageToDelete(messageID);
+    setShowDeleteConfirmationDialog(true);
   };
 
   /**
@@ -140,11 +163,64 @@ function ChatBox({ room }) {
       );
       await socket.emit("delete-message");
       fetchMessages();
-      setShowConfirmationDialog(false);
+      setShowDeleteConfirmationDialog(false);
       setShowDeletionMessage(true);
     } catch (error) {
-      setError(error.response.data.error);
+      setError(error?.response?.data?.error || "Error: Unable to delete message");
+      setShowError(true);
       console.error(error.response.data.error);
+    }
+  };
+
+  const handleHideSelection = (messageID) => {
+    setMessageToHide(messageID);
+    setShowHideConfirmationDialog(true);
+  };
+
+  const hideMessage = async (messageID) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/hide`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      await socket.emit("delete-message");
+      fetchMessages();
+      setShowHideConfirmationDialog(false);
+      setDisplayHideMessage(true);
+    } catch (error) {
+      setError(error?.response?.data?.error || "Error: Unable to hide message");
+      setShowError(true);
+      console.error(error);
+    }
+  };
+
+  const handleUnhideSelection = (message) => {
+    setMessageToUnhide(message);
+    setShowUnhideConfirmationDialog(true);
+  };
+
+  const unHideMessage = async (messageID) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/show`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      await socket.emit("delete-message");
+      fetchMessages();
+      setShowUnhideConfirmationDialog(false);
+      setDisplayUnhideMessage(true);
+    } catch (error) {
+      setError(
+        error?.response?.data?.error || "Error: Unable to un-hide message"
+      );
+      setShowError(true);
+      console.error(error);
     }
   };
 
@@ -173,6 +249,7 @@ function ChatBox({ room }) {
       });
       newSocket.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When the messageList state is updated, scroll to the bottom of the chat window
@@ -224,7 +301,11 @@ function ChatBox({ room }) {
                   borderBottom="1px solid black"
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
-                  {message.content}
+                  {message.hidden ? (
+                    <i>--- Message Hidden  ---</i>
+                  ) : (
+                    message?.content
+                  )}
                 </Typography>
                 <Stack direction="row" justifyContent="flex-end">
                   <Typography
@@ -239,8 +320,8 @@ function ChatBox({ room }) {
                     {`#${message.message_id} | `}
                     {formatTimestamp(message.timestamp)}
                   </Typography>
-                   {/* If the user is not the author of the message, render a 'Reply' icon on the chat bubble */}
-                  {(message.member_id !== user.id) && (
+                  {/* If the user is not the author of the message, render a 'Reply' icon on the chat bubble */}
+                  {message.member_id !== user.id && (
                     <Tooltip title="Reply">
                       <ReplyIcon
                         sx={{ marginLeft: "1rem", cursor: "pointer" }}
@@ -248,15 +329,32 @@ function ChatBox({ room }) {
                       />
                     </Tooltip>
                   )}
-                  {/* If the user is the author of the message, or the owner of the chat room, render a 'Delete' icon on the chat bubble */}
-                  {(message.member_id === user.id ||
-                    user.id === room.member_id) && (
+                  {/* If the user is a Teacher, render a 'Delete' icon on the chat bubble */}
+                  {user.isTeacher && (
                     <Tooltip title="Delete message">
                       <DeleteForeverIcon
                         sx={{ marginLeft: "1rem", cursor: "pointer" }}
                         onClick={() =>
                           handleDeleteSelection(message.message_id)
                         }
+                      />
+                    </Tooltip>
+                  )}
+                  {/* If the user is a Teacher or owns the message, and message is not hidden, render a 'Hide' icon on the chat bubble */}
+                  {((user.isTeacher || user.id === message.member_id) && !message.hidden) && (
+                    <Tooltip title="Hide message">
+                      <VisibilityOffIcon
+                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        onClick={() => handleHideSelection(message.message_id)}
+                      />
+                    </Tooltip>
+                  )}
+                  {/* If the user is a Teacher, and the message is hidden, render a 'Show' icon on the chat bubble */}
+                  {((user.isTeacher || user.id === message.member_id) && message.hidden) && (
+                    <Tooltip title="Show message">
+                      <VisibilityIcon
+                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        onClick={() => handleUnhideSelection(message)}
                       />
                     </Tooltip>
                   )}
@@ -284,8 +382,8 @@ function ChatBox({ room }) {
 
       {/* Confirmation dialog for message deletion */}
       <Dialog
-        open={showConfirmationDialog}
-        onClose={() => setShowConfirmationDialog(false)}
+        open={showDeleteConfirmationDialog}
+        onClose={() => setShowDeleteConfirmationDialog(false)}
         sx={{ paddingLeft: "0.5rem" }}
       >
         <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
@@ -295,11 +393,58 @@ function ChatBox({ room }) {
           {`Are you sure you want to delete this message? Once deleted, a message cannot be recovered!`}
         </DialogContentText>
         <DialogActions>
-          <Button onClick={() => setShowConfirmationDialog(false)}>
+          <Button onClick={() => setShowDeleteConfirmationDialog(false)}>
             Cancel
           </Button>
           <Button onClick={() => deleteMessage(messageToDelete)} color="error">
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation dialog for message hiding */}
+      <Dialog
+        open={showHideConfirmationDialog}
+        onClose={() => setShowHideConfirmationDialog(false)}
+        sx={{ paddingLeft: "0.5rem" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          Hide this message?
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to hide this message? The message content will be hidden from all users. You may un-hide the message later.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowHideConfirmationDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => hideMessage(messageToHide)} color="error">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation dialog for message un-hiding */}
+      <Dialog
+        open={showUnhideConfirmationDialog}
+        onClose={() => setShowUnhideConfirmationDialog(false)}
+        sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          Show this message?
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to un-hide this message:\n\n'${messageToUnhide?.content}'?\n\nThe message content will be visible to all users. You may hide the message again later.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowUnhideConfirmationDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => unHideMessage(messageToUnhide.message_id)}
+            color="error"
+          >
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>
@@ -318,6 +463,56 @@ function ChatBox({ room }) {
           onClose={() => setShowDeletionMessage(false)}
         >
           {"Message deleted successfully!"}
+        </Alert>
+      </Snackbar>
+
+      {/* Success Message Notification for successful message hiding */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={displayHideMessage}
+        autoHideDuration={6000}
+        onClose={() => setDisplayHideMessage(false)}
+        message={"Message hidden successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setDisplayHideMessage(false)}
+        >
+          {"Message hidden successfully!"}
+        </Alert>
+      </Snackbar>
+
+      {/* Success Message Notification for successful message unhiding */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={displayUnhideMessage}
+        autoHideDuration={6000}
+        onClose={() => setDisplayUnhideMessage(false)}
+        message={"Message un-hidden successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setDisplayUnhideMessage(false)}
+        >
+          {"Message unhidden successfully!"}
+        </Alert>
+      </Snackbar>
+
+      {/* Error message if API call fails */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showError}
+        autoHideDuration={6000}
+        onClose={() => setShowError(false)}
+      >
+        <Alert
+          severity="error"
+          sx={{ width: "100%" }}
+          onClose={() => setShowError(false)}
+        >
+          {error}
         </Alert>
       </Snackbar>
     </Stack>

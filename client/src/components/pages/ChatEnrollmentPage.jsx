@@ -15,6 +15,7 @@ import Error404Page from "./Error404Page";
 import axios from "axios";
 import paperStyles from "../../styles/paperStyles";
 import BatchEnrolmentForm from "../forms/BatchEnrolmentForm";
+import TeacherEnrolmentForm from "../forms/TeacherEnrolmentForm";
 
 function ChatEnrollmentPage() {
   const { roomID } = useParams(); // Get the room ID from the URL
@@ -40,6 +41,7 @@ function ChatEnrollmentPage() {
 
   useEffect(() => {
     fetchRoom();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (room === undefined) {
@@ -63,6 +65,7 @@ function ChatEnrollmentPage() {
       </Stack>
       <Divider />
 
+      {/* Manual Student Enrolment Section */}
       <Accordion
         elevation={6}
         disableGutters
@@ -85,6 +88,7 @@ function ChatEnrollmentPage() {
         <ManualStudentEnrollmentForm room={room} />
       </Accordion>
 
+      {/* CSV/Batch Student Enrolment Section */}
       <Accordion
         elevation={6}
         disableGutters
@@ -101,12 +105,35 @@ function ChatEnrollmentPage() {
             component="h1"
             variant="h5"
           >
-            Batch Enrolment via file upload
+            Batch Enrolment via File Upload
           </Typography>
         </AccordionSummary>
 
         <BatchEnrolmentForm room={room} />
+      </Accordion>
 
+      {/* Teacher Enrolment Section */}
+      <Accordion
+        elevation={6}
+        disableGutters
+        sx={{ ...paperStyles, borderRadius: "5px" }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1bh-content"
+          id="panel1bh-header"
+          sx={{ borderBottom: "1px solid grey" }}
+        >
+          <Typography
+            sx={{ width: "75%", flexShrink: 0 }}
+            component="h1"
+            variant="h5"
+          >
+            Add Teachers to Chat
+          </Typography>
+        </AccordionSummary>
+
+        <TeacherEnrolmentForm room={room} />
       </Accordion>
     </Stack>
   );

@@ -14,8 +14,10 @@ import axios from "axios";
 
 function BatchEnrolmentForm({ room }) {
   const [csvFile, setCsvFile] = useState(null);
-  const [showAlert, setShowAlert] = useState(false);
-  const [apiResponse, setApiResponse] = useState(null);
+  const [showEnrolmentReport, setShowEnrolmentReport] = useState(false);
+  const [enrolmentReport, setEnrolmentReport] = useState("");
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -47,22 +49,28 @@ function BatchEnrolmentForm({ room }) {
         }
       );
       if (response.status === 207) {
-        // Construct the string to be shown in the information dialog box
-        const failedEnrolmentsStr = response.data.failedEnrolments.join("  ");
-        const successfulEnrolmentsStr =
-          response.data.successfulEnrolments.join("  ");
-        const duplicateEnrolmentsStr =
-          response.data.duplicateEnrolments.join("  ");
+        // Construct the report to be shown in the information dialog box
+        const failedEnrolments = response?.data?.failedEnrolments.join("  ");
+        const successfulEnrolments =
+          response?.data?.successfulEnrolments.join("  ");
+        const duplicateEnrolments =
+          response?.data?.duplicateEnrolments.join("  ");
 
-        const result = `${response?.data?.message} See below for details. \n\nThe following students were successfully enrolled:\n${successfulEnrolmentsStr}\n\nThe following students were already enrolled in this chat:\n${duplicateEnrolmentsStr}\n\nThe following students could not be found on the system:\n${failedEnrolmentsStr}`;
-        setApiResponse(result);
+        const enrolmentReportText = `${response?.data?.message} See below for details.\n\n\
+The following Students were successfully enrolled:\n${successfulEnrolments}\n\n\
+The following Students were already enrolled in this chat:\n${duplicateEnrolments}\n\n\
+The following Students could not be found on the system:\n${failedEnrolments}`;
+
+        setEnrolmentReport(enrolmentReportText);
       }
       if (response.status === 200) {
-        setApiResponse(response?.data?.message);
+        setEnrolmentReport(response?.data?.message);
       }
-      setShowAlert(true);
+      setShowEnrolmentReport(true);
     } catch (error) {
       console.error(error);
+      setErrorMessage(error?.response?.data?.error || "Error: Enrolment failed");
+      setShowErrorMessage(true);
     }
   };
 
@@ -110,10 +118,10 @@ function BatchEnrolmentForm({ room }) {
       {/* Notification containing API response after enrollment is submitted */}
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showAlert}
+        open={showEnrolmentReport}
         onClose={() => {
-          setShowAlert(false);
-          setApiResponse("");
+          setShowEnrolmentReport(false);
+          setEnrolmentReport("");
         }}
         sx={{ whiteSpace: "pre-wrap" }}
       >
@@ -121,11 +129,33 @@ function BatchEnrolmentForm({ room }) {
           severity="info"
           sx={{ width: "100%" }}
           onClose={() => {
-            setShowAlert(false);
-            setApiResponse("");
+            setShowEnrolmentReport(false);
+            setEnrolmentReport("");
           }}
         >
-          {apiResponse}
+          {enrolmentReport}
+        </Alert>
+      </Snackbar>
+
+      {/* Notification containing error message if API returns an error status code */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showErrorMessage}
+        onClose={() => {
+          setShowErrorMessage(false);
+          setErrorMessage("");
+        }}
+        sx={{ whiteSpace: "pre-wrap" }}
+      >
+        <Alert
+          severity="error"
+          sx={{ width: "100%" }}
+          onClose={() => {
+            setShowErrorMessage(false);
+            setErrorMessage("");
+          }}
+        >
+          {errorMessage}
         </Alert>
       </Snackbar>
     </Stack>

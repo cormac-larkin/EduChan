@@ -1,5 +1,5 @@
 import ChatBox from "../chat/ChatBox";
-import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { ThreeCircles } from "react-loader-spinner";
 import { useTheme } from "@emotion/react";
@@ -20,7 +20,7 @@ import paperStyles from "../../styles/paperStyles";
 import { AuthContext } from "../authentication/AuthProvider";
 
 function ChatRoomPage() {
-  const navigate = useNavigate();
+
   const location = useLocation();
   const theme = useTheme();
   const { user } = useContext(AuthContext);
@@ -54,6 +54,7 @@ function ChatRoomPage() {
   // Fetch room data from the API on first render
   useEffect(() => {
     fetchRoom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

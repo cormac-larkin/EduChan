@@ -3,15 +3,16 @@ import csvParser from "csv-parser";
 
 
 /**
- * Reads a CSV file containing Student numbers and returns an array containing all of the Student numbers.
+ * Validates a CSV file containing Student numbers to ensure the file is in the correct format.
  * 
  * @param {File} csvFile 
- * @returns {Promise<String[]>} An array of Student numbers extracted from the CSV file.
+ * @returns {Promise<Boolean>} True if the CSV file is valid, otherwise returns false.
  */
-const parseEnrolmentCsv = async (csvFile) => {
+const validateCsv = async (csvFile) => {
   try {
-    const studentNumbers = [];
 
+    let isValid;
+    
     const stream = streamifier.createReadStream(csvFile.data);
 
     await new Promise((resolve, reject) => {
@@ -20,19 +21,19 @@ const parseEnrolmentCsv = async (csvFile) => {
         .on("data", (data) => {
           const studentNumber = data["student_number"];
           if (studentNumber) {
-            studentNumbers.push(studentNumber);
+            isValid = true;
           } else {
-            reject(new Error("Invalid CSV format"));
+            isValid = false;
           }
         })
         .on("end", () => resolve())
         .on("error", (error) => reject(error));
     });
 
-    return studentNumbers;
+    return isValid;
   } catch (error) {
     throw error;
   }
 };
 
-export default parseEnrolmentCsv;
+export default validateCsv;
