@@ -1,7 +1,23 @@
 import { Router } from "express";
 import verifyAuthStatus from "../middleware/verifyAuthStatus.js";
 import verifyTeacherRole from "../middleware/verifyTeacherRole.js";
-import { getChatByID, getMessages, postMessage, deleteMessage, createRoom, deleteRoom, enrolStudentsManually, batchEnrolStudents, enrolTeachers, showMessage, hideMessage, showRoom, hideRoom } from "../controllers/chatControllers.js";
+import {
+  getChatByID,
+  getMessages,
+  postMessage,
+  deleteMessage,
+  createRoom,
+  deleteRoom,
+  enrolStudentsManually,
+  batchEnrolStudents,
+  enrolTeachers,
+  showMessage,
+  hideMessage,
+  showRoom,
+  hideRoom,
+  likeMessage,
+  unlikeMessage,
+} from "../controllers/chatControllers.js";
 
 const router = Router();
 
@@ -9,16 +25,24 @@ router.use(verifyAuthStatus); // All '/chat' endpoints require authorization.
 
 router.post("/", createRoom);
 router.delete("/:roomID", deleteRoom);
+
 router.post("/:roomID/students", enrolStudentsManually);
 router.post("/:roomID/students/batch", batchEnrolStudents);
 router.post("/:roomID/teachers", enrolTeachers);
+
 router.get("/:roomID", getChatByID);
 router.get("/:roomID/messages", getMessages);
+router.post("/:roomID/messages", postMessage);
+
 router.put("/:roomID/hide", verifyTeacherRole, hideRoom);
 router.put("/:roomID/show", verifyTeacherRole, showRoom);
+
 router.put("/:roomID/messages/:messageID/hide", hideMessage);
 router.put("/:roomID/messages/:messageID/show", showMessage);
-router.post("/:roomID/messages", postMessage);
+
+router.post("/:roomID/messages/:messageID/like", likeMessage);
+router.delete("/:roomID/messages/:messageID/like", unlikeMessage);
+
 router.delete("/:roomID/messages/:messageID", verifyTeacherRole, deleteMessage);
 
 export default router;

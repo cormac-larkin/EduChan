@@ -8,13 +8,13 @@ import logoutIcon from "../assets/logout.svg";
 const teacherDashboardCards = [
   {
     title: "Browse Chats",
-    description: "View your chats",
+    description: "View and manage your chats",
     imageURI: chatBubbleIcon,
     href: "/chats/"
   },
   {
-    title: "Create New Chat",
-    description: "Create a new chat and enrol Students",
+    title: "Create Chat",
+    description: "Create a new chatroom",
     imageURI: newChatIcon,
     href: "/chats/create"
   },

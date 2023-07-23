@@ -14,8 +14,11 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Badge,
 } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import Fab from "@mui/material/Fab";
 import { useTheme } from "@emotion/react";
 import MessageInputBox from "./MessageInputBox";
@@ -53,6 +56,9 @@ function ChatBox({ room }) {
   const [displayUnhideMessage, setDisplayUnhideMessage] = useState(false);
   const [showUnhideConfirmationDialog, setShowUnhideConfirmationDialog] =
     useState(false);
+
+  // State to track if the chat should scroll to bottom on re-render (eg if new message was sent/delivered)
+  const [shouldScroll, setShouldScroll] = useState(false);
 
   // States for handling API errors
   const [error, setError] = useState("");
@@ -99,7 +105,9 @@ function ChatBox({ room }) {
       );
       setMessages(response.data);
     } catch (error) {
-      setError(error?.response?.data?.error || "Error: Unable to retrieve messages");
+      setError(
+        error?.response?.data?.error || "Error: Unable to retrieve messages"
+      );
       setShowError(true);
       console.error(error);
     }
@@ -131,6 +139,7 @@ function ChatBox({ room }) {
       // Emit 'send-message' event to WS server and fetch latest messages from the API
       // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
       await socket.emit("send-message", messageData);
+      setShouldScroll(true);
       fetchMessages();
       setNewMessage(""); // Clear the message input field
     } catch (error) {
@@ -166,7 +175,9 @@ function ChatBox({ room }) {
       setShowDeleteConfirmationDialog(false);
       setShowDeletionMessage(true);
     } catch (error) {
-      setError(error?.response?.data?.error || "Error: Unable to delete message");
+      setError(
+        error?.response?.data?.error || "Error: Unable to delete message"
+      );
       setShowError(true);
       console.error(error.response.data.error);
     }
@@ -224,6 +235,43 @@ function ChatBox({ room }) {
     }
   };
 
+  const likeMessage = async (messageID) => {
+    console.log(messageID);
+    try {
+      await axios.post(
+        `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/like`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      await socket.emit("delete-message");
+      fetchMessages();
+    } catch (error) {
+      setError(error?.response?.data?.error || "Error: Unable to like message");
+      setShowError(true);
+      console.error(error);
+    }
+  };
+
+  const unLikeMessage = async (messageID) => {
+    console.log(messageID);
+    try {
+      await axios.delete(
+        `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/like`,
+        {
+          withCredentials: true,
+        }
+      );
+      await socket.emit("delete-message");
+      fetchMessages();
+    } catch (error) {
+      setError(error?.response?.data?.error || "Error: Unable to un-like message");
+      setShowError(true);
+      console.error(error);
+    }
+  };
+
   // Fetch previous messages and initialise new socket instance when component mounts
   useEffect(() => {
     fetchMessages();
@@ -252,9 +300,13 @@ function ChatBox({ room }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // When the messageList state is updated, scroll to the bottom of the chat window
+  // When the messageList state is updated after a new message, scroll to the bottom of the chat window
   useEffect(() => {
-    scrollToBottom();
+    if(shouldScroll) {
+      scrollToBottom();
+    }
+    setShouldScroll(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   return (
@@ -277,7 +329,7 @@ function ChatBox({ room }) {
           >
             <Box
               id="chatBubble"
-              maxWidth="90%"
+              maxWidth="100%"
               borderRadius="30px"
               p="0.2rem 1rem"
               // Use different colours for owned/un-owned messages
@@ -302,12 +354,16 @@ function ChatBox({ room }) {
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
                   {message.hidden ? (
-                    <i>--- Message Hidden  ---</i>
+                    <i>--- Message Hidden ---</i>
                   ) : (
                     message?.content
                   )}
                 </Typography>
-                <Stack direction="row" justifyContent="flex-end">
+                <Stack
+                  direction="row"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                >
                   <Typography
                     align="right"
                     component="p"
@@ -333,7 +389,7 @@ function ChatBox({ room }) {
                   {user.isTeacher && (
                     <Tooltip title="Delete message">
                       <DeleteForeverIcon
-                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        sx={{ marginLeft: "0.5rem", cursor: "pointer" }}
                         onClick={() =>
                           handleDeleteSelection(message.message_id)
                         }
@@ -341,22 +397,64 @@ function ChatBox({ room }) {
                     </Tooltip>
                   )}
                   {/* If the user is a Teacher or owns the message, and message is not hidden, render a 'Hide' icon on the chat bubble */}
-                  {((user.isTeacher || user.id === message.member_id) && !message.hidden) && (
-                    <Tooltip title="Hide message">
-                      <VisibilityOffIcon
-                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        onClick={() => handleHideSelection(message.message_id)}
-                      />
-                    </Tooltip>
-                  )}
+                  {(user.isTeacher || user.id === message.member_id) &&
+                    !message.hidden && (
+                      <Tooltip title="Hide message">
+                        <VisibilityOffIcon
+                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                          onClick={() =>
+                            handleHideSelection(message.message_id)
+                          }
+                        />
+                      </Tooltip>
+                    )}
                   {/* If the user is a Teacher, and the message is hidden, render a 'Show' icon on the chat bubble */}
-                  {((user.isTeacher || user.id === message.member_id) && message.hidden) && (
-                    <Tooltip title="Show message">
-                      <VisibilityIcon
-                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        onClick={() => handleUnhideSelection(message)}
-                      />
-                    </Tooltip>
+                  {(user.isTeacher || user.id === message.member_id) &&
+                    message.hidden && (
+                      <Tooltip title="Show message">
+                        <VisibilityIcon
+                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                          onClick={() => handleUnhideSelection(message)}
+                        />
+                      </Tooltip>
+                    )}
+                  {/* Display Like button if User has not already liked this comment */}
+                  {!message.likedBy.includes(user.id) && (
+                    <Badge
+                      badgeContent={message.likedBy.length}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                      }}
+                      color="secondary"
+                    >
+                      <Tooltip title="Like message">
+                        <ThumbUpIcon
+                          color="action"
+                          onClick={() => likeMessage(message.message_id)}
+                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        />
+                      </Tooltip>
+                    </Badge>
+                  )}
+                  {/* Display un-like button if User has already liked this comment */}
+                  {message.likedBy.includes(user.id) && (
+                    <Badge
+                      badgeContent={message.likedBy.length}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                      }}
+                      color="secondary"
+                    >
+                      <Tooltip title="Un-like this message">
+                        <ThumbDownIcon
+                          color="action"
+                          onClick={() => unLikeMessage(message.message_id)}
+                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                        />
+                      </Tooltip>
+                    </Badge>
                   )}
                 </Stack>
               </Stack>

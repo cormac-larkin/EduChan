@@ -4,6 +4,7 @@ import "dotenv/config";
 import parseEnrolmentCsv from "../utils/parseEnrolmentCsv.js";
 import validateCsv from "../utils/validateCsv.js";
 import defaultCardImages from "../utils/defaultCardImages.js";
+import groupLikesByMessage from "../utils/groupLikesByMessage.js";
 
 const createRoom = async (req, res) => {
   try {
@@ -13,7 +14,14 @@ const createRoom = async (req, res) => {
     // Verify that the request body contains the roomName property
     if (!roomName) {
       return res.status(400).json({
-        error: "Request body is missing required properties",
+        error: "Request body is missing the required property 'roomName'",
+      });
+    }
+
+    // Ensure description is below the maximum allowed length
+    if (description && description.length > 100) {
+      return res.status(400).json({
+        error: "Room description must not be longer than 100 characters",
       });
     }
 
@@ -30,7 +38,10 @@ const createRoom = async (req, res) => {
 
     // If no imageURL was provided by the user, pick a random image for this room
     if (!imageURL) {
-      imageURL = defaultCardImages[Math.round(Math.random() * (defaultCardImages.length - 1))];
+      imageURL =
+        defaultCardImages[
+          Math.round(Math.random() * (defaultCardImages.length - 1))
+        ];
     }
 
     // Insert new room into the DB and retrieve the room_id
@@ -106,12 +117,18 @@ const getMessages = async (req, res) => {
       return res.sendStatus(404);
     }
 
-    // Retrieve all messages for the specified chat room, ordered by their insertion so they can be displayed chronologically on the frontend.
-    const getMessagesQuery =
-      "SELECT * FROM message WHERE room_id = $1 ORDER BY message_id ASC";
+    // Retrieve all messages for the specified chat room together with their likes. Order by message insertion so they can be displayed chronologically on the frontend.
+    const getMessagesQuery = `SELECT message.*, likes.member_id AS liker_id from message
+      LEFT JOIN likes
+      ON message.message_id = likes.message_id
+      WHERE message.room_id = $1
+      ORDER BY message_id ASC`;
     const result = await pool.query(getMessagesQuery, [roomID]);
 
-    return res.status(200).json(result.rows);
+    // Format the result set so that each message object contains an array of likes
+    const messagesWithLikes = groupLikesByMessage(result);
+
+    return res.status(200).json(messagesWithLikes);
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -657,8 +674,7 @@ const hideRoom = async (req, res) => {
     }
 
     // Set the specified room as hidden
-    const hideRoomQuery =
-      "UPDATE room SET hidden = true WHERE room_id = $1";
+    const hideRoomQuery = "UPDATE room SET hidden = true WHERE room_id = $1";
     await pool.query(hideRoomQuery, [roomID]);
 
     return res.sendStatus(204);
@@ -695,9 +711,118 @@ const showRoom = async (req, res) => {
     }
 
     // Set the specified room as not hidden
-    const unHideRoomQuery =
-      "UPDATE room SET hidden = false WHERE room_id = $1";
+    const unHideRoomQuery = "UPDATE room SET hidden = false WHERE room_id = $1";
     await pool.query(unHideRoomQuery, [roomID]);
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+const likeMessage = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const messageID = req.params.messageID;
+
+    // Verify that the messageID parameter only contains digits
+    if (!isNumber(messageID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified messageID exists
+    const findMessageQuery = "SELECT * FROM message WHERE message_id = $1";
+    const findMessageResult = await pool.query(findMessageQuery, [messageID]);
+    if (!findMessageResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify client has permission to like this message (must be owner or member of the chatroom where the message was posted)
+    const roomID = findMessageResult.rows[0].room_id;
+    const checkRoomMemberQuery =
+      "SELECT * FROM room_member WHERE room_id = $1 AND member_id = $2";
+    const checkRoomMemberResult = await pool.query(checkRoomMemberQuery, [
+      roomID,
+      userID,
+    ]);
+
+    if (!checkRoomMemberResult.rowCount) {
+      const checkRoomOwnerQuery =
+        "SELECT * FROM room WHERE room_id = $1 AND member_id = $2";
+      const checkRoomOwnerResult = await pool.query(checkRoomOwnerQuery, [
+        roomID,
+        userID,
+      ]);
+
+      // If the client is neither the room owner or a room member, return 403 Forbidden status
+      if (!checkRoomOwnerResult.rowCount) {
+        return res
+          .status(403)
+          .json({ error: "You do not have permission to like this message" });
+      }
+    }
+
+    // Verify that the client has not already liked this message
+    const duplicateLikesQuery =
+      "SELECT * FROM likes WHERE member_id = $1 AND message_id = $2";
+    const duplicateLikesResult = await pool.query(duplicateLikesQuery, [
+      userID,
+      messageID,
+    ]);
+    if (duplicateLikesResult.rowCount) {
+      return res
+        .status(409)
+        .json({ error: "You have already liked this message" });
+    }
+
+    // Insert the new like
+    const insertLikeQuery =
+      "INSERT INTO likes (message_id, member_id) VALUES ($1, $2)";
+    await pool.query(insertLikeQuery, [messageID, userID]);
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+const unlikeMessage = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const messageID = req.params.messageID;
+
+    // Verify that the messageID parameter only contains digits
+    if (!isNumber(messageID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified messageID exists
+    const findMessageQuery = "SELECT * FROM message WHERE message_id = $1";
+    const findMessageResult = await pool.query(findMessageQuery, [messageID]);
+    if (!findMessageResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify client has permission to un-like this message (must have already liked it)
+    const checkLikeQuery =
+      "SELECT * FROM likes WHERE message_id = $1 AND member_id = $2";
+    const checkLikeResult = await pool.query(checkLikeQuery, [
+      messageID,
+      userID,
+    ]);
+
+    if (!checkLikeResult.rowCount) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to un-like this message" });
+    }
+
+    // Delete the like
+    const deleteLikeQuery =
+      "DELETE FROM likes WHERE message_id = $1 AND member_id = $2";
+    await pool.query(deleteLikeQuery, [messageID, userID]);
 
     return res.sendStatus(204);
   } catch (error) {
@@ -719,5 +844,7 @@ export {
   showMessage,
   hideMessage,
   showRoom,
-  hideRoom
+  hideRoom,
+  likeMessage,
+  unlikeMessage
 };

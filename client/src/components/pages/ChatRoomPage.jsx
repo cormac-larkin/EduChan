@@ -1,7 +1,6 @@
 import ChatBox from "../chat/ChatBox";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
-import { ThreeCircles } from "react-loader-spinner";
 import { useTheme } from "@emotion/react";
 import {
   Stack,
@@ -11,6 +10,7 @@ import {
   Snackbar,
   Alert,
   Fab,
+  useMediaQuery,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import AddIcon from "@mui/icons-material/Add";
@@ -18,9 +18,10 @@ import axios from "axios";
 import Error404Page from "./Error404Page";
 import paperStyles from "../../styles/paperStyles";
 import { AuthContext } from "../authentication/AuthProvider";
+import LoadingSpinnerPage from "./LoadingSpinnerPage";
 
 function ChatRoomPage() {
-
+  const smallScreen = useMediaQuery("(max-width:600px)")
   const location = useLocation();
   const theme = useTheme();
   const { user } = useContext(AuthContext);
@@ -54,7 +55,7 @@ function ChatRoomPage() {
   // Fetch room data from the API on first render
   useEffect(() => {
     fetchRoom();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -63,13 +64,13 @@ function ChatRoomPage() {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
       setShowSuccessMessage(true);
-      window.history.replaceState(null, ""); // Clear the history state after the message is retrieved
+      window.history.replaceState(null, ""); // Clear the history state after the message is retrieved so it does not re-appear on page refresh
     }
   }, [location]);
 
   // Display Loading animation while API call is in progress
   if (loading) {
-    return <ThreeCircles />;
+    return <LoadingSpinnerPage />;
   }
 
   // If no room with the specified ID is found, render the 404 Error Page
@@ -85,16 +86,26 @@ function ChatRoomPage() {
         </Stack>
 
         <Stack direction="row" justifyContent="space-between" flexGrow={1}>
-          <Typography
-            component="h1"
-            variant="h5"
-            align="left"
-            pl="0.5rem"
-            display="flex"
-            alignItems="center"
-          >
-            <b>{room.title}</b>
-          </Typography>
+          <Stack pl="0.5rem" justifyContent="center">
+            <Typography
+              component="h1"
+              variant="h5"
+              align="left"
+              display="flex"
+              alignItems="center"
+            >
+              <b>{room.title}</b>
+            </Typography>
+
+            {/* Display room description on larger screens if one exists */}
+            {(!smallScreen && room.description) && (
+              <Typography variant="body2" color="text.secondary">
+                {room.description}
+              </Typography>
+            )}
+          </Stack>
+
+          {/* If the room owner is viewing the page, render the 'Add Users' button */}
           {user.id === room.member_id && (
             <Link
               style={{ textDecoration: "none", color: "white" }}

@@ -137,6 +137,7 @@ function ChatCreationForm() {
               </InputAdornment>
             ),
           }}
+          inputProps={{maxLength: 100}}
         />
 
         <TextField

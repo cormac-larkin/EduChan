@@ -1,7 +1,6 @@
 import ManualStudentEnrollmentForm from "../forms/ManualStudentEnrollmentForm";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { ThreeCircles } from "react-loader-spinner";
+import { Link, useParams } from "react-router-dom";
 import {
   Stack,
   Typography,
@@ -16,6 +15,7 @@ import axios from "axios";
 import paperStyles from "../../styles/paperStyles";
 import BatchEnrolmentForm from "../forms/BatchEnrolmentForm";
 import TeacherEnrolmentForm from "../forms/TeacherEnrolmentForm";
+import LoadingSpinnerPage from "./LoadingSpinnerPage";
 
 function ChatEnrollmentPage() {
   const { roomID } = useParams(); // Get the room ID from the URL
@@ -45,7 +45,7 @@ function ChatEnrollmentPage() {
   }, []);
 
   if (room === undefined) {
-    return <ThreeCircles />;
+    return <LoadingSpinnerPage/>;
   }
 
   if (room === null) {
@@ -60,7 +60,7 @@ function ChatEnrollmentPage() {
         </Stack>
 
         <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{`Enrol Students in '${room.title}'`}</b>
+          <b>Enrol Students in <Link to={`/chats/${room.room_id}`}>{`'${room.title}'`}</Link></b>
         </Typography>
       </Stack>
       <Divider />

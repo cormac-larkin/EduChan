@@ -25,12 +25,12 @@ function ChatCard({
   const theme = useTheme();
   const smallScreen = useMediaQuery("(max-width:500px)");
   const { user } = useContext(AuthContext);
-  const { room_id, title, creation_date, member_id, description, image_url } =
+  const { room_id, title, creation_date, member_id, image_url } =
     chat;
 
   return (
     <Card
-      sx={{ maxWidth: 345, width: "100%", cursor: "pointer" }}
+      sx={{ maxWidth: 345, width: "100%", cursor: "pointer", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
       elevation={6}
     >
       <Link
@@ -44,7 +44,7 @@ function ChatCard({
             image={image_url} 
             alt="pic"
           />
-          <CardContent>
+          <CardContent sx={{pl:"0.6rem", pr: "0.2rem"}}>
             <Typography gutterBottom variant="h5" component="div">
               {title}
             </Typography>
@@ -85,6 +85,7 @@ function ChatCard({
           display: "flex",
           flexDirection: smallScreen ? "column" : "row",
           alignItems: smallScreen && "flex-start",
+          
         }}
       >
         {/* Include a 'Delete' button if the current User owns this chat */}
