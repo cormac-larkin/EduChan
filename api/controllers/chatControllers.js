@@ -118,11 +118,23 @@ const getMessages = async (req, res) => {
     }
 
     // Retrieve all messages for the specified chat room together with their likes. Order by message insertion so they can be displayed chronologically on the frontend.
-    const getMessagesQuery = `SELECT message.*, likes.member_id AS liker_id from message
-      LEFT JOIN likes
-      ON message.message_id = likes.message_id
-      WHERE message.room_id = $1
-      ORDER BY message_id ASC`;
+    const getMessagesQuery = `SELECT
+    message.*,
+    parent.message_id AS parent_id,
+    parent.content AS parent_content,
+    parent.hidden AS parent_hidden,
+    likes.member_id AS liker_id
+    FROM message
+    LEFT JOIN message
+    AS parent ON 
+    message.parent_id = parent.message_id
+    LEFT JOIN
+    likes ON message.message_id = likes.message_id
+    LEFT JOIN
+    room ON message.room_id = room.room_id
+    WHERE message.room_id = $1
+    ORDER BY
+    message.message_id ASC`;
     const result = await pool.query(getMessagesQuery, [roomID]);
 
     // Format the result set so that each message object contains an array of likes
@@ -138,7 +150,7 @@ const getMessages = async (req, res) => {
 const postMessage = async (req, res) => {
   try {
     const roomID = req.params.roomID;
-    const { content, authorID } = req.body;
+    const { content, authorID, parentID } = req.body;
 
     // Verify that the roomID parameter contains only digits
     if (!isNumber(roomID)) {
@@ -158,8 +170,8 @@ const postMessage = async (req, res) => {
     }
 
     const addMessageQuery =
-      "INSERT INTO message (content, timestamp, room_id, member_id) VALUES ($1, $2, $3, $4)";
-    await pool.query(addMessageQuery, [content, new Date(), roomID, authorID]);
+      "INSERT INTO message (content, timestamp, room_id, parent_id, member_id) VALUES ($1, $2, $3, $4, $5)";
+    await pool.query(addMessageQuery, [content, new Date(), roomID, parentID, authorID]);
 
     return res.sendStatus(204);
   } catch (error) {
@@ -846,5 +858,5 @@ export {
   showRoom,
   hideRoom,
   likeMessage,
-  unlikeMessage
+  unlikeMessage,
 };

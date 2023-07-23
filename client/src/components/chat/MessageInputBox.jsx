@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import TextareaAutosize from "@mui/base/TextareaAutosize";
 import { styled } from "@mui/system";
 
-export default function MessageInputBox({ onChange, value, cursorPositionRef }) {
+export default function MessageInputBox({ onChange, value, cursorPositionRef, isReply }) {
   const textAreaRef = useRef(null);
 
   // Update the textarea value and set the cursor position to its previous when the component re-renders
@@ -13,6 +13,7 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef }) 
       textAreaRef.current.selectionStart = textAreaRef.current.selectionEnd =
         cursorPositionRef.current;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const blue = {
@@ -54,17 +55,19 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef }) 
     };
 
     border-radius: 30px;
-    flex-grow: 1;
+    width: 100%;
     resize: none;
     margin-right: 0.5rem;
+
+    ${isReply && 'border-top-left-radius: 0px; border-top-right-radius: 0px;'}
   
     &:hover {
       border-color: ${blue[400]};
     }
   
     &:focus {
-      border-color: ${blue[400]};
-      box-shadow: 0 0 0 3px ${
+      // border-color: ${blue[400]};
+     // box-shadow: 0 0 0 3px ${
         theme.palette.mode === "dark" ? blue[500] : blue[200]
       };
     }
@@ -79,6 +82,7 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef }) 
   return (
     <StyledTextarea
       ref={textAreaRef}
+      maxRows={4}
       aria-label="empty textarea"
       placeholder="Message"
       onChange={onChange}

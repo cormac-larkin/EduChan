@@ -15,6 +15,7 @@ import {
   DialogActions,
   Button,
   Badge,
+  useMediaQuery,
 } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
@@ -27,12 +28,15 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import ReplyIcon from "@mui/icons-material/Reply";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ReplyBubble from "./ReplyBubble";
 
 function ChatBox({ room }) {
   const { user } = useContext(AuthContext);
   const chatBox = useRef();
   const cursorPositionRef = useRef(0);
   const theme = useTheme();
+  const smallScreen = useMediaQuery("(max-width: 450px)");
+  const medScreen = useMediaQuery("(max-width: 600px)")
 
   // States for handling message sending
   const [newMessage, setNewMessage] = useState("");
@@ -44,6 +48,10 @@ function ChatBox({ room }) {
   const [showDeletionMessage, setShowDeletionMessage] = useState(false);
   const [showDeleteConfirmationDialog, setShowDeleteConfirmationDialog] =
     useState(false);
+
+  // States for handling message replies
+  const [isReply, setIsReply] = useState(false);
+  const [parentMessage, setParentMessage] = useState(null);
 
   // States for handling message hiding
   const [messageToHide, setMessageToHide] = useState(null);
@@ -80,9 +88,14 @@ function ChatBox({ room }) {
    *
    * @param {Object} message - The message object containing the message being replied to.
    */
-  const handleReply = (message) => {
-    setNewMessage(`*** Replying to #${message.message_id} ***\n\n`);
-    cursorPositionRef.current = 50;
+  const handleReply = (parentMessage) => {
+    setParentMessage(parentMessage);
+    setIsReply(true);
+  };
+
+  const handleReplyClose = () => {
+    setIsReply(false);
+    setParentMessage(null);
   };
 
   /**
@@ -125,6 +138,7 @@ function ChatBox({ room }) {
     const messageData = {
       authorID: user.id,
       content: newMessage,
+      parentID: parentMessage.message_id
     };
 
     // POST the message to the API
@@ -142,6 +156,8 @@ function ChatBox({ room }) {
       setShouldScroll(true);
       fetchMessages();
       setNewMessage(""); // Clear the message input field
+      setIsReply(false); // Hide the reply box
+      setParentMessage(null); // Reset the parent message state
     } catch (error) {
       setError(error?.response?.data?.error || "Error: Unable to send message");
       setShowError(true);
@@ -236,7 +252,6 @@ function ChatBox({ room }) {
   };
 
   const likeMessage = async (messageID) => {
-    console.log(messageID);
     try {
       await axios.post(
         `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/like`,
@@ -255,7 +270,6 @@ function ChatBox({ room }) {
   };
 
   const unLikeMessage = async (messageID) => {
-    console.log(messageID);
     try {
       await axios.delete(
         `http://localhost:5000/chats/${room.room_id}/messages/${messageID}/like`,
@@ -266,7 +280,9 @@ function ChatBox({ room }) {
       await socket.emit("delete-message");
       fetchMessages();
     } catch (error) {
-      setError(error?.response?.data?.error || "Error: Unable to un-like message");
+      setError(
+        error?.response?.data?.error || "Error: Unable to un-like message"
+      );
       setShowError(true);
       console.error(error);
     }
@@ -302,11 +318,11 @@ function ChatBox({ room }) {
 
   // When the messageList state is updated after a new message, scroll to the bottom of the chat window
   useEffect(() => {
-    if(shouldScroll) {
+    if (shouldScroll) {
       scrollToBottom();
     }
     setShouldScroll(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   return (
@@ -329,7 +345,7 @@ function ChatBox({ room }) {
           >
             <Box
               id="chatBubble"
-              maxWidth="100%"
+              maxWidth={!medScreen ? "80%": "100%"}
               borderRadius="30px"
               p="0.2rem 1rem"
               // Use different colours for owned/un-owned messages
@@ -353,6 +369,8 @@ function ChatBox({ room }) {
                   borderBottom="1px solid black"
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
+                  {/* If the message is a reply, render the reply bubble with the parent message inside */}
+                  {message.parent_id && <ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} />}
                   {message.hidden ? (
                     <i>--- Message Hidden ---</i>
                   ) : (
@@ -361,7 +379,9 @@ function ChatBox({ room }) {
                 </Typography>
                 <Stack
                   direction="row"
-                  justifyContent="flex-end"
+                  justifyContent={
+                    message.member_id === user.id ? "flex-end" : "flex-start"
+                  }
                   alignItems="center"
                 >
                   <Typography
@@ -430,7 +450,6 @@ function ChatBox({ room }) {
                     >
                       <Tooltip title="Like message">
                         <ThumbUpIcon
-                          color="action"
                           onClick={() => likeMessage(message.message_id)}
                           sx={{ marginLeft: "1rem", cursor: "pointer" }}
                         />
@@ -462,20 +481,36 @@ function ChatBox({ room }) {
           </Box>
         ))}
       </Stack>
+
       <Stack direction="row" paddingTop="0.5rem" alignItems="center">
-        <MessageInputBox
-          onChange={handleInputChange}
-          value={newMessage}
-          cursorPositionRef={cursorPositionRef}
-        />
-        <Fab
-          size="medium"
-          color="primary"
-          aria-label="add"
-          onClick={sendMessage}
+        <Stack
+          flexGrow={1}
+          marginRight="0.5rem"
+          maxWidth={smallScreen ? "85%" : "100%"}
         >
-          <SendRoundedIcon />
-        </Fab>
+          {/* Reply Bubble */}
+          {isReply && (
+            <ReplyBubble messageID={parentMessage.message_id} messageContent={parentMessage.content} onClose={handleReplyClose} innerBubble={false} />
+          )}
+
+          <MessageInputBox
+            onChange={handleInputChange}
+            value={newMessage}
+            cursorPositionRef={cursorPositionRef}
+            isReply={isReply}
+          />
+        </Stack>
+        <Box>
+          <Fab
+            size="medium"
+            color="primary"
+            aria-label="send"
+            onClick={sendMessage}
+            sx={{ height: "3rem", width: "3rem" }}
+          >
+            <SendRoundedIcon />
+          </Fab>
+        </Box>
       </Stack>
 
       {/* Confirmation dialog for message deletion */}

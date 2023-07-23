@@ -36,7 +36,8 @@ const login = async (req, res) => {
     req.session.user = {
       id: result.rows[0].member_id,
       email: email,
-      isTeacher: result.rows[0].is_admin,
+      isTeacher: result.rows[0].is_teacher,
+      isAdmin: result.rows[0].is_admin
     };
 
     return res.status(200).json(req.session.user);

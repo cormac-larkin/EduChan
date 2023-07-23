@@ -33,11 +33,11 @@ const registerTeacher = async (req, res) => {
     const hashedPassword = await hash(password, 10); //Hash the plaintext password before inserting into DB
 
     const insertNewUser =
-      "INSERT INTO member (first_name, last_name, is_admin, email, password_hash, join_date, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+      "INSERT INTO member (first_name, last_name, is_teacher, email, password_hash, join_date, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *";
     const userData = [
       firstName,
       lastName,
-      true, // Teacher Users are admins
+      true, // Mark User as a Teacher
       email,
       hashedPassword,
       new Date(),
@@ -94,7 +94,7 @@ const registerStudent = async (req, res) => {
     const userData = [
       firstName,
       lastName,
-      false, // Student Users are not admins
+      false, // Mark user as a non-Teacher (Student)
       email,
       studentNumber,
       hashedPassword,
