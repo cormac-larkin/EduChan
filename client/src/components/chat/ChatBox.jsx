@@ -132,6 +132,7 @@ function ChatBox({ room }) {
   const sendMessage = async () => {
     // Ensure empty messages are not sent
     if (newMessage === "" || newMessage.startsWith(" ")) {
+      alert("Messages must not be empty or begin with a whitespace!")
       return;
     }
 
@@ -370,7 +371,7 @@ function ChatBox({ room }) {
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
                   {/* If the message is a reply, render the reply bubble with the parent message inside */}
-                  {(message.parent_id && !message.hidden) && <ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} />}
+                  {(message.parent_id && !message.hidden) && <span><ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} /></span>}
                   {message.hidden ? (
                     <i>--- Message Hidden ---</i>
                   ) : (
