@@ -16,7 +16,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
-import validateEmailAddress from "../../utils/validateEmailAddress";
+import validateEmailAddress from "../../../utils/validateEmailAddress";
 
 function TeacherEnrolmentForm({ room }) {
   const smallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));

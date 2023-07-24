@@ -28,7 +28,7 @@ const teacherDashboardCards = [
     title: "Create Quizzes",
     description: "Create new quizzes to test your Students",
     imageURI: quizIcon,
-    href: "#"
+    href: "/quizzes/create"
   },
   {
     title: "My Account",

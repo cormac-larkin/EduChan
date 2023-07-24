@@ -1,4 +1,4 @@
-import ChatBox from "../chat/ChatBox";
+import ChatBox from "../../chat/ChatBox";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { useTheme } from "@emotion/react";
@@ -15,10 +15,10 @@ import {
 import ChatIcon from "@mui/icons-material/Chat";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
-import Error404Page from "./Error404Page";
-import paperStyles from "../../styles/paperStyles";
-import { AuthContext } from "../authentication/AuthProvider";
-import LoadingSpinnerPage from "./LoadingSpinnerPage";
+import Error404Page from "../error/Error404Page";
+import paperStyles from "../../../styles/paperStyles";
+import { AuthContext } from "../../authentication/AuthProvider";
+import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 
 function ChatRoomPage() {
   const smallScreen = useMediaQuery("(max-width:600px)")

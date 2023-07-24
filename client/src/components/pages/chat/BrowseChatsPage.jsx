@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../authentication/AuthProvider";
+import { AuthContext } from "../../authentication/AuthProvider";
 
 import {
   Grid,
@@ -20,8 +20,8 @@ import {
 } from "@mui/material";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChatCard from "../UI/ChatCard";
-import paperStyles from "../../styles/paperStyles";
+import ChatCard from "../../UI/ChatCard";
+import paperStyles from "../../../styles/paperStyles";
 
 function BrowseChatsPage() {
   const { user } = useContext(AuthContext);

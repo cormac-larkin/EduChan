@@ -17,7 +17,7 @@ import MailLockIcon from "@mui/icons-material/MailLock";
 import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
 import SchoolIcon from "@mui/icons-material/School";
-import validateEmailAddress from "../../utils/validateEmailAddress";
+import validateEmailAddress from "../../../utils/validateEmailAddress";
 
 function StudentRegistrationForm() {
   const navigate = useNavigate();

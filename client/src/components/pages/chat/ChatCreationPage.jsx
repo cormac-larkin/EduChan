@@ -1,7 +1,7 @@
 import { Stack, Paper, Divider, Typography } from "@mui/material";
 import CreateIcon from '@mui/icons-material/Create';
-import paperStyles from "../../styles/paperStyles";
-import ChatCreationForm from "../forms/ChatCreationForm";
+import paperStyles from "../../../styles/paperStyles.js";
+import ChatCreationForm from "../../forms/ChatCreationForm.jsx";
 
 function ChatCreationPage() {
 

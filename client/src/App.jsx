@@ -1,22 +1,24 @@
 import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
-import TeacherRegistrationPage from "./components/pages/TeacherRegistrationPage";
-import StudentRegistrationPage from "./components/pages/StudentRegistrationPage";
+import TeacherRegistrationPage from "./components/pages/auth/TeacherRegistrationPage";
+import StudentRegistrationPage from "./components/pages/auth/StudentRegistrationPage";
 import DashboardPage from "./components/pages/DashboardPage";
-import ChatEnrollmentPage from "./components/pages/ChatEnrollmentPage";
-import BrowseChatsPage from "./components/pages/BrowseChatsPage";
-import ChatCreationPage from "./components/pages/ChatCreationPage";
-import LoginPage from "./components/pages/LoginPage";
-import ChatRoomPage from "./components/pages/ChatRoomPage";
+import ChatEnrollmentPage from "./components/pages/chat/ChatEnrollmentPage";
+import BrowseChatsPage from "./components/pages/chat/BrowseChatsPage";
+import ChatCreationPage from "./components/pages/chat/ChatCreationPage";
+import LoginPage from "./components/pages/auth/LoginPage";
+import ChatRoomPage from "./components/pages/chat/ChatRoomPage";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline, createTheme } from "@mui/material";
 
 import "./App.css";
-import Error404Page from "./components/pages/Error404Page";
+import Error404Page from "./components/pages/error/Error404Page";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/authentication/ProtectedRoute";
 import NoSideBarLayout from "./components/layout/NoSideBarLayout";
 import AccountApprovalPage from "./components/pages/AccountApprovalPage";
+import QuizCreationPage from "./components/pages/quiz/QuizCreationPage";
+import QuizBuilderPage from "./components/pages/quiz/QuizBuilderPage";
 
 function App() {
 
@@ -38,10 +40,15 @@ function App() {
         <Route path="/register/student" element={<NoSideBarLayout onThemeChange={setDarkTheme}> <StudentRegistrationPage /> </NoSideBarLayout>} />
 
         <Route path="/dashboard/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <DashboardPage /> </ProtectedRoute> </Layout>} />
+
         <Route path="/chats/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <BrowseChatsPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatCreationPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/:roomID" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatRoomPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/:roomID/enrol" element={<Layout onThemeChange={setDarkTheme}><ProtectedRoute> <ChatEnrollmentPage /> </ProtectedRoute> </Layout>} />
+
+        <Route path="/quizzes/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizCreationPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/quizzes/:quizID/build" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizBuilderPage /> </ProtectedRoute> </Layout>} />
+       
         <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="*" element={<Error404Page />} />

@@ -7,6 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import quizRoutes from "./routes/quizRoutes.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes)
 app.use("/chats", chatRoutes);
+app.use("/quizzes", quizRoutes);
 
 export default app;
 

@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import LoginForm from "../forms/LoginForm";
+import LoginForm from "../../forms/auth/LoginForm";
 import Snackbar from "@mui/material/Snackbar";
 import { useEffect, useState } from "react";
 import { Alert } from "@mui/material";

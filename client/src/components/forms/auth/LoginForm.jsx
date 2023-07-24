@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../authentication/AuthProvider";
+import { AuthContext } from "../../authentication/AuthProvider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import {
@@ -15,7 +15,7 @@ import {
 import MailLockIcon from "@mui/icons-material/MailLock";
 import LockIcon from "@mui/icons-material/Lock";
 import TextField from "@mui/material/TextField";
-import validateEmailAddress from "../../utils/validateEmailAddress";
+import validateEmailAddress from "../../../utils/validateEmailAddress";
 
 function LoginForm() {
   const { login } = useContext(AuthContext);

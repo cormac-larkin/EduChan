@@ -1,4 +1,4 @@
-import ManualStudentEnrollmentForm from "../forms/ManualStudentEnrollmentForm";
+import ManualStudentEnrollmentForm from "../../forms//enrolment/ManualStudentEnrollmentForm";
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -10,12 +10,12 @@ import {
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Error404Page from "./Error404Page";
+import Error404Page from "../error/Error404Page";
 import axios from "axios";
-import paperStyles from "../../styles/paperStyles";
-import BatchEnrolmentForm from "../forms/BatchEnrolmentForm";
-import TeacherEnrolmentForm from "../forms/TeacherEnrolmentForm";
-import LoadingSpinnerPage from "./LoadingSpinnerPage";
+import paperStyles from "../../../styles/paperStyles";
+import BatchEnrolmentForm from "../../forms/enrolment/BatchEnrolmentForm";
+import TeacherEnrolmentForm from "../../forms/enrolment/TeacherEnrolmentForm";
+import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 
 function ChatEnrollmentPage() {
   const { roomID } = useParams(); // Get the room ID from the URL

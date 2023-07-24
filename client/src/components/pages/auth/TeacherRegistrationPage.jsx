@@ -1,4 +1,4 @@
-import TeacherRegistrationForm from "../forms/TeacherRegistrationForm";
+import TeacherRegistrationForm from "../../forms/auth/TeacherRegistrationForm";
 
 function TeacherRegistrationPage() {
   return (

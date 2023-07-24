@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { Typography, Box, Button } from "@mui/material";
+import { Typography, Box, Button, ListItemIcon } from "@mui/material";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Checkbox from "@mui/material/Checkbox";
-import Avatar from "@mui/material/Avatar";
+import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 
 function ApprovalList({ pendingApprovals, approved, onChange, onSubmit }) {
-
-
   return (
-    <Box component="form"
-    onSubmit={onSubmit}
+    <Box
+      component="form"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      onSubmit={onSubmit}
     >
       <Typography
         component="h1"
@@ -21,17 +21,21 @@ function ApprovalList({ pendingApprovals, approved, onChange, onSubmit }) {
         align="center"
         paddingBottom="1rem"
       >
-        {`${pendingApprovals.length} Pending ${pendingApprovals.length === 1 ? 'Approval' : "Approvals"}`}
+        {`${pendingApprovals.length} ${
+          pendingApprovals.length === 1 ? "Account" : "Accounts"
+        } Pending Approval`}
       </Typography>
 
-      <List
-        dense
-        sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
-      >
+      <List dense sx={{ width: "100%", maxWidth: 360, bgcolor: "inherit" }}>
         {pendingApprovals.map((pending, index) => {
           const labelId = `checkbox-list-secondary-label-${index}`;
           return (
             <ListItem
+              sx={{
+                border: "1px solid grey",
+                borderRadius: "5px",
+                marginBottom: "0.2rem",
+              }}
               key={index}
               secondaryAction={
                 <Checkbox
@@ -44,21 +48,28 @@ function ApprovalList({ pendingApprovals, approved, onChange, onSubmit }) {
               disablePadding
             >
               <ListItemButton>
-                <ListItemText id={labelId} primary={`${pending.email}`} />
+                <ListItemIcon>
+                <GppMaybeIcon/>
+                </ListItemIcon>
+                <ListItemText
+                  id={labelId}
+                  primary={`${pending.email}`}
+                  secondary={`${pending.first_name} ${pending.last_name}`}
+                />
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
       <Button
-            disabled={pendingApprovals.length === 0}
-          type="submit"
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3, mb: 2 }}
-        >
-          Submit Approvals
-        </Button>
+        disabled={pendingApprovals.length === 0}
+        type="submit"
+        fullWidth
+        variant="contained"
+        sx={{ mt: 3, mb: 2 }}
+      >
+        Submit Approvals
+      </Button>
     </Box>
   );
 }

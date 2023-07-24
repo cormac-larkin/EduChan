@@ -1,4 +1,4 @@
-import StudentRegistrationForm from "../forms/StudentRegistrationForm"
+import StudentRegistrationForm from "../../forms/auth/StudentRegistrationForm"
 
 function StudentRegistrationPage() {
   return (
