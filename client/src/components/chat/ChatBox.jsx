@@ -138,7 +138,7 @@ function ChatBox({ room }) {
     const messageData = {
       authorID: user.id,
       content: newMessage,
-      parentID: parentMessage.message_id
+      parentID: parentMessage?.message_id
     };
 
     // POST the message to the API
@@ -370,7 +370,7 @@ function ChatBox({ room }) {
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
                   {/* If the message is a reply, render the reply bubble with the parent message inside */}
-                  {message.parent_id && <ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} />}
+                  {(message.parent_id && !message.hidden) && <ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} />}
                   {message.hidden ? (
                     <i>--- Message Hidden ---</i>
                   ) : (
@@ -523,7 +523,7 @@ function ChatBox({ room }) {
           Confirm Message Deletion
         </DialogTitle>
         <DialogContentText paddingLeft="0.5rem">
-          {`Are you sure you want to delete this message? Once deleted, a message cannot be recovered!`}
+          {`Are you sure you want to delete this message? This action is permanent, and any replies to this message will also be permanently deleted!`}
         </DialogContentText>
         <DialogActions>
           <Button onClick={() => setShowDeleteConfirmationDialog(false)}>

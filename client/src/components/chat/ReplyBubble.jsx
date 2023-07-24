@@ -1,16 +1,13 @@
-import { Stack, Tooltip, Typography, useMediaQuery, Divider } from "@mui/material";
+import {
+  Stack,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  Divider,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplyIcon from "@mui/icons-material/Reply";
 import { useTheme } from "@emotion/react";
-
-const blue = {
-  100: "#DAECFF",
-  200: "#b6daff",
-  400: "#3399FF",
-  500: "#007FFF",
-  600: "#0072E5",
-  900: "#003A75",
-};
 
 const grey = {
   50: "#f6f8fa",
@@ -33,14 +30,19 @@ function ReplyBubble({ messageID, messageContent, onClose, innerBubble }) {
     <Stack
       direction="row"
       justifyContent="space-between"
-      sx={!innerBubble ? { // Apply different styles if this bubble is nested within another bubble
-        border: `1px solid ${
-          theme.palette.mode === "dark" ? grey[700] : grey[200]
-        }`,
-        borderTopLeftRadius: "30px",
-        borderTopRightRadius: "30px",
-        padding: "0.8rem",
-      } : {}}
+      sx={
+        !innerBubble
+          ? {
+              // Apply different styles if this bubble is nested within another bubble
+              border: `1px solid ${
+                theme.palette.mode === "dark" ? grey[700] : grey[200]
+              }`,
+              borderTopLeftRadius: "30px",
+              borderTopRightRadius: "30px",
+              padding: "0.8rem",
+            }
+          : {}
+      }
     >
       <Stack
         direction="row"
@@ -50,30 +52,45 @@ function ReplyBubble({ messageID, messageContent, onClose, innerBubble }) {
       >
         <ReplyIcon sx={{ color: "black" }} />
         <Stack pl="0.3rem" width="100%">
-            <Typography 
-                 width="100%"
-                bgcolor={theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]}
-                borderRadius="0 10px 0 0"
-                color={theme.palette.mode === "light" ? "black" : "white"}
-                p="0.2rem 0.5rem">
-                {`Replying to #${messageID}`}
-            </Typography>
-            <Divider />
-            <Typography
-                width="100%"
-                bgcolor={theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]}
-                borderRadius="0 0 10px 0"
-                color={theme.palette.mode === "light" ? "black" : "white"}
-                p="0.2rem 0.5rem"
-            >
-                {/* Show more or less of the parent message depending on the screen size */}
-            <i>{`${medScreen ? messageContent.slice(0, 150) : messageContent.slice(0, 50)}...`}</i>
-            </Typography> 
+          <Typography
+            width="100%"
+            bgcolor={
+              theme.palette.mode === "light"
+                ? theme.palette.grey[300]
+                : theme.palette.grey[800]
+            }
+            borderRadius="0 10px 0 0"
+            color={theme.palette.mode === "light" ? "black" : "white"}
+            p="0.2rem 0.5rem"
+          >
+            {`Replying to #${messageID}`}
+          </Typography>
+          <Divider />
+          <Typography
+            width="100%"
+            bgcolor={
+              theme.palette.mode === "light"
+                ? theme.palette.grey[300]
+                : theme.palette.grey[800]
+            }
+            borderRadius="0 0 10px 0"
+            color={theme.palette.mode === "light" ? "black" : "white"}
+            p="0.2rem 0.5rem"
+          >
+            {/* Show more or less of the parent message depending on the screen size */}
+            <i>{`${
+              medScreen
+                ? messageContent.slice(0, 150)
+                : messageContent.slice(0, 50)
+            }...`}</i>
+          </Typography>
         </Stack>
       </Stack>
-      <Tooltip title="Close reply">
-        <CloseIcon onClick={onClose} sx={{ cursor: "pointer" }} />
-      </Tooltip>
+      {!innerBubble && (
+        <Tooltip title="Close reply">
+          <CloseIcon onClick={onClose} sx={{ cursor: "pointer" }} />
+        </Tooltip>
+      )}
     </Stack>
   );
 }

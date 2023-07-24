@@ -119,10 +119,18 @@ const getMessages = async (req, res) => {
 
     // Retrieve all messages for the specified chat room together with their likes. Order by message insertion so they can be displayed chronologically on the frontend.
     const getMessagesQuery = `SELECT
-    message.*,
+    message.message_id,
+    message.content,
+    message.timestamp,
+    message.room_id,
+    message.member_id,
+    message.hidden,
     parent.message_id AS parent_id,
-    parent.content AS parent_content,
     parent.hidden AS parent_hidden,
+    CASE
+        WHEN parent.hidden = true THEN '*** Message Hidden ***'
+        ELSE parent.content
+    END AS parent_content,
     likes.member_id AS liker_id
     FROM message
     LEFT JOIN message
