@@ -6,10 +6,18 @@ const registerTeacher = async (req, res) => {
   try {
     const { firstName, lastName, email, password, passwordConfirmation } =
       req.body;
- 
+
     // Ensure all required properties are present in the request body
-    if (!firstName || !lastName || !email || !password || !passwordConfirmation) {
-       return res.status(400).json({ error: "Request body is missing required properties" });
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !passwordConfirmation
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Request body is missing required properties" });
     }
 
     // Check that password & password confirmation fields match (also performed at client side)
@@ -33,7 +41,7 @@ const registerTeacher = async (req, res) => {
     const hashedPassword = await hash(password, 10); //Hash the plaintext password before inserting into DB
 
     const insertNewUser =
-      "INSERT INTO member (first_name, last_name, is_teacher, email, password_hash, join_date, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+      "INSERT INTO member (first_name, last_name, is_teacher, email, password_hash, join_date, last_login, is_approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
     const userData = [
       firstName,
       lastName,
@@ -42,6 +50,7 @@ const registerTeacher = async (req, res) => {
       hashedPassword,
       new Date(),
       new Date(),
+      false, // Teacher Accounts require approval from an Admin before they can be used
     ];
 
     await pool.query(insertNewUser, userData);
@@ -65,8 +74,17 @@ const registerStudent = async (req, res) => {
     } = req.body;
 
     // Ensure all required properties are present in the request body
-    if (!firstName || !lastName || !email || !studentNumber || !password || !passwordConfirmation) {
-      return res.status(400).json({ error: "Request body is missing required properties" });
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !studentNumber ||
+      !password ||
+      !passwordConfirmation
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Request body is missing required properties" });
     }
 
     // Check that password & password confirmation fields match (also performed at client side)
@@ -90,7 +108,7 @@ const registerStudent = async (req, res) => {
     const hashedPassword = await hash(password, 10); // Hash the plaintext password before inserting into DB
 
     const insertNewUser =
-      "INSERT INTO member (first_name, last_name, is_admin, email, student_number, password_hash, join_date, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
+      "INSERT INTO member (first_name, last_name, is_admin, email, student_number, password_hash, join_date, last_login, is_approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
     const userData = [
       firstName,
       lastName,
@@ -100,11 +118,24 @@ const registerStudent = async (req, res) => {
       hashedPassword,
       new Date(),
       new Date(),
+      true, // Student User Accounts are approved by default
     ];
 
     await pool.query(insertNewUser, userData);
 
     return res.status(200).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+// Authorization for this route is checked by middleware (see 'userRoutes.js)
+const getAllUsers = async (req, res) => {
+  try {
+    const getAllUsersQuery = "SELECT * FROM member";
+    const result = await pool.query(getAllUsersQuery);
+    return res.status(200).json(result.rows);
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -153,7 +184,8 @@ const getOwnedChats = async (req, res) => {
     }
 
     // Find and return any chats owned by the user (put all archived/hidden chats at the end of the result set)
-    const findOwnedChats = "SELECT * FROM room WHERE member_id = $1 ORDER BY hidden ASC";
+    const findOwnedChats =
+      "SELECT * FROM room WHERE member_id = $1 ORDER BY hidden ASC";
     const result = await pool.query(findOwnedChats, [userID]);
 
     return res.status(200).json(result.rows);
@@ -195,10 +227,42 @@ const getJoinedChats = async (req, res) => {
   }
 };
 
+const approveUsers = async (req, res) => {
+  try {
+    const { approvedEmails } = req.body; // An array of email addresses to approve
+
+    // Verify that the request includes the array of approvals
+    if (!approvedEmails || approvedEmails.length === 0) {
+      return res.sendStatus(400);
+    }
+
+    for (const approvedEmail of approvedEmails) {
+      // Verify that the User exists
+      const findUserQuery = "SELECT * FROM member WHERE email = $1";
+      const findUserResult = await pool.query(findUserQuery, [approvedEmail]);
+      if (!findUserResult.rowCount) {
+        continue 
+      }
+
+      // Mark the User as approved
+      const approveUserQuery =
+        "UPDATE member SET is_approved = true WHERE email = $1";
+      await pool.query(approveUserQuery, [approvedEmail]);
+    }
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
 export {
   registerStudent,
   registerTeacher,
+  getAllUsers,
   getUser,
   getOwnedChats,
   getJoinedChats,
+  approveUsers,
 };

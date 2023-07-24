@@ -16,6 +16,7 @@ import Error404Page from "./components/pages/Error404Page";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/authentication/ProtectedRoute";
 import NoSideBarLayout from "./components/layout/NoSideBarLayout";
+import AccountApprovalPage from "./components/pages/AccountApprovalPage";
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
         <Route path="/chats/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatCreationPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/:roomID" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatRoomPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/:roomID/enrol" element={<Layout onThemeChange={setDarkTheme}><ProtectedRoute> <ChatEnrollmentPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="*" element={<Error404Page />} />
       </Routes>

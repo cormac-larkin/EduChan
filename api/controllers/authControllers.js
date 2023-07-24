@@ -16,6 +16,11 @@ const login = async (req, res) => {
         .json({ error: "Login Failed: Invalid Credentials" });
     }
 
+    // Check if the Users account is approved (Teacher accounts must be approved  by an Admin before login is available)
+    if(!result.rows[0].is_approved) {
+      return res.status(401).json({error: "Login failed. Please contact your school administrator to request approval for this account"});
+    }
+
     // If user exists, compare their stored password hash with the password supplied in the login form
     const passwordIsMatch = await compare(
       password,

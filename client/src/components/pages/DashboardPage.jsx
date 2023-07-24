@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
 import SpaceDashboardRoundedIcon from "@mui/icons-material/SpaceDashboardRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
+import adminDashboardCards from "../../data/adminDashboardCards";
 import teacherDashboardCards from "../../data/teacherDashboardCards";
 import studentDashboardCards from "../../data/studentDashboardCards";
 import paperStyles from "../../styles/paperStyles";
@@ -14,7 +15,15 @@ function DashboardPage() {
   const location = useLocation();
   const { user } = useContext(AuthContext);
 
-  const cards = user?.isTeacher ? teacherDashboardCards : studentDashboardCards; // Select the dashboard card data for the current user category
+  // Pick the appropriate cards for the User category
+  let cards;
+  if (user.isAdmin) {
+    cards = adminDashboardCards;
+  } else if (user.isTeacher) {
+    cards = teacherDashboardCards
+  } else {
+    cards = studentDashboardCards
+  }
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -33,7 +42,7 @@ function DashboardPage() {
     <Stack>
       <Stack p="1rem" direction="row">
         <Stack justifyContent="center">
-          {user?.isTeacher ? (
+          {user?.isTeacher ? ( // Display different Icon for Students vs Admins/Teachers
             <SpaceDashboardRoundedIcon />
           ) : (
             <SchoolRoundedIcon />
@@ -41,7 +50,7 @@ function DashboardPage() {
         </Stack>
 
         <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{user?.isTeacher ? "Teacher Dashboard" : "Student Dashboard"}</b>
+          <b>{(user?.isTeacher && user.isAdmin) ? "Admin Dashboard" : user?.isTeacher ? "Teacher Dashboard" : "Student Dashboard"}</b>
         </Typography>
       </Stack>
       <Divider />
