@@ -99,7 +99,7 @@ function QuizBuilderPage() {
           paddingTop: "0.5rem",
         }}
       >
-        <QuizBuilderForm />
+        <QuizBuilderForm quiz={quiz} />
       </Paper>
 
       <Snackbar

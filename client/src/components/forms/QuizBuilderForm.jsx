@@ -12,7 +12,7 @@ import NumbersIcon from "@mui/icons-material/Numbers";
 import { useRef, useState } from "react";
 import QuestionBuilderForm from "./QuestionBuilderForm";
 
-function QuizBuilderForm() {
+function QuizBuilderForm({ quiz }) {
   const numberOfQuestionsRef = useRef(null);
 
   // State to hold the number of questions this quiz will have
@@ -34,7 +34,9 @@ function QuizBuilderForm() {
   // Create an array of QuestionBuilderForms based on the number of questions selected by the user
   const questionBuilderForms = [];
   for (let i = 0; i < numberOfQuestions; i++) {
-    questionBuilderForms.push(<QuestionBuilderForm key={i} questionNumber={i + 1} />);
+    questionBuilderForms.push(
+      <QuestionBuilderForm key={i} questionNumber={i + 1} quiz={quiz} />
+    );
   }
 
   return (

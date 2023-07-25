@@ -69,7 +69,7 @@ function TeacherRegistrationForm() {
       });
       navigate("/login", {
         state: {
-          message: "Registration Successful! Please contact your School Administrator to request account approval. Once approved, you may begin using your account.", // Pass success message to the login page so we can display notification
+          message: "Registration Successful!\n\nPlease contact your School Administrator to request account approval. Once approved, you may begin using your account.", // Pass success message to the login page so we can display notification
         },
       });
     } catch (error) {

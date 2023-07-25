@@ -28,10 +28,11 @@ function LoginPage() {
         autoHideDuration={6000}
         onClose={() => setShowSuccessMessage(false)}
         message={successMessage}
+        sx={{whiteSpace: "pre-wrap"}}
       >
         <Alert
           severity="success"
-          sx={{ width: "100%" }}
+          sx={{ width: "100%", whiteSpace: "pre-wrap" }}
           onClose={() => setShowSuccessMessage(false)}
         >
           {successMessage}
