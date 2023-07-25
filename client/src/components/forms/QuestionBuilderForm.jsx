@@ -86,6 +86,7 @@ function QuestionBuilderForm({ quiz, questionNumber }) {
   return (
     <>
       <Accordion
+        defaultExpanded={true}
         elevation={10}
         disableGutters
         sx={{ ...paperStyles, borderRadius: "5px", width: "100%" }}

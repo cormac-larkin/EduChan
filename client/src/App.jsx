@@ -42,14 +42,14 @@ function App() {
         <Route path="/dashboard/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <DashboardPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="/chats/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <BrowseChatsPage /> </ProtectedRoute> </Layout>} />
-        <Route path="/chats/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatCreationPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/chats/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <ChatCreationPage /> </ProtectedRoute> </Layout>} />
         <Route path="/chats/:roomID" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <ChatRoomPage /> </ProtectedRoute> </Layout>} />
-        <Route path="/chats/:roomID/enrol" element={<Layout onThemeChange={setDarkTheme}><ProtectedRoute> <ChatEnrollmentPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/chats/:roomID/enrol" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <ChatEnrollmentPage /> </ProtectedRoute> </Layout>} />
 
-        <Route path="/quizzes/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizCreationPage /> </ProtectedRoute> </Layout>} />
-        <Route path="/quizzes/:quizID/build" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizBuilderPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/quizzes/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <QuizCreationPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/quizzes/:quizID/edit" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <QuizBuilderPage /> </ProtectedRoute> </Layout>} />
        
-        <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Admin"}> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="*" element={<Error404Page />} />
       </Routes>

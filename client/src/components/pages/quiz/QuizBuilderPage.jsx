@@ -83,7 +83,7 @@ function QuizBuilderPage() {
         </Stack>
 
         <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{`Build the '${quiz.title}' quiz`}</b>
+          <b>{`Edit Quiz`}</b>
         </Typography>
       </Stack>
       <Divider />
@@ -101,6 +101,23 @@ function QuizBuilderPage() {
       >
         <QuizBuilderForm quiz={quiz} />
       </Paper>
+
+      {/* Error message if API call fails  */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showErrorMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowErrorMessage(false)}
+        message={errorMessage}
+      >
+        <Alert
+          severity="error"
+          sx={{ width: "100%" }}
+          onClose={() => setShowErrorMessage(false)}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}

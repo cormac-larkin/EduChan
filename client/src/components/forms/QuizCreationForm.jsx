@@ -42,7 +42,7 @@ function QuizCreationForm() {
         { withCredentials: true }
       );
       const newQuizID = response?.data?.quizID;
-      navigate(`/quizzes/${newQuizID}/build`, {
+      navigate(`/quizzes/${newQuizID}/edit`, {
         state: {
           message: `Quiz created successfully!`, // Pass success message to the ChatRoomPage so we can display notification upon redirect
         },

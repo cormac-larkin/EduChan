@@ -1,121 +1,71 @@
-import {
-  Box,
-  Stack,
-  Typography,
-  TextField,
-  InputAdornment,
-  Button,
-  Alert,
-  Snackbar,
-} from "@mui/material";
-import NumbersIcon from "@mui/icons-material/Numbers";
-import { useRef, useState } from "react";
+import { Stack, Typography, Fab, Tooltip, useTheme } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { useState } from "react";
 import QuestionBuilderForm from "./QuestionBuilderForm";
 
 function QuizBuilderForm({ quiz }) {
-  const numberOfQuestionsRef = useRef(null);
-
+  const theme = useTheme();
   // State to hold the number of questions this quiz will have
-  const [numberOfQuestions, setNumberOfQuestions] = useState(0);
+  const [questionBuilderForms, setQuestionBuilderForms] = useState([]);
 
-  // States to handle showing error messages from API
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
-
-  // Sets the number of questions this quiz will have. This determines how many QuestionBuilderForms are rendered
-  const submitNumberOfQuestions = (e) => {
-    e.preventDefault();
-
-    // Access the input value using the ref and convert it to an integer
-    const inputValue = parseInt(numberOfQuestionsRef.current.value, 10);
-    setNumberOfQuestions(inputValue);
+  // Adds a QuestionBuilder form in response to User clicking the 'Add Button'
+  const addQuestionBuilderForm = () => {
+    setQuestionBuilderForms((prevForms) => [
+      ...prevForms,
+      <QuestionBuilderForm
+        key={Date.now()}
+        questionNumber={questionBuilderForms.length + 1}
+        quiz={quiz}
+      />,
+    ]);
   };
 
-  // Create an array of QuestionBuilderForms based on the number of questions selected by the user
-  const questionBuilderForms = [];
-  for (let i = 0; i < numberOfQuestions; i++) {
-    questionBuilderForms.push(
-      <QuestionBuilderForm key={i} questionNumber={i + 1} quiz={quiz} />
-    );
-  }
-
   return (
-    <>
-      {/* Form for setting quiz length (hide once number of questions is chosen) */}
-      {!numberOfQuestions && (
-        <Stack>
-          <Typography
-            component="h1"
-            variant="h4"
-            align="center"
-            paddingBottom="1rem"
+    <Stack sx={{ width: "100%", mr: "1rem" }}>
+      <Stack>
+        {/* Button to add Questions to quiz */}
+        <Tooltip title="Add question">
+          <Fab
+            color="success"
+            variant="extended"
+            aria-label="add question"
+            sx={{
+              margin: 0,
+              top: "auto",
+              right: 20, // Make button float in bottom right corner
+              bottom: 20,
+              left: "auto",
+              position: "fixed",
+            }}
+            onClick={addQuestionBuilderForm}
           >
-            Set Quiz Length
-          </Typography>
-          <Box component="form" onSubmit={submitNumberOfQuestions}>
-            <TextField
-              inputRef={numberOfQuestionsRef}
-              margin="normal"
-              required
-              fullWidth
-              id="numberOfQuestions"
-              label="Number of Questions"
-              name="numberOfQuestions"
-              type="number"
-              autoFocus
-              inputProps={{
-                max: 50,
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <NumbersIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Continue
-            </Button>
-          </Box>
-        </Stack>
+            <AddIcon />
+            Add Question
+          </Fab>
+        </Tooltip>
+      </Stack>
+      <Typography
+        component="h1"
+        variant="h4"
+        align="center"
+        paddingTop="0.5rem"
+      >
+        {quiz.title}
+      </Typography>
+      {quiz.description && (
+        <Typography
+          component="h4"
+          variant="subtitle1"
+          align="center"
+          paddingBottom="0.5rem"
+        >
+          {quiz.description}
+        </Typography>
       )}
 
       {/* Render the array of QuestionBuilder forms constructed above */}
-      {numberOfQuestions > 1 && (
-        <Typography
-          component="h1"
-          variant="h4"
-          align="center"
-          paddingBottom="1rem"
-        >
-          Create Questions
-        </Typography>
-      )}
       {questionBuilderForms}
-
-      {/* Error notification if API call fails */}
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showErrorMessage}
-        autoHideDuration={6000}
-        onClose={() => setShowErrorMessage(false)}
-      >
-        <Alert
-          severity="error"
-          sx={{ width: "100%" }}
-          onClose={() => setShowErrorMessage(false)}
-        >
-          {errorMessage}
-        </Alert>
-      </Snackbar>
-    </>
+    </Stack>
   );
 }
 
