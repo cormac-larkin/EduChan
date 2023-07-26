@@ -12,7 +12,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import paperStyles from "../../styles/paperStyles";
+import paperStyles from "../../../styles/paperStyles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 import AddIcon from "@mui/icons-material/Add";

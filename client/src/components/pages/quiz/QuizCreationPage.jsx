@@ -1,7 +1,7 @@
 import { Stack, Paper, Typography, Divider } from "@mui/material";
 import paperStyles from "../../../styles/paperStyles";
 import QuizIcon from "@mui/icons-material/Quiz";
-import QuizCreationForm from "../../forms/QuizCreationForm";
+import QuizCreationForm from "../../forms/quiz/QuizCreationForm";
 
 function QuizCreationPage() {
   return (

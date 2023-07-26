@@ -1,10 +1,9 @@
-import { Stack, Typography, Fab, Tooltip, useTheme } from "@mui/material";
+import { Stack, Typography, Fab, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
 import QuestionBuilderForm from "./QuestionBuilderForm";
 
 function QuizBuilderForm({ quiz }) {
-  const theme = useTheme();
   // State to hold the number of questions this quiz will have
   const [questionBuilderForms, setQuestionBuilderForms] = useState([]);
 
@@ -54,8 +53,8 @@ function QuizBuilderForm({ quiz }) {
       </Typography>
       {quiz.description && (
         <Typography
-          component="h4"
-          variant="subtitle1"
+          variant="body2"
+          color="text.secondary"
           align="center"
           paddingBottom="0.5rem"
         >

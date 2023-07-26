@@ -1,32 +1,25 @@
-import { useState } from "react";
-import { useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
-  Snackbar,
-  Alert,
   Stack,
   Typography,
+  Snackbar,
+  Alert,
   Divider,
   Paper,
 } from "@mui/material";
-import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 import Error404Page from "../error/Error404Page";
-import BuildIcon from "@mui/icons-material/Build";
+import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 import paperStyles from "../../../styles/paperStyles";
+import QuizIcon from "@mui/icons-material/Quiz";
 import axios from "axios";
-import QuizBuilderForm from "../../forms/quiz/QuizBuilderForm";
+import { useParams } from "react-router-dom";
 
-function QuizBuilderPage() {
-  const location = useLocation();
+function QuizTakerPage() {
   const { quizID } = useParams();
 
   // State for holding the Quiz object retrieved from the API
   const [quiz, setQuiz] = useState();
   const [loading, setIsLoading] = useState(true);
-
-  // States for handling success message after re-direct from the previous page
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // States for handling error messages from the API
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,16 +47,9 @@ function QuizBuilderPage() {
   };
 
   useEffect(() => {
-    // On first render, check if a success message was passed from the previous page
-    // If so, save it in the 'succcessMessage' state, then set the 'showSuccessMessage' state to true so it will be displayed
-    if (location.state?.message) {
-      setSuccessMessage(location.state.message);
-      setShowSuccessMessage(true);
-      window.history.replaceState(null, ""); // Clear the history state after the message is retrieved
-    }
     fetchQuiz();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Display Loading animation while API call is in progress
   if (loading) {
@@ -79,11 +65,11 @@ function QuizBuilderPage() {
     <Stack>
       <Stack p="1rem" direction="row">
         <Stack justifyContent="center">
-          <BuildIcon />
+          <QuizIcon />
         </Stack>
 
         <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{`Edit Quiz`}</b>
+          <b>{`Take the ${quiz.title} quiz`}</b>
         </Typography>
       </Stack>
       <Divider />
@@ -98,9 +84,7 @@ function QuizBuilderPage() {
           alignItems: "center",
           paddingTop: "0.5rem",
         }}
-      >
-        <QuizBuilderForm quiz={quiz} />
-      </Paper>
+      ></Paper>
 
       {/* Error message if API call fails  */}
       <Snackbar
@@ -118,24 +102,8 @@ function QuizBuilderPage() {
           {errorMessage}
         </Alert>
       </Snackbar>
-
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showSuccessMessage}
-        autoHideDuration={6000}
-        onClose={() => setShowSuccessMessage(false)}
-        message={successMessage}
-      >
-        <Alert
-          severity="success"
-          sx={{ width: "100%" }}
-          onClose={() => setShowSuccessMessage(false)}
-        >
-          {successMessage}
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 }
 
-export default QuizBuilderPage;
+export default QuizTakerPage;
