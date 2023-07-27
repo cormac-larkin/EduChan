@@ -19,7 +19,8 @@ import NoSideBarLayout from "./components/layout/NoSideBarLayout";
 import AccountApprovalPage from "./components/pages/AccountApprovalPage";
 import QuizCreationPage from "./components/pages/quiz/QuizCreationPage";
 import QuizBuilderPage from "./components/pages/quiz/QuizBuilderPage";
-import QuizTakerPage from "./components/pages/quiz/QuizTakerPage";
+import QuizPage from "./components/pages/quiz/QuizPage";
+import QuizAttemptsPage from "./components/pages/quiz/QuizAttemptsPage";
 
 function App() {
 
@@ -48,7 +49,8 @@ function App() {
         <Route path="/chats/:roomID/enrol" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <ChatEnrollmentPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="/quizzes/create" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <QuizCreationPage /> </ProtectedRoute> </Layout>} />
-        <Route path="/quizzes/:quizID/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizTakerPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/quizzes/attempts/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizAttemptsPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/quizzes/:quizID/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizPage /> </ProtectedRoute> </Layout>} />
         <Route path="/quizzes/:quizID/edit" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <QuizBuilderPage /> </ProtectedRoute> </Layout>} />
        
         <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Admin"}> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />

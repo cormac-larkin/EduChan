@@ -121,23 +121,83 @@ const addQuestion = async (req, res) => {
     // Insert the question
     const insertQuestionQuery =
       "INSERT INTO question (content, quiz_id) VALUES ($1, $2) RETURNING *";
-    const insertQuestionResult = await pool.query(insertQuestionQuery, [questionText, quizID]);
+    const insertQuestionResult = await pool.query(insertQuestionQuery, [
+      questionText,
+      quizID,
+    ]);
 
     // Get the newly inserted question_id so we can insert the answers and link them with foreign key
-    const newQuestionID = insertQuestionResult.rows[0].question_id
+    const newQuestionID = insertQuestionResult.rows[0].question_id;
 
     // Insert the answers and link to question
     for (const answer of answers) {
-        const insertAnswerQuery = "INSERT INTO answer (content, is_correct, question_id) VALUES ($1, $2, $3)";
-        await pool.query(insertAnswerQuery, [answer.answerText, answer.isCorrect, newQuestionID])
+      const insertAnswerQuery =
+        "INSERT INTO answer (content, is_correct, question_id) VALUES ($1, $2, $3)";
+      await pool.query(insertAnswerQuery, [
+        answer.answerText,
+        answer.isCorrect,
+        newQuestionID,
+      ]);
     }
 
-    return res.status(200).json({message: "Question added successfully"})
-
+    return res.status(200).json({ message: "Question added successfully" });
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
   }
 };
 
-export { createQuiz, getQuiz, addQuestion };
+const addAttempt = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const quizID = req.params.quizID;
+
+    const { quizAttempt } = req.body; // Array of objects containing a question_id and an array of selected answers for the question
+
+    // Verify that the quizID is a number
+    if (!isNumber(quizID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify the request body contains the required property
+    if (!quizAttempt || quizAttempt.length === 0) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the quizID exists
+    const findQuizQuery = "SELECT * FROM quiz WHERE quiz_id = $1";
+    const findQuizResult = await pool.query(findQuizQuery, [quizID]);
+    if (!findQuizResult.rowCount) {
+      return res
+        .status(404)
+        .json({ error: `Quiz with ID '${quizID}' not found` });
+    }
+
+    // Insert the new attempt and get it's ID
+    const createAttemptQuery =
+      "INSERT INTO attempt (timestamp, member_id, quiz_id) VALUES ($1, $2, $3) RETURNING *";
+    const createAttemptResult = await pool.query(createAttemptQuery, [
+      new Date(),
+      userID,
+      quizID,
+    ]);
+    const newAttemptID = createAttemptResult.rows[0].attempt_id;
+
+    // Insert all the user's answers from each question attempt in the quiz attempt
+    for (const questionAttempt of quizAttempt) {
+      const { id: questionID, answers } = questionAttempt;
+      for (const answer of answers) {
+        const insertQuestionAttempt =
+          "INSERT INTO attempt_answer (attempt_id, question_id, answer_id, was_selected) VALUES ($1, $2, $3, $4)";
+        await pool.query(insertQuestionAttempt, [newAttemptID, questionID, answer.answer_id, answer.isChosen]);
+      }
+    }
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+export { createQuiz, getQuiz, addQuestion, addAttempt };

@@ -1,0 +1,78 @@
+import { Box, Stack, Button, Snackbar, Alert } from "@mui/material";
+import QuizQuestion from "./QuizQuestion";
+import { useState } from "react";
+import axios from "axios";
+
+function Quiz({ quiz }) {
+  const { quiz_id, title, description, questions, member_id } = quiz;
+
+  // State to hold the quiz attempt (An array of question objects, where each object contains an array of the selected answer_ids for that question)
+  const [quizAttempt, setQuizAttempt] = useState([]);
+
+  // Handles error message from API
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+
+  // Submits the quiz attempt
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/quizzes/${quiz_id}/attempts`,
+        {
+          quizAttempt,
+        },
+        { withCredentials: true }
+      );
+      console.log("Attempt submitted successfully!");
+    } catch (error) {
+      setErrorMessage(
+        error?.response?.data?.error || "Error: Unable to submit quiz"
+      );
+      setShowErrorMessage(true);
+      console.error(error);
+    }
+  };
+
+  return (
+    <Stack width="100%">
+      <Box component="form" onSubmit={handleSubmit}>
+        {questions.map((question, index) => (
+          <QuizQuestion
+            key={index}
+            question={question}
+            questionNumber={index + 1}
+            setQuizAttempt={setQuizAttempt}
+          />
+        ))}
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3, mb: 2 }}
+        >
+          Submit Quiz
+        </Button>
+      </Box>
+
+      {/* Error message if quiz submission fails  */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showErrorMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowErrorMessage(false)}
+        message={errorMessage}
+      >
+        <Alert
+          severity="error"
+          sx={{ width: "100%" }}
+          onClose={() => setShowErrorMessage(false)}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
+    </Stack>
+  );
+}
+
+export default Quiz;

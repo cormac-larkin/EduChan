@@ -13,8 +13,9 @@ import paperStyles from "../../../styles/paperStyles";
 import QuizIcon from "@mui/icons-material/Quiz";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import Quiz from "../../forms/quiz/Quiz";
 
-function QuizTakerPage() {
+function QuizPage() {
   const { quizID } = useParams();
 
   // State for holding the Quiz object retrieved from the API
@@ -48,7 +49,7 @@ function QuizTakerPage() {
 
   useEffect(() => {
     fetchQuiz();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Display Loading animation while API call is in progress
@@ -67,10 +68,21 @@ function QuizTakerPage() {
         <Stack justifyContent="center">
           <QuizIcon />
         </Stack>
-
-        <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{`Take the ${quiz.title} quiz`}</b>
-        </Typography>
+        <Stack pl="0.5rem">
+          <Typography component="h1" variant="h5" align="left">
+            <b>{`Take the '${quiz.title}' quiz`}</b>
+          </Typography>
+          {quiz.description && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              align="left"
+              paddingLeft="0.2rem"
+            >
+              {quiz.description}
+            </Typography>
+          )}
+        </Stack>
       </Stack>
       <Divider />
 
@@ -84,7 +96,9 @@ function QuizTakerPage() {
           alignItems: "center",
           paddingTop: "0.5rem",
         }}
-      ></Paper>
+      >
+        <Quiz quiz={quiz} />
+      </Paper>
 
       {/* Error message if API call fails  */}
       <Snackbar
@@ -106,4 +120,4 @@ function QuizTakerPage() {
   );
 }
 
-export default QuizTakerPage;
+export default QuizPage;
