@@ -36,7 +36,7 @@ function ChatBox({ room }) {
   const cursorPositionRef = useRef(0);
   const theme = useTheme();
   const smallScreen = useMediaQuery("(max-width: 450px)");
-  const medScreen = useMediaQuery("(max-width: 600px)")
+  const medScreen = useMediaQuery("(max-width: 600px)");
 
   // States for handling message sending
   const [newMessage, setNewMessage] = useState("");
@@ -132,14 +132,14 @@ function ChatBox({ room }) {
   const sendMessage = async () => {
     // Ensure empty messages are not sent
     if (newMessage === "" || newMessage.startsWith(" ")) {
-      alert("Messages must not be empty or begin with a whitespace!")
+      alert("Messages must not be empty or begin with a whitespace!");
       return;
     }
 
     const messageData = {
       authorID: user.id,
       content: newMessage,
-      parentID: parentMessage?.message_id
+      parentID: parentMessage?.message_id,
     };
 
     // POST the message to the API
@@ -346,7 +346,7 @@ function ChatBox({ room }) {
           >
             <Box
               id="chatBubble"
-              maxWidth={!medScreen ? "80%": "100%"}
+              maxWidth={!medScreen ? "80%" : "100%"}
               borderRadius="30px"
               p="0.2rem 1rem"
               // Use different colours for owned/un-owned messages
@@ -371,7 +371,15 @@ function ChatBox({ room }) {
                   whiteSpace="pre-line" // Preserves newline characters in the message
                 >
                   {/* If the message is a reply, render the reply bubble with the parent message inside */}
-                  {(message.parent_id && !message.hidden) && <span><ReplyBubble messageID={message.parent_id} messageContent={message.parent_content} innerBubble={true} /></span>}
+                  {message.parent_id && !message.hidden && (
+                    <span>
+                      <ReplyBubble
+                        messageID={message.parent_id}
+                        messageContent={message.parent_content}
+                        innerBubble={true}
+                      />
+                    </span>
+                  )}
                   {message.hidden ? (
                     <i>--- Message Hidden ---</i>
                   ) : (
@@ -491,7 +499,12 @@ function ChatBox({ room }) {
         >
           {/* Reply Bubble */}
           {isReply && (
-            <ReplyBubble messageID={parentMessage.message_id} messageContent={parentMessage.content} onClose={handleReplyClose} innerBubble={false} />
+            <ReplyBubble
+              messageID={parentMessage.message_id}
+              messageContent={parentMessage.content}
+              onClose={handleReplyClose}
+              innerBubble={false}
+            />
           )}
 
           <MessageInputBox
@@ -499,10 +512,12 @@ function ChatBox({ room }) {
             value={newMessage}
             cursorPositionRef={cursorPositionRef}
             isReply={isReply}
+            room={room}
           />
         </Stack>
         <Box>
           <Fab
+            disabled={room.read_only} // Disable send button if room is read-only
             size="medium"
             color="primary"
             aria-label="send"

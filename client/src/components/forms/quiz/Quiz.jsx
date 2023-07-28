@@ -2,9 +2,11 @@ import { Box, Stack, Button, Snackbar, Alert } from "@mui/material";
 import QuizQuestion from "./QuizQuestion";
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Quiz({ quiz }) {
-  const { quiz_id, title, description, questions, member_id } = quiz;
+  const navigate = useNavigate();
+  const { quiz_id, questions } = quiz;
 
   // State to hold the quiz attempt (An array of question objects, where each object contains an array of the selected answer_ids for that question)
   const [quizAttempt, setQuizAttempt] = useState([]);
@@ -24,7 +26,13 @@ function Quiz({ quiz }) {
         },
         { withCredentials: true }
       );
-      console.log("Attempt submitted successfully!");
+      const quizAttemptID = response.data.attemptID;
+      // Redirect to the result page for this quiz attempt
+      navigate(`/quizzes/attempts/${quizAttemptID}`, {
+        state: {
+          message: "Quiz submitted successfully! View your results below", // Pass success message to the login page so we can display notification
+        },
+      });
     } catch (error) {
       setErrorMessage(
         error?.response?.data?.error || "Error: Unable to submit quiz"

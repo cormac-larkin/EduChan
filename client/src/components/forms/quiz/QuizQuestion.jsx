@@ -14,28 +14,12 @@ import {
 function QuizQuestion({ question, questionNumber, setQuizAttempt }) {
   const { question_id, content: questionText, answers: answerList } = question;
 
-  // Object containing the question_id and an array of the selected answers
+  // Object containing the question_id and an array of answers objects
   const [questionAttempt, setQuestionAttempt] = useState({
     id: question_id,
     answers: answerList.map((answer) => ({ answer_id: answer.answer_id, isChosen: false })),
   });
 
-  // // Handles adding/removing an answer from the chosenAnswers array
-  // const handleToggle = (answerID) => {
-  //   const currentIndex = questionAttempt.chosenAnswers.indexOf(answerID);
-  //   const updatedAnswers = [...questionAttempt.chosenAnswers];
-
-  //   // If the answer is already in the array of selected answers, remove it. Otherwise add it to the array
-  //   if (currentIndex === -1) {
-  //     updatedAnswers.push(answerID);
-  //   } else {
-  //     updatedAnswers.splice(currentIndex, 1);
-  //   }
-
-  //   setQuestionAttempt({...questionAttempt, chosenAnswers: updatedAnswers});
-  // };
-
-  // Handles adding/removing an answer from the chosenAnswers array
   const handleToggle = (answerID) => {
     setQuestionAttempt((prevAttempt) => {
       const updatedAnswers = prevAttempt.answers.map((answer) => {
@@ -77,7 +61,7 @@ function QuizQuestion({ question, questionNumber, setQuizAttempt }) {
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
-                    checked={isChecked} // Box is checked if the answer object in the array of answer array is set as chosen
+                    checked={isChecked} // Box is checked if the answer object in the array of answers is set as chosen
                   />
                 </ListItemIcon>
                 <ListItemText primary={answerText} />

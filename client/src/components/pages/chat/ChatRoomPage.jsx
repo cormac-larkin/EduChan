@@ -111,8 +111,8 @@ function ChatRoomPage() {
               style={{ textDecoration: "none", color: "white" }}
               to={`/chats/${roomID}/enrol`}
             >
-              <Fab color="success" variant="extended">
-                <Typography fontSize="md">Add Users</Typography>
+              <Fab color="success" variant="extended"> 
+                <Typography fontSize="md">Enrol</Typography>
                 <AddIcon />
               </Fab>
             </Link>

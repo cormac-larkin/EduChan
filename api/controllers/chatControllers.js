@@ -177,9 +177,20 @@ const postMessage = async (req, res) => {
       return res.sendStatus(404);
     }
 
+    // Verify that the room is not set as 'read only'
+    if(findRoomResult.rows[0].read_only) {
+      return res.status(403).json({error: `Error: Failed to post message. Room is set to 'read-only'`})
+    }
+
     const addMessageQuery =
       "INSERT INTO message (content, timestamp, room_id, parent_id, member_id) VALUES ($1, $2, $3, $4, $5)";
-    await pool.query(addMessageQuery, [content, new Date(), roomID, parentID, authorID]);
+    await pool.query(addMessageQuery, [
+      content,
+      new Date(),
+      roomID,
+      parentID,
+      authorID,
+    ]);
 
     return res.sendStatus(204);
   } catch (error) {
@@ -418,20 +429,20 @@ const batchEnrolStudents = async (req, res) => {
     }
 
     // Parse the student numbers from the csv file
-    const teacherEmails = await parseEnrolmentCsv(csvFile);
+    const studentNumbers = await parseEnrolmentCsv(csvFile);
 
     // Enrol the Students in the chatroom
     const addMemberQuery =
       "INSERT INTO room_member (room_id, member_id) VALUES ($1, $2)";
-    for (const teacherEmail of teacherEmails) {
+    for (const studentNumber of studentNumbers) {
       // Verify that the Student exists
       const findUserQuery =
         "SELECT member_id FROM member WHERE student_number = $1";
-      const findUserResult = await pool.query(findUserQuery, [teacherEmail]);
+      const findUserResult = await pool.query(findUserQuery, [studentNumber]);
 
       // If the Student is not found, add the student number to the failedEnrolments array and skip to the next iteration
       if (!findUserResult.rowCount) {
-        failedEnrolments.add(teacherEmail);
+        failedEnrolments.add(studentNumber);
         continue;
       }
 
@@ -445,14 +456,14 @@ const batchEnrolStudents = async (req, res) => {
       );
 
       if (checkDuplicateEnrolmentResult.rowCount) {
-        duplicateEnrolments.add(teacherEmail);
+        duplicateEnrolments.add(studentNumber);
         continue;
       }
 
       // Otherwise add the Student to the chat room and record the successful enrollment
       const studentID = findUserResult.rows[0].member_id;
       await pool.query(addMemberQuery, [roomID, studentID]);
-      successfulEnrolments.add(teacherEmail);
+      successfulEnrolments.add(studentNumber);
     }
 
     // If all enrolments did not succeed return '207 multi-status' with lists of successful and failed enrolments
@@ -533,7 +544,7 @@ const enrolTeachers = async (req, res) => {
     for (const teacherEmail of teacherEmails) {
       // Verify that the Teacher exists
       const findUserQuery =
-        "SELECT member_id FROM member WHERE email = $1 AND is_admin = $2";
+        "SELECT member_id FROM member WHERE email = $1 AND is_teacher = $2";
       const findUserResult = await pool.query(findUserQuery, [
         teacherEmail,
         true,
@@ -851,6 +862,55 @@ const unlikeMessage = async (req, res) => {
   }
 };
 
+const changeReadOnlyStatus = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
+
+    const { readOnly } = req.body; // A boolean value indicating whether the room should be set/unset as 'read-only'
+
+    // Verify the request body contains the required property
+    if (readOnly === null || readOnly === undefined) {
+      return res.status(400).json({
+        error: "Request body must contain the 'readOnly' property with a value of 'true' or 'false'",
+      });
+    }
+
+    // Verify that the roomID parameter only contains digits
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the specified roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify that the client has permission to set the read-only status (must own the chat room)
+    const verifyPermissionQuery =
+      "SELECT * from room WHERE room_id = $1 AND member_id = $2";
+    const verifyPermissionResult = await pool.query(verifyPermissionQuery, [
+      roomID,
+      userID,
+    ]);
+    if (!verifyPermissionResult.rowCount) {
+      return res.sendStatus(403);
+    }
+
+    // Set the read-only status of the room
+    const setReadOnlyQuery = "UPDATE room SET read_only = $1 WHERE room_id = $2";
+    await pool.query(setReadOnlyQuery, [readOnly, roomID]);
+
+    return res.status(200).json({message: `Read-only status of room '${roomID}' set to ''${readOnly}`});
+
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
 export {
   getChatByID,
   getMessages,
@@ -867,4 +927,5 @@ export {
   hideRoom,
   likeMessage,
   unlikeMessage,
+  changeReadOnlyStatus,
 };

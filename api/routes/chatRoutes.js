@@ -17,6 +17,7 @@ import {
   hideRoom,
   likeMessage,
   unlikeMessage,
+  changeReadOnlyStatus
 } from "../controllers/chatControllers.js";
 
 const router = Router();
@@ -33,6 +34,8 @@ router.post("/:roomID/teachers", enrolTeachers);
 router.get("/:roomID", getChatByID);
 router.get("/:roomID/messages", getMessages);
 router.post("/:roomID/messages", postMessage);
+
+router.put("/:roomID/read-only", verifyTeacherRole, changeReadOnlyStatus);
 
 router.put("/:roomID/hide", verifyTeacherRole, hideRoom);
 router.put("/:roomID/show", verifyTeacherRole, showRoom);

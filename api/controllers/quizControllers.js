@@ -189,15 +189,111 @@ const addAttempt = async (req, res) => {
       for (const answer of answers) {
         const insertQuestionAttempt =
           "INSERT INTO attempt_answer (attempt_id, question_id, answer_id, was_selected) VALUES ($1, $2, $3, $4)";
-        await pool.query(insertQuestionAttempt, [newAttemptID, questionID, answer.answer_id, answer.isChosen]);
+        await pool.query(insertQuestionAttempt, [
+          newAttemptID,
+          questionID,
+          answer.answer_id,
+          answer.isChosen,
+        ]);
       }
     }
 
-    return res.sendStatus(204);
+    return res.status(200).json({attemptID: newAttemptID});
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
   }
 };
 
-export { createQuiz, getQuiz, addQuestion, addAttempt };
+const getAttempt = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const { attemptID } = req.params;
+
+    // Verify that the attemptID is a number
+    if (!isNumber(attemptID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the attemptID exists
+    const findAttemptQuery = "SELECT * FROM attempt WHERE attempt_id = $1";
+    const findAttemptResult = await pool.query(findAttemptQuery, [attemptID]);
+    if (!findAttemptResult.rowCount) {
+      return res
+        .status(404)
+        .json({ error: `Quiz attempt with ID '${attemptID}' not found` });
+    }
+
+    // Verify that the client has permission to access the attempt (must be a Teacher or the Student who made the attempt)
+    if (!req.session.user.isTeacher) {
+      const verifyPermissionQuery =
+        "SELECT * FROM attempt WHERE attempt_id = $1 AND member_id = $2";
+      const verifyPermissionResult = await pool.query(verifyPermissionQuery, [
+        attemptID,
+        userID,
+      ]);
+
+      if (!verifyPermissionResult.rowCount) {
+        return res.sendStatus(403);
+      }
+    }
+
+    // Retrieve the quiz attempt and return it
+    const getAttemptQuery = `WITH question_answers AS (
+      SELECT
+        q.quiz_id,
+        q.title AS quiz_title,
+        qn.question_id,
+        qn.content AS question_content,
+        json_agg(
+          json_build_object(
+            'answer_id', ans.answer_id,
+            'content', ans.content,
+            'is_correct', ans.is_correct,
+            'was_selected', aa.was_selected
+          )
+        ) AS answers
+      FROM
+        member m
+      JOIN
+        quiz q ON m.member_id = q.member_id
+      JOIN
+        attempt a ON q.quiz_id = a.quiz_id
+      JOIN
+        attempt_answer aa ON a.attempt_id = aa.attempt_id
+      JOIN
+        question qn ON aa.question_id = qn.question_id
+      LEFT JOIN
+        answer ans ON aa.answer_id = ans.answer_id
+      WHERE
+        a.attempt_id = $1
+      GROUP BY
+        q.quiz_id, q.title, qn.question_id, qn.content
+    )
+    SELECT
+      json_build_object(
+        'quiz_id', quiz_id,
+        'quiz_title', quiz_title,
+        'questions', json_agg(
+          json_build_object(
+            'question_id', question_id,
+            'content', question_content,
+            'answers', answers
+          )
+        )
+      ) AS quiz_attempt
+    FROM
+      question_answers
+    GROUP BY
+      quiz_id, quiz_title;`;
+
+    const getAttemptResult = await pool.query(getAttemptQuery, [attemptID]);
+
+    return res.status(200).json(getAttemptResult.rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+export { createQuiz, getQuiz, addQuestion, addAttempt, getAttempt };

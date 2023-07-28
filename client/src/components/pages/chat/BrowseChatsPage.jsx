@@ -50,6 +50,18 @@ function BrowseChatsPage() {
   const [showRoomUnhideSuccessMessage, setShowRoomUnhideSuccessMessage] =
     useState(false);
 
+  // States for handling setting rooms as 'read only'
+  const [roomToSetAsReadOnly, setRoomToSetAsReadOnly] = useState({});
+  const [showReadOnlyDialog, setShowReadOnlyDialog] = useState(false);
+  const [showReadOnlySuccessMessage, setShowReadOnlySuccessMessage] =
+    useState(false);
+
+  // States for handling un-setting rooms as 'read only'
+  const [roomToSetAsNotReadOnly, setRoomToSetAsNotReadOnly] = useState({});
+  const [showNotReadOnlyDialog, setShowNotReadOnlyDialog] = useState(false);
+  const [showNotReadOnlySuccessMessage, setShowNotReadOnlySuccessMessage] =
+    useState(false);
+
   // States for controlling opening/closing of 'Accordion' UI elements
   const [expandFirstAccordion, setExpandFirstAccordion] = useState(true);
   const [expandSecondAccordion, setExpandSecondAccordion] = useState(true);
@@ -199,6 +211,61 @@ function BrowseChatsPage() {
     }
   };
 
+  const handleReadOnlySelection = (roomToSetAsReadOnly) => {
+    setRoomToSetAsReadOnly(roomToSetAsReadOnly);
+    setShowReadOnlyDialog(true);
+  };
+
+  const handleReadOnlyConfirmation = () => {
+    setShowReadOnlyDialog(false);
+    setAsReadOnly(roomToSetAsReadOnly);
+  };
+
+  const setAsReadOnly = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${roomToSetAsReadOnly.room_id}/read-only`,
+        { readOnly: true },
+        { withCredentials: true }
+      );
+      setShowReadOnlySuccessMessage(true);
+      fetchOwnedChats();
+    } catch (error) {
+      setError(
+        error?.response?.data?.error || "Error: Unable to set room as read-only"
+      );
+      setShowErrorMessage(true);
+    }
+  };
+
+  const handleNotReadOnlySelection = (roomToSetAsNotReadOnly) => {
+    setRoomToSetAsNotReadOnly(roomToSetAsNotReadOnly);
+    setShowNotReadOnlyDialog(true);
+  };
+
+  const handleNotReadOnlyConfirmation = () => {
+    setShowNotReadOnlyDialog(false);
+    setAsNotReadOnly(roomToSetAsNotReadOnly);
+  };
+
+  const setAsNotReadOnly = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/chats/${roomToSetAsNotReadOnly.room_id}/read-only`,
+        { readOnly: false },
+        { withCredentials: true }
+      );
+      setShowNotReadOnlySuccessMessage(true);
+      fetchOwnedChats();
+    } catch (error) {
+      setError(
+        error?.response?.data?.error ||
+          "Error: Unable to disable read-only status"
+      );
+      setShowErrorMessage(true);
+    }
+  };
+
   // On first render, fetch all the User's chats from the database.
   // If the User is a Teacher, fetch the chats that they own, as well as chats that they have joined.
   useEffect(() => {
@@ -264,6 +331,8 @@ function BrowseChatsPage() {
                   onDeleteSelection={handleDeleteSelection}
                   onHideSelection={handleHideSelection}
                   onUnhideSelection={handleUnhideSelection}
+                  onReadOnlySelection={handleReadOnlySelection}
+                  onNotReadOnlySelection={handleNotReadOnlySelection}
                 />
               </Grid>
             ))}
@@ -290,7 +359,14 @@ function BrowseChatsPage() {
             variant="h5"
           >
             {/* Display the number of joined chats, minus any hidden/archived chats */}
-            {`Joined Chat Rooms (${joinedChats.length && (joinedChats.length - joinedChats.reduce((count, chat) => count + (chat.hidden ? 1 : 0), 0))})`}
+            {`Joined Chat Rooms (${
+              joinedChats.length &&
+              joinedChats.length -
+                joinedChats.reduce(
+                  (count, chat) => count + (chat.hidden ? 1 : 0),
+                  0
+                )
+            })`}
           </Typography>
         </AccordionSummary>
         <Grid
@@ -366,7 +442,7 @@ function BrowseChatsPage() {
         sx={{ paddingLeft: "0.5rem" }}
       >
         <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
-        {`Archive '${roomToHide.title}'?`}
+          {`Archive '${roomToHide.title}'?`}
         </DialogTitle>
         <DialogContentText paddingLeft="0.5rem">
           {`Are you sure you want to archive the '${roomToHide.title}' chat room? The room will be hidden from all other users. You may re-activate the room later.`}
@@ -385,7 +461,7 @@ function BrowseChatsPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Confirmation dialog for message un-hiding */}
+      {/* Confirmation dialog for un-archiving rooms */}
       <Dialog
         open={showRoomUnhideDialog}
         onClose={() => setShowRoomUnhideDialog(false)}
@@ -411,6 +487,60 @@ function BrowseChatsPage() {
         </DialogActions>
       </Dialog>
 
+      {/* Confirmation dialog for setting rooms as read-only */}
+      <Dialog
+        open={showReadOnlyDialog}
+        onClose={() => setShowReadOnlyDialog(false)}
+        sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          {`Set '${roomToSetAsReadOnly.title}' as Read-Only?`}
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to set the '${roomToSetAsReadOnly.title}' chat room as read-only? Students will not be able to post messages in this room until you disable the read-only status.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowReadOnlyDialog(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setAsReadOnly(roomToSetAsReadOnly);
+              handleReadOnlyConfirmation();
+            }}
+            color="error"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation dialog for setting rooms as not read-only */}
+      <Dialog
+        open={showNotReadOnlyDialog}
+        onClose={() => setShowNotReadOnlyDialog(false)}
+        sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
+      >
+        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+          {`Disable read-only setting for the '${roomToSetAsNotReadOnly.title}' chat-room?`}
+        </DialogTitle>
+        <DialogContentText paddingLeft="0.5rem">
+          {`Are you sure you want to disable the read-only setting for the '${roomToSetAsNotReadOnly.title}' chat room? Students will be able to post messages in this room.`}
+        </DialogContentText>
+        <DialogActions>
+          <Button onClick={() => setShowNotReadOnlyDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              setAsNotReadOnly(roomToSetAsNotReadOnly);
+              handleNotReadOnlyConfirmation();
+            }}
+            color="error"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Success notification upon chat deletion */}
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -428,8 +558,8 @@ function BrowseChatsPage() {
         </Alert>
       </Snackbar>
 
-       {/* Success notification upon chat hide/archive */}
-       <Snackbar
+      {/* Success notification upon chat hide/archive */}
+      <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showRoomHideSuccessMessage}
         autoHideDuration={6000}
@@ -445,8 +575,8 @@ function BrowseChatsPage() {
         </Alert>
       </Snackbar>
 
-       {/* Success notification upon chat re-activation/unhide */}
-       <Snackbar
+      {/* Success notification upon chat re-activation/unhide */}
+      <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={showRoomUnhideSuccessMessage}
         autoHideDuration={6000}
@@ -459,6 +589,40 @@ function BrowseChatsPage() {
           onClose={() => setShowRoomUnhideSuccessMessage(false)}
         >
           {"Chat Reactivated Successfully!"}
+        </Alert>
+      </Snackbar>
+
+      {/* Success notification upon setting room as 'read only' */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showReadOnlySuccessMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowReadOnlySuccessMessage(false)}
+        message={"Chat set to read-only successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setShowReadOnlySuccessMessage(false)}
+        >
+          {"Chat set to read-only successfully!"}
+        </Alert>
+      </Snackbar>
+
+      {/* Success notification upon setting room as not 'read only' */}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showNotReadOnlySuccessMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowNotReadOnlySuccessMessage(false)}
+        message={"Read-only status disabled successfully!"}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={() => setShowNotReadOnlySuccessMessage(false)}
+        >
+          {"Read-only status disabled successfully!"}
         </Alert>
       </Snackbar>
 

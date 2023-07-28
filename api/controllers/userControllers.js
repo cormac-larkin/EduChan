@@ -185,7 +185,7 @@ const getOwnedChats = async (req, res) => {
 
     // Find and return any chats owned by the user (put all archived/hidden chats at the end of the result set)
     const findOwnedChats =
-      "SELECT * FROM room WHERE member_id = $1 ORDER BY hidden ASC";
+      "SELECT * FROM room WHERE member_id = $1 ORDER BY creation_date DESC, hidden ASC";
     const result = await pool.query(findOwnedChats, [userID]);
 
     return res.status(200).json(result.rows);

@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import TextareaAutosize from "@mui/base/TextareaAutosize";
 import { styled } from "@mui/system";
 
-export default function MessageInputBox({ onChange, value, cursorPositionRef, isReply }) {
+export default function MessageInputBox({ room, onChange, value, cursorPositionRef, isReply }) {
   const textAreaRef = useRef(null);
 
   // Update the textarea value and set the cursor position to its previous when the component re-renders
@@ -82,9 +82,10 @@ export default function MessageInputBox({ onChange, value, cursorPositionRef, is
   return (
     <StyledTextarea
       ref={textAreaRef}
+      disabled={room.read_only} // Disable the input box if the room is set as read-only
       maxRows={4}
       aria-label="empty textarea"
-      placeholder="Message"
+      placeholder={room.read_only ? "Message posting disabled. Room set to read-only" : "Message"}
       onChange={onChange}
       value={value}
       autoFocus={true}
