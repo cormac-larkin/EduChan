@@ -1,5 +1,5 @@
 import ChatBox from "../../chat/ChatBox";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { useTheme } from "@emotion/react";
 import {
@@ -9,19 +9,19 @@ import {
   Paper,
   Snackbar,
   Alert,
-  Fab,
+  Chip,
   useMediaQuery,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
-import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import Error404Page from "../error/Error404Page";
 import paperStyles from "../../../styles/paperStyles";
 import { AuthContext } from "../../authentication/AuthProvider";
 import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
+import ChatPageKebabMenu from "../../UI/ChatPageKebabMenu";
 
 function ChatRoomPage() {
-  const smallScreen = useMediaQuery("(max-width:600px)")
+  const smallScreen = useMediaQuery("(max-width:600px)");
   const location = useLocation();
   const theme = useTheme();
   const { user } = useContext(AuthContext);
@@ -31,6 +31,15 @@ function ChatRoomPage() {
   const [loading, setLoading] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+
+  const [activeUsers, setActiveUsers] = useState(0);
+
+  // State for controlling the LiveQuizSelectorModal
+  const [selectorModalOpen, setSelectorModalOpen] = useState(false);
+  const [resultsModalOpen, setResultsModalOpen] = useState(false);
+
+  // State passed to the kebab menu so that we can force a re-render of this component when the room is set/unset as read-only
+  const [readOnly, setReadOnly] = useState();
 
   /**
    * Retrieves the details of the chat room from the API and sets the 'room' state.
@@ -56,7 +65,7 @@ function ChatRoomPage() {
   useEffect(() => {
     fetchRoom();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [readOnly]);
 
   useEffect(() => {
     // On first render, check if a success message was passed from the previous page
@@ -87,35 +96,46 @@ function ChatRoomPage() {
 
         <Stack direction="row" justifyContent="space-between" flexGrow={1}>
           <Stack pl="0.5rem" justifyContent="center">
-            <Typography
-              component="h1"
-              variant="h5"
-              align="left"
-              display="flex"
-              alignItems="center"
+            <Stack
+              direction={smallScreen ? "column" : "row"}
+              alignItems={smallScreen ? "flex-start" : "center"}
             >
-              <b>{room.title}</b>
-            </Typography>
+              <Typography
+                component="h1"
+                variant="h5"
+                align="left"
+                display="flex"
+                alignItems="center"
+              >
+                <b>{room.title}</b>
+              </Typography>
+
+              {room.read_only && (
+                <Chip
+                  color="warning"
+                  variant="outlined"
+                  size="small"
+                  label="Read Only"
+                  sx={{ width: "6rem", marginLeft: !smallScreen && "0.3rem" }}
+                />
+              )}
+            </Stack>
 
             {/* Display room description on larger screens if one exists */}
-            {(!smallScreen && room.description) && (
+            {!smallScreen && room.description && (
               <Typography variant="body2" color="text.secondary">
                 {room.description}
               </Typography>
             )}
           </Stack>
 
-          {/* If the room owner is viewing the page, render the 'Add Users' button */}
+          {/* If the room owner is viewing the page, render the 'Kebab Menu' button */}
           {user.id === room.member_id && (
-            <Link
-              style={{ textDecoration: "none", color: "white" }}
-              to={`/chats/${roomID}/enrol`}
-            >
-              <Fab color="success" variant="extended"> 
-                <Typography fontSize="md">Enrol</Typography>
-                <AddIcon />
-              </Fab>
-            </Link>
+            <ChatPageKebabMenu
+              room={room}
+              onReadOnlyChange={setReadOnly}
+              setSelectorModalOpen={setSelectorModalOpen}
+            />
           )}
         </Stack>
       </Stack>
@@ -134,7 +154,15 @@ function ChatRoomPage() {
             theme.palette.mode === "light" && theme.palette.grey[100],
         }}
       >
-        <ChatBox room={room} />
+        <ChatBox
+          room={room}
+          activeUsers={activeUsers}
+          setActiveUsers={setActiveUsers}
+          selectorModalOpen={selectorModalOpen}
+          setSelectorModalOpen={setSelectorModalOpen}
+          resultsModalOpen={resultsModalOpen}
+          setResultsModalOpen={setResultsModalOpen}
+        />
       </Paper>
 
       {/* Success Message Notification if redirected from ChatCreationPage */}

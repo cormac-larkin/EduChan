@@ -85,7 +85,7 @@ export default function MessageInputBox({ room, onChange, value, cursorPositionR
       disabled={room.read_only} // Disable the input box if the room is set as read-only
       maxRows={4}
       aria-label="empty textarea"
-      placeholder={room.read_only ? "Message posting disabled. Room set to read-only" : "Message"}
+      placeholder={room.read_only ? "Message posting disabled" : "Message"}
       onChange={onChange}
       value={value}
       autoFocus={true}

@@ -4,11 +4,11 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function Quiz({ quiz }) {
+function Quiz({ quiz, socket }) {
   const navigate = useNavigate();
   const { quiz_id, questions } = quiz;
 
-  // State to hold the quiz attempt (An array of question objects, where each object contains an array of the selected answer_ids for that question)
+  // State to hold the quiz attempt (An array of question objects, where each object contains an array of answer objects with the answer id and whether the answer was selected or not)
   const [quizAttempt, setQuizAttempt] = useState([]);
 
   // Handles error message from API
@@ -51,6 +51,7 @@ function Quiz({ quiz }) {
             question={question}
             questionNumber={index + 1}
             setQuizAttempt={setQuizAttempt}
+            socket={socket}
           />
         ))}
         <Button

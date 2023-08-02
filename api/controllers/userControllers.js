@@ -337,6 +337,37 @@ const getQuizAttempts = async (req, res) => {
   }
 };
 
+const getOwnedQuizzes = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    // Validate that the roomID parameter contains only digits
+    if (!isNumber(userID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify userID exists
+    const verifyUserQuery = "SELECT * FROM member WHERE member_id = $1";
+    const verifyUserResult = await pool.query(verifyUserQuery, [userID]);
+
+    // Return 404 if no user with the ID exists
+    if (!verifyUserResult.rowCount) {
+      return res
+        .status(404)
+        .json({ error: `User with ID '${userID}' not found` });
+    }
+
+    // Get the users owned quizzes
+    const getOwnedQuizzesQuery = "SELECT * FROM quiz WHERE member_id = $1";
+    const ownedQuizzes = await pool.query(getOwnedQuizzesQuery, [userID]);
+
+    return res.status(200).json(ownedQuizzes.rows);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
 export {
   registerStudent,
   registerTeacher,
@@ -346,4 +377,5 @@ export {
   getJoinedChats,
   approveUsers,
   getQuizAttempts,
+  getOwnedQuizzes,
 };

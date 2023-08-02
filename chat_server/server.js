@@ -19,6 +19,7 @@ const io = new Server(server, {
 // Listen for connection events
 io.on("connection", (socket) => {
   console.log(`Connection from ${socket.id}`);
+  socket.broadcast.emit("update-participants", io.sockets.sockets.size) // Each time theres a connection, broadcast the total number of connected sockets
 
   // When a connected client emits the 'join-room' event, add them to the specified room.
   // Future messages addressed to this room will only be delivered to clients who have joined it.
@@ -38,7 +39,18 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("delete-message");
   });
 
+  socket.on("new-answer", (newAnswer) => {
+    console.log(newAnswer)
+    socket.broadcast.emit("new-answer", newAnswer)
+  })
+
+  // End quizzes
+  socket.on("end-quiz", () => {
+    socket.broadcast.emit("end-quiz")
+  })
+
   socket.on("disconnect", () => {
+    socket.broadcast.emit("update-participants", io.sockets.sockets.size)
     console.log("User Disconnected", socket.id);
   });
 });

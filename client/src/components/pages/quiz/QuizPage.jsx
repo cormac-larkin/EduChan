@@ -12,11 +12,9 @@ import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 import paperStyles from "../../../styles/paperStyles";
 import QuizIcon from "@mui/icons-material/Quiz";
 import axios from "axios";
-import { useParams } from "react-router-dom";
 import Quiz from "../../forms/quiz/Quiz";
 
-function QuizPage() {
-  const { quizID } = useParams();
+function QuizPage({ quizID, socket }) {
 
   // State for holding the Quiz object retrieved from the API
   const [quiz, setQuiz] = useState();
@@ -97,7 +95,7 @@ function QuizPage() {
           paddingTop: "0.5rem",
         }}
       >
-        <Quiz quiz={quiz} />
+        <Quiz quiz={quiz} socket={socket} />
       </Paper>
 
       {/* Error message if API call fails  */}

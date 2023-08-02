@@ -124,6 +124,7 @@ const getMessages = async (req, res) => {
     message.timestamp,
     message.room_id,
     message.member_id,
+    message.quiz_id,
     message.hidden,
     parent.message_id AS parent_id,
     parent.hidden AS parent_hidden,
@@ -158,7 +159,7 @@ const getMessages = async (req, res) => {
 const postMessage = async (req, res) => {
   try {
     const roomID = req.params.roomID;
-    const { content, authorID, parentID } = req.body;
+    const { content, authorID, parentID, quizID } = req.body;
 
     // Verify that the roomID parameter contains only digits
     if (!isNumber(roomID)) {
@@ -183,13 +184,14 @@ const postMessage = async (req, res) => {
     }
 
     const addMessageQuery =
-      "INSERT INTO message (content, timestamp, room_id, parent_id, member_id) VALUES ($1, $2, $3, $4, $5)";
+      "INSERT INTO message (content, timestamp, room_id, parent_id, member_id, quiz_id) VALUES ($1, $2, $3, $4, $5, $6)";
     await pool.query(addMessageQuery, [
       content,
       new Date(),
       roomID,
       parentID,
       authorID,
+      quizID || null
     ]);
 
     return res.sendStatus(204);

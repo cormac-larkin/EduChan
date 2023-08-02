@@ -29,8 +29,19 @@ import ReplyIcon from "@mui/icons-material/Reply";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ReplyBubble from "./ReplyBubble";
+import LiveQuizSelectorModal from "../pages/quiz/LiveQuizSelectorModal";
+import QuizPage from "../pages/quiz/QuizPage";
+import LiveResults from "../pages/quiz/LiveResults";
 
-function ChatBox({ room }) {
+function ChatBox({
+  room,
+  activeUsers,
+  setActiveUsers,
+  selectorModalOpen,
+  setSelectorModalOpen,
+  resultsModalOpen,
+  setResultsModalOpen,
+}) {
   const { user } = useContext(AuthContext);
   const chatBox = useRef();
   const cursorPositionRef = useRef(0);
@@ -307,6 +318,10 @@ function ChatBox({ room }) {
       fetchMessages();
     });
 
+    newSocket.on("update-participants", (participants) => {
+      setActiveUsers(participants);
+    })
+
     // Clean up the event listener and close the socket connection when this component unmounts.
     return () => {
       newSocket.off("receive-message", () => {
@@ -327,344 +342,371 @@ function ChatBox({ room }) {
   }, [messages]);
 
   return (
-    <Stack width="100%" height="75vh" justifyContent="space-between">
-      <Stack
-        overflow="auto"
-        ref={chatBox}
-        sx={{ overscrollBehavior: "contain" }}
-      >
-        {messages.map((message) => (
-          <Box
-            id="chatBubbleContainer"
-            key={message.message_id}
-            display="flex"
-            justifyContent={
-              message.member_id === user.id ? "flex-end" : "flex-start" // Owned messages appear on right, un-owned messages appear on left
-            }
-            color={"black"}
-            m="0.5rem"
-          >
+    <>
+      {/* Modal for selecting which quiz to launch in the chat - Controlled by ChatPageKebabMenu */}
+      <LiveQuizSelectorModal
+        room={room}
+        socket={socket}
+        fetchMessages={fetchMessages}
+        selectorModalOpen={selectorModalOpen}
+        setSelectorModalOpen={setSelectorModalOpen}
+        resultsModalOpen={resultsModalOpen}
+        setResultsModalOpen={setResultsModalOpen}
+      />
+
+      {/* Modal for controlling quizzes/viewing quiz results (for Teachers to see after they have launched a quiz) */}
+      <LiveResults
+        socket={socket}
+        activeUsers={activeUsers}
+        setActiveUsers={setActiveUsers}
+        resultsModalOpen={resultsModalOpen}
+        setResultsModalOpen={setResultsModalOpen}
+      />
+
+      <Stack width="100%" height="75vh" justifyContent="space-between">
+        <Stack
+          overflow="auto"
+          ref={chatBox}
+          sx={{ overscrollBehavior: "contain" }}
+        >
+          {messages.map((message) => (
             <Box
-              id="chatBubble"
-              maxWidth={!medScreen ? "80%" : "100%"}
-              borderRadius="30px"
-              p="0.2rem 1rem"
-              // Use different colours for owned/un-owned messages
-              bgcolor={
-                message.member_id === user.id
-                  ? theme.palette.success.main
-                  : theme.palette.primary.main
+              id="chatBubbleContainer"
+              key={message.message_id}
+              display="flex"
+              justifyContent={
+                message.member_id === user.id ? "flex-end" : "flex-start" // Owned messages appear on right, un-owned messages appear on left
               }
-              sx={{
-                borderTopRightRadius: message.member_id === user.id && "0",
-                borderTopLeftRadius: message.member_id !== user.id && "0",
-              }}
+              color="black"
+              m="0.5rem"
             >
-              <Stack>
-                <Typography
-                  color={
-                    message.member_id === user.id
-                      ? theme.palette.success.contrastText
-                      : theme.palette.primary.contrastText
-                  }
-                  borderBottom="1px solid black"
-                  whiteSpace="pre-line" // Preserves newline characters in the message
-                >
-                  {/* If the message is a reply, render the reply bubble with the parent message inside */}
-                  {message.parent_id && !message.hidden && (
-                    <span>
-                      <ReplyBubble
-                        messageID={message.parent_id}
-                        messageContent={message.parent_content}
-                        innerBubble={true}
-                      />
-                    </span>
-                  )}
-                  {message.hidden ? (
-                    <i>--- Message Hidden ---</i>
-                  ) : (
-                    message?.content
-                  )}
-                </Typography>
-                <Stack
-                  direction="row"
-                  justifyContent={
-                    message.member_id === user.id ? "flex-end" : "flex-start"
-                  }
-                  alignItems="center"
-                >
+              <Box
+                id="chatBubble"
+                maxWidth={!medScreen ? "80%" : "100%"}
+                borderRadius="30px"
+                p="0.2rem 1rem"
+                // Use different colours for owned/un-owned messages
+                bgcolor={
+                  message.member_id === user.id
+                    ? theme.palette.success.main
+                    : theme.palette.primary.main
+                }
+                sx={{
+                  borderTopRightRadius: message.member_id === user.id && "0",
+                  borderTopLeftRadius: message.member_id !== user.id && "0",
+                }}
+              >
+                <Stack>
                   <Typography
-                    align="right"
-                    component="p"
-                    fontSize="small"
-                    fontWeight="700"
-                    color="black"
-                    display="flex"
+                    color={
+                      message.member_id === user.id
+                        ? theme.palette.success.contrastText
+                        : theme.palette.primary.contrastText
+                    }
+                    borderBottom="1px solid black"
+                    whiteSpace="pre-line" // Preserves newline characters in the message
+                  >
+                    {/* If the message is a reply, render the reply bubble with the parent message inside */}
+                    {message.parent_id && !message.hidden && (
+                      <span>
+                        <ReplyBubble
+                          messageID={message.parent_id}
+                          messageContent={message.parent_content}
+                          innerBubble={true}
+                        />
+                      </span>
+                    )}
+                    {message.hidden ? (
+                      <i>--- Message Hidden ---</i>
+                    ) : message.quiz_id ? (
+                      <QuizPage quizID={message.quiz_id} socket={socket} />
+                    ) : (
+                      message?.content
+                    )}
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    justifyContent={
+                      message.member_id === user.id ? "flex-end" : "flex-start"
+                    }
                     alignItems="center"
                   >
-                    {`#${message.message_id} | `}
-                    {formatTimestamp(message.timestamp)}
-                  </Typography>
-                  {/* If the user is not the author of the message, render a 'Reply' icon on the chat bubble */}
-                  {message.member_id !== user.id && (
-                    <Tooltip title="Reply">
-                      <ReplyIcon
-                        sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        onClick={() => handleReply(message)}
-                      />
-                    </Tooltip>
-                  )}
-                  {/* If the user is a Teacher, render a 'Delete' icon on the chat bubble */}
-                  {user.isTeacher && (
-                    <Tooltip title="Delete message">
-                      <DeleteForeverIcon
-                        sx={{ marginLeft: "0.5rem", cursor: "pointer" }}
-                        onClick={() =>
-                          handleDeleteSelection(message.message_id)
-                        }
-                      />
-                    </Tooltip>
-                  )}
-                  {/* If the user is a Teacher or owns the message, and message is not hidden, render a 'Hide' icon on the chat bubble */}
-                  {(user.isTeacher || user.id === message.member_id) &&
-                    !message.hidden && (
-                      <Tooltip title="Hide message">
-                        <VisibilityOffIcon
+                    <Typography
+                      align="right"
+                      component="p"
+                      fontSize="small"
+                      fontWeight="700"
+                      color="black"
+                      display="flex"
+                      alignItems="center"
+                    >
+                      {`#${message.message_id} | `}
+                      {formatTimestamp(message.timestamp)}
+                    </Typography>
+                    {/* If the user is not the author of the message, render a 'Reply' icon on the chat bubble */}
+                    {message.member_id !== user.id && (
+                      <Tooltip title="Reply">
+                        <ReplyIcon
                           sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                          onClick={() => handleReply(message)}
+                        />
+                      </Tooltip>
+                    )}
+                    {/* If the user is a Teacher, render a 'Delete' icon on the chat bubble */}
+                    {user.isTeacher && (
+                      <Tooltip title="Delete message">
+                        <DeleteForeverIcon
+                          sx={{ marginLeft: "0.5rem", cursor: "pointer" }}
                           onClick={() =>
-                            handleHideSelection(message.message_id)
+                            handleDeleteSelection(message.message_id)
                           }
                         />
                       </Tooltip>
                     )}
-                  {/* If the user is a Teacher, and the message is hidden, render a 'Show' icon on the chat bubble */}
-                  {(user.isTeacher || user.id === message.member_id) &&
-                    message.hidden && (
-                      <Tooltip title="Show message">
-                        <VisibilityIcon
-                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                          onClick={() => handleUnhideSelection(message)}
-                        />
-                      </Tooltip>
+                    {/* If the user is a Teacher or owns the message, and message is not hidden, render a 'Hide' icon on the chat bubble */}
+                    {(user.isTeacher || user.id === message.member_id) &&
+                      !message.hidden && (
+                        <Tooltip title="Hide message">
+                          <VisibilityOffIcon
+                            sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                            onClick={() =>
+                              handleHideSelection(message.message_id)
+                            }
+                          />
+                        </Tooltip>
+                      )}
+                    {/* If the user is a Teacher, and the message is hidden, render a 'Show' icon on the chat bubble */}
+                    {(user.isTeacher || user.id === message.member_id) &&
+                      message.hidden && (
+                        <Tooltip title="Show message">
+                          <VisibilityIcon
+                            sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                            onClick={() => handleUnhideSelection(message)}
+                          />
+                        </Tooltip>
+                      )}
+                    {/* Display Like button if User has not already liked this comment */}
+                    {!message.likedBy.includes(user.id) && (
+                      <Badge
+                        badgeContent={message.likedBy.length}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "right",
+                        }}
+                        color="secondary"
+                      >
+                        <Tooltip title="Like message">
+                          <ThumbUpIcon
+                            onClick={() => likeMessage(message.message_id)}
+                            sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                          />
+                        </Tooltip>
+                      </Badge>
                     )}
-                  {/* Display Like button if User has not already liked this comment */}
-                  {!message.likedBy.includes(user.id) && (
-                    <Badge
-                      badgeContent={message.likedBy.length}
-                      anchorOrigin={{
-                        vertical: "bottom",
-                        horizontal: "right",
-                      }}
-                      color="secondary"
-                    >
-                      <Tooltip title="Like message">
-                        <ThumbUpIcon
-                          onClick={() => likeMessage(message.message_id)}
-                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        />
-                      </Tooltip>
-                    </Badge>
-                  )}
-                  {/* Display un-like button if User has already liked this comment */}
-                  {message.likedBy.includes(user.id) && (
-                    <Badge
-                      badgeContent={message.likedBy.length}
-                      anchorOrigin={{
-                        vertical: "bottom",
-                        horizontal: "right",
-                      }}
-                      color="secondary"
-                    >
-                      <Tooltip title="Un-like this message">
-                        <ThumbDownIcon
-                          color="action"
-                          onClick={() => unLikeMessage(message.message_id)}
-                          sx={{ marginLeft: "1rem", cursor: "pointer" }}
-                        />
-                      </Tooltip>
-                    </Badge>
-                  )}
+                    {/* Display un-like button if User has already liked this comment */}
+                    {message.likedBy.includes(user.id) && (
+                      <Badge
+                        badgeContent={message.likedBy.length}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "right",
+                        }}
+                        color="secondary"
+                      >
+                        <Tooltip title="Un-like this message">
+                          <ThumbDownIcon
+                            color="action"
+                            onClick={() => unLikeMessage(message.message_id)}
+                            sx={{ marginLeft: "1rem", cursor: "pointer" }}
+                          />
+                        </Tooltip>
+                      </Badge>
+                    )}
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Box>
             </Box>
-          </Box>
-        ))}
-      </Stack>
-
-      <Stack direction="row" paddingTop="0.5rem" alignItems="center">
-        <Stack
-          flexGrow={1}
-          marginRight="0.5rem"
-          maxWidth={smallScreen ? "85%" : "100%"}
-        >
-          {/* Reply Bubble */}
-          {isReply && (
-            <ReplyBubble
-              messageID={parentMessage.message_id}
-              messageContent={parentMessage.content}
-              onClose={handleReplyClose}
-              innerBubble={false}
-            />
-          )}
-
-          <MessageInputBox
-            onChange={handleInputChange}
-            value={newMessage}
-            cursorPositionRef={cursorPositionRef}
-            isReply={isReply}
-            room={room}
-          />
+          ))}
         </Stack>
-        <Box>
-          <Fab
-            disabled={room.read_only} // Disable send button if room is read-only
-            size="medium"
-            color="primary"
-            aria-label="send"
-            onClick={sendMessage}
-            sx={{ height: "3rem", width: "3rem" }}
+
+        <Stack direction="row" paddingTop="0.5rem" alignItems="center">
+          <Stack
+            flexGrow={1}
+            marginRight="0.5rem"
+            maxWidth={smallScreen ? "85%" : "100%"}
           >
-            <SendRoundedIcon />
-          </Fab>
-        </Box>
-      </Stack>
+            {/* Reply Bubble */}
+            {isReply && (
+              <ReplyBubble
+                messageID={parentMessage.message_id}
+                messageContent={parentMessage.content}
+                onClose={handleReplyClose}
+                innerBubble={false}
+              />
+            )}
 
-      {/* Confirmation dialog for message deletion */}
-      <Dialog
-        open={showDeleteConfirmationDialog}
-        onClose={() => setShowDeleteConfirmationDialog(false)}
-        sx={{ paddingLeft: "0.5rem" }}
-      >
-        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
-          Confirm Message Deletion
-        </DialogTitle>
-        <DialogContentText paddingLeft="0.5rem">
-          {`Are you sure you want to delete this message? This action is permanent, and any replies to this message will also be permanently deleted!`}
-        </DialogContentText>
-        <DialogActions>
-          <Button onClick={() => setShowDeleteConfirmationDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => deleteMessage(messageToDelete)} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <MessageInputBox
+              onChange={handleInputChange}
+              value={newMessage}
+              cursorPositionRef={cursorPositionRef}
+              isReply={isReply}
+              room={room}
+            />
+          </Stack>
+          <Box>
+            <Fab
+              disabled={room.read_only} // Disable send button if room is read-only
+              size="medium"
+              color="primary"
+              aria-label="send"
+              onClick={sendMessage}
+              sx={{ height: "3rem", width: "3rem" }}
+            >
+              <SendRoundedIcon />
+            </Fab>
+          </Box>
+        </Stack>
 
-      {/* Confirmation dialog for message hiding */}
-      <Dialog
-        open={showHideConfirmationDialog}
-        onClose={() => setShowHideConfirmationDialog(false)}
-        sx={{ paddingLeft: "0.5rem" }}
-      >
-        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
-          Hide this message?
-        </DialogTitle>
-        <DialogContentText paddingLeft="0.5rem">
-          {`Are you sure you want to hide this message? The message content will be hidden from all users. You may un-hide the message later.`}
-        </DialogContentText>
-        <DialogActions>
-          <Button onClick={() => setShowHideConfirmationDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => hideMessage(messageToHide)} color="error">
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Confirmation dialog for message deletion */}
+        <Dialog
+          open={showDeleteConfirmationDialog}
+          onClose={() => setShowDeleteConfirmationDialog(false)}
+          sx={{ paddingLeft: "0.5rem" }}
+        >
+          <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+            Confirm Message Deletion
+          </DialogTitle>
+          <DialogContentText paddingLeft="0.5rem">
+            {`Are you sure you want to delete this message? This action is permanent, and any replies to this message will also be permanently deleted!`}
+          </DialogContentText>
+          <DialogActions>
+            <Button onClick={() => setShowDeleteConfirmationDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => deleteMessage(messageToDelete)}
+              color="error"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Confirmation dialog for message un-hiding */}
-      <Dialog
-        open={showUnhideConfirmationDialog}
-        onClose={() => setShowUnhideConfirmationDialog(false)}
-        sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
-      >
-        <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
-          Show this message?
-        </DialogTitle>
-        <DialogContentText paddingLeft="0.5rem">
-          {`Are you sure you want to un-hide this message?\n\n'${messageToUnhide?.content}'\n\nThe message content will be visible to all users. You may hide the message again later.`}
-        </DialogContentText>
-        <DialogActions>
-          <Button onClick={() => setShowUnhideConfirmationDialog(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => unHideMessage(messageToUnhide.message_id)}
-            color="error"
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Confirmation dialog for message hiding */}
+        <Dialog
+          open={showHideConfirmationDialog}
+          onClose={() => setShowHideConfirmationDialog(false)}
+          sx={{ paddingLeft: "0.5rem" }}
+        >
+          <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+            Hide this message?
+          </DialogTitle>
+          <DialogContentText paddingLeft="0.5rem">
+            {`Are you sure you want to hide this message? The message content will be hidden from all users. You may un-hide the message later.`}
+          </DialogContentText>
+          <DialogActions>
+            <Button onClick={() => setShowHideConfirmationDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => hideMessage(messageToHide)} color="error">
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Success Message Notification for successful message deletion */}
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showDeletionMessage}
-        autoHideDuration={6000}
-        onClose={() => setShowDeletionMessage(false)}
-        message={"Message deleted successfully!"}
-      >
-        <Alert
-          severity="success"
-          sx={{ width: "100%" }}
+        {/* Confirmation dialog for message un-hiding */}
+        <Dialog
+          open={showUnhideConfirmationDialog}
+          onClose={() => setShowUnhideConfirmationDialog(false)}
+          sx={{ paddingLeft: "0.5rem", whiteSpace: "pre-wrap" }}
+        >
+          <DialogTitle sx={{ paddingLeft: "0.5rem" }}>
+            Show this message?
+          </DialogTitle>
+          <DialogContentText paddingLeft="0.5rem">
+            {`Are you sure you want to un-hide this message?\n\n'${messageToUnhide?.content}'\n\nThe message content will be visible to all users. You may hide the message again later.`}
+          </DialogContentText>
+          <DialogActions>
+            <Button onClick={() => setShowUnhideConfirmationDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => unHideMessage(messageToUnhide.message_id)}
+              color="error"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Success Message Notification for successful message deletion */}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={showDeletionMessage}
+          autoHideDuration={6000}
           onClose={() => setShowDeletionMessage(false)}
+          message={"Message deleted successfully!"}
         >
-          {"Message deleted successfully!"}
-        </Alert>
-      </Snackbar>
+          <Alert
+            severity="success"
+            sx={{ width: "100%" }}
+            onClose={() => setShowDeletionMessage(false)}
+          >
+            {"Message deleted successfully!"}
+          </Alert>
+        </Snackbar>
 
-      {/* Success Message Notification for successful message hiding */}
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={displayHideMessage}
-        autoHideDuration={6000}
-        onClose={() => setDisplayHideMessage(false)}
-        message={"Message hidden successfully!"}
-      >
-        <Alert
-          severity="success"
-          sx={{ width: "100%" }}
+        {/* Success Message Notification for successful message hiding */}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={displayHideMessage}
+          autoHideDuration={6000}
           onClose={() => setDisplayHideMessage(false)}
+          message={"Message hidden successfully!"}
         >
-          {"Message hidden successfully!"}
-        </Alert>
-      </Snackbar>
+          <Alert
+            severity="success"
+            sx={{ width: "100%" }}
+            onClose={() => setDisplayHideMessage(false)}
+          >
+            {"Message hidden successfully!"}
+          </Alert>
+        </Snackbar>
 
-      {/* Success Message Notification for successful message unhiding */}
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={displayUnhideMessage}
-        autoHideDuration={6000}
-        onClose={() => setDisplayUnhideMessage(false)}
-        message={"Message un-hidden successfully!"}
-      >
-        <Alert
-          severity="success"
-          sx={{ width: "100%" }}
+        {/* Success Message Notification for successful message unhiding */}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={displayUnhideMessage}
+          autoHideDuration={6000}
           onClose={() => setDisplayUnhideMessage(false)}
+          message={"Message un-hidden successfully!"}
         >
-          {"Message unhidden successfully!"}
-        </Alert>
-      </Snackbar>
+          <Alert
+            severity="success"
+            sx={{ width: "100%" }}
+            onClose={() => setDisplayUnhideMessage(false)}
+          >
+            {"Message unhidden successfully!"}
+          </Alert>
+        </Snackbar>
 
-      {/* Error message if API call fails */}
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={showError}
-        autoHideDuration={6000}
-        onClose={() => setShowError(false)}
-      >
-        <Alert
-          severity="error"
-          sx={{ width: "100%" }}
+        {/* Error message if API call fails */}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={showError}
+          autoHideDuration={6000}
           onClose={() => setShowError(false)}
         >
-          {error}
-        </Alert>
-      </Snackbar>
-    </Stack>
+          <Alert
+            severity="error"
+            sx={{ width: "100%" }}
+            onClose={() => setShowError(false)}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+      </Stack>
+    </>
   );
 }
 
