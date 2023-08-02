@@ -32,8 +32,6 @@ function ChatRoomPage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const [activeUsers, setActiveUsers] = useState(0);
-
   // State for controlling the LiveQuizSelectorModal
   const [selectorModalOpen, setSelectorModalOpen] = useState(false);
   const [resultsModalOpen, setResultsModalOpen] = useState(false);
@@ -156,8 +154,6 @@ function ChatRoomPage() {
       >
         <ChatBox
           room={room}
-          activeUsers={activeUsers}
-          setActiveUsers={setActiveUsers}
           selectorModalOpen={selectorModalOpen}
           setSelectorModalOpen={setSelectorModalOpen}
           resultsModalOpen={resultsModalOpen}

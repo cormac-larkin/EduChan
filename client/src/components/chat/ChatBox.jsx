@@ -29,14 +29,13 @@ import ReplyIcon from "@mui/icons-material/Reply";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ReplyBubble from "./ReplyBubble";
-import LiveQuizSelectorModal from "../pages/quiz/LiveQuizSelectorModal";
+import LiveQuizSelectorModal from "../forms/quiz/LiveQuizSelectorModal";
 import QuizPage from "../pages/quiz/QuizPage";
-import LiveResults from "../pages/quiz/LiveResults";
+import EmbeddedResults from "../quiz/EmbeddedResults";
+import LiveResults from "../quiz/LiveResults";
 
 function ChatBox({
   room,
-  activeUsers,
-  setActiveUsers,
   selectorModalOpen,
   setSelectorModalOpen,
   resultsModalOpen,
@@ -53,6 +52,9 @@ function ChatBox({
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
+
+  // Array containing the Unique SocketID of all connected users/clients
+  const [activeUsers, setActiveUsers] = useState([]);
 
   // States for handling message deletion
   const [messageToDelete, setMessageToDelete] = useState(null);
@@ -320,7 +322,7 @@ function ChatBox({
 
     newSocket.on("update-participants", (participants) => {
       setActiveUsers(participants);
-    })
+    });
 
     // Clean up the event listener and close the socket connection when this component unmounts.
     return () => {
@@ -354,14 +356,14 @@ function ChatBox({
         setResultsModalOpen={setResultsModalOpen}
       />
 
-      {/* Modal for controlling quizzes/viewing quiz results (for Teachers to see after they have launched a quiz) */}
+      {/* Modal for controlling quizzes/viewing quiz results (for Teachers to see after they have launched a quiz)
       <LiveResults
         socket={socket}
         activeUsers={activeUsers}
         setActiveUsers={setActiveUsers}
         resultsModalOpen={resultsModalOpen}
         setResultsModalOpen={setResultsModalOpen}
-      />
+      /> */}
 
       <Stack width="100%" height="75vh" justifyContent="space-between">
         <Stack
@@ -418,7 +420,9 @@ function ChatBox({
                     )}
                     {message.hidden ? (
                       <i>--- Message Hidden ---</i>
-                    ) : message.quiz_id ? (
+                    ) : message.quiz_id && user.isTeacher ? (
+                      <EmbeddedResults quizID={message.quiz_id} socket={socket} activeUsers={activeUsers} />
+                    ) : message.quiz_id && !user.isTeacher ? (
                       <QuizPage quizID={message.quiz_id} socket={socket} />
                     ) : (
                       message?.content

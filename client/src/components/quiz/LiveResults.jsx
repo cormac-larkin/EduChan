@@ -1,6 +1,6 @@
 import { Typography, Fade, Backdrop, Modal, Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
-import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
+import LoadingSpinnerPage from "../pages/error/LoadingSpinnerPage";
 
 const style = {
   position: "absolute",

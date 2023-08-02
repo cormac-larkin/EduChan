@@ -69,11 +69,11 @@ function QuizQuestion({ question, questionNumber, setQuizAttempt, socket }) {
                   <Checkbox
                     edge="start"
                     checked={isChecked} // Box is checked if the answer object in the array of answers is set as chosen
-                    onChange={async () => {
+                    onChange={async (e) => {
                       await socket.emit("new-answer", {
-                        studentID: socket.id,
-                        answerID: answer_id,
-                        is_correct
+                        socketID: socket.id,
+                        questionIndex: (questionNumber - 1),
+                        isCorrect: (is_correct && e.target.checked) ? true : (!is_correct && e.target.checked) ? false : null
                       });
                     }}
                   />
