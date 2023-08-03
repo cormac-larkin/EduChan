@@ -1,16 +1,26 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { Snackbar, Alert, Stack, Typography, Paper, Divider } from "@mui/material";
+import {
+  Snackbar,
+  Alert,
+  Stack,
+  Typography,
+  Paper,
+  Divider,
+} from "@mui/material";
 import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
 import QuizIcon from "@mui/icons-material/Quiz";
 import Error404Page from "../error/Error404Page";
 import paperStyles from "../../../styles/paperStyles";
 import QuizQuestionAttempt from "../../forms/quiz/QuizQuestionAttempt";
+import { AuthContext } from "../../authentication/AuthProvider";
 
-function ViewQuizAttemptPage() {
-  const location = useLocation();
-  const { attemptID } = useParams();
+function ViewQuizAttemptPage({ quizID }) {
+  // const location = useLocation();
+  // const { attemptID } = useParams();
+
+  const { user } = useContext(AuthContext);
 
   // State for holding the Quiz Attempt object retrieved from the API
   const [quizAttempt, setQuizAttempt] = useState();
@@ -27,9 +37,16 @@ function ViewQuizAttemptPage() {
   const fetchQuizAttempt = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/quizzes/attempts/${attemptID}`,
+        `http://localhost:5000/users/${user.id}/quizzes/${quizID}/attempts/`,
         { withCredentials: true }
       );
+
+      // If no attempt is found for this user for the quiz, render a message instad of the results page
+      if(response?.data.quiz_attempt.length === 0) {
+        setQuizAttempt(null);
+        setIsLoading(false);
+        return;
+      }
       setQuizAttempt(response?.data?.quiz_attempt);
       setIsLoading(false);
     } catch (error) {
@@ -44,16 +61,16 @@ function ViewQuizAttemptPage() {
   };
 
   useEffect(() => {
-    // On first render, check if a success message was passed from the previous page
-    // If so, save it in the 'succcessMessage' state, then set the 'showSuccessMessage' state to true so it will be displayed
-    if (location.state?.message) {
-      setSuccessMessage(location.state.message);
-      setShowSuccessMessage(true);
-      window.history.replaceState(null, ""); // Clear the history state after the message is retrieved
-    }
+    // // On first render, check if a success message was passed from the previous page
+    // // If so, save it in the 'succcessMessage' state, then set the 'showSuccessMessage' state to true so it will be displayed
+    // if (location.state?.message) {
+    //   setSuccessMessage(location.state.message);
+    //   setShowSuccessMessage(true);
+    //   window.history.replaceState(null, ""); // Clear the history state after the message is retrieved
+    // }
     fetchQuizAttempt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]);
+  }, []);
 
   // Display Loading animation while API call is in progress
   if (loading) {
@@ -62,7 +79,7 @@ function ViewQuizAttemptPage() {
 
   // If no room with the specified ID is found, render the 404 Error Page
   if (quizAttempt === null) {
-    return <Error404Page />;
+    return <> --- Quiz Ended ---</>;
   }
 
   return (
@@ -91,7 +108,11 @@ function ViewQuizAttemptPage() {
         }}
       >
         {quizAttempt.questions.map((question, index) => (
-          <QuizQuestionAttempt key={index} question={question} questionNumber={index + 1}/>
+          <QuizQuestionAttempt
+            key={index}
+            question={question}
+            questionNumber={index + 1}
+          />
         ))}
       </Paper>
 

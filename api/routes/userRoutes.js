@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerStudent, registerTeacher, getUser, getAllUsers, getOwnedChats, getJoinedChats, approveUsers, getQuizAttempts, getOwnedQuizzes } from "../controllers/userControllers.js";
+import { registerStudent, registerTeacher, getUser, getAllUsers, getOwnedChats, getJoinedChats, approveUsers, getQuizAttempt, getOwnedQuizzes } from "../controllers/userControllers.js";
 import verifyAuthStatus from "../middleware/verifyAuthStatus.js";
 import verifyAdminStatus from "../middleware/verifyAdminStatus.js";
 import verifyTeacherRole from "../middleware/verifyTeacherRole.js";
@@ -15,7 +15,7 @@ router.get("/:userID/chats/joined", verifyAuthStatus, getJoinedChats);
 
 router.get("/:userID/quizzes", verifyAuthStatus, verifyTeacherRole, getOwnedQuizzes);
 
-router.get("/:userID/quizzes/attempts", verifyAuthStatus, getQuizAttempts);
+router.get("/:userID/quizzes/:quizID/attempts", verifyAuthStatus, getQuizAttempt);
 
 router.post("/teachers", registerTeacher);
 router.post("/students", registerStudent);

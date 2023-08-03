@@ -108,11 +108,12 @@ const registerStudent = async (req, res) => {
     const hashedPassword = await hash(password, 10); // Hash the plaintext password before inserting into DB
 
     const insertNewUser =
-      "INSERT INTO member (first_name, last_name, is_admin, email, student_number, password_hash, join_date, last_login, is_approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
+      "INSERT INTO member (first_name, last_name, is_teacher, is_admin, email, student_number, password_hash, join_date, last_login, is_approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
     const userData = [
       firstName,
       lastName,
-      false, // Mark user as a non-Teacher (Student)
+      false, // Mark as non Teacher (Student)
+      false, // Mark user as a non-Admin 
       email,
       studentNumber,
       hashedPassword,
@@ -257,12 +258,13 @@ const approveUsers = async (req, res) => {
   }
 };
 
-const getQuizAttempts = async (req, res) => {
+const getQuizAttempt = async (req, res) => {
   try {
     const userID = req.params.userID;
+    const quizID = req.params.quizID;
 
     // Validate that the roomID parameter contains only digits
-    if (!isNumber(userID)) {
+    if (!isNumber(userID) || !isNumber(quizID)) {
       return res.sendStatus(400);
     }
 
@@ -277,9 +279,10 @@ const getQuizAttempts = async (req, res) => {
         .json({ error: `User with ID '${userID}' not found` });
     }
 
-    // Get the users quiz attempts
+    // Get the users attempt for this quiz
     const getQuizAttemptsQuery = `WITH question_answers AS (
       SELECT
+        a.attempt_id,
         q.quiz_id,
         q.title AS quiz_title,
         qn.question_id,
@@ -304,13 +307,15 @@ const getQuizAttempts = async (req, res) => {
         question qn ON aa.question_id = qn.question_id
       LEFT JOIN
         answer ans ON aa.answer_id = ans.answer_id
-      WHERE
-        m.member_id = $1
+        WHERE
+            a.member_id = $1
+        and a.quiz_id = $2
       GROUP BY
-        q.quiz_id, q.title, qn.question_id, qn.content
+        a.attempt_id, q.quiz_id, q.title, qn.question_id, qn.content
     )
     SELECT
       json_build_object(
+        'attempt_id', attempt_id, -- Include attempt_id in the json_build_object
         'quiz_id', quiz_id,
         'quiz_title', quiz_title,
         'questions', json_agg(
@@ -324,13 +329,15 @@ const getQuizAttempts = async (req, res) => {
     FROM
       question_answers
     GROUP BY
-      quiz_id, quiz_title;`;
+      attempt_id, quiz_id, quiz_title
+    ORDER BY
+      attempt_id DESC;`;
 
     const getQuizAttemptsResult = await pool.query(getQuizAttemptsQuery, [
-      userID,
+      userID, quizID
     ]);
 
-    return res.status(200).json(getQuizAttemptsResult.rows);
+    return res.status(200).json(getQuizAttemptsResult.rows[0]);
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -376,6 +383,6 @@ export {
   getOwnedChats,
   getJoinedChats,
   approveUsers,
-  getQuizAttempts,
+  getQuizAttempt,
   getOwnedQuizzes,
 };

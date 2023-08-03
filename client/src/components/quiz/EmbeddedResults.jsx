@@ -97,10 +97,10 @@ function EmbeddedResults({ quizID, socket, activeUsers }) {
         });
       });
 
-      // When clients disconnect, remove their object from the questionResults array
-      socket.on("disconnect", (socketID) => {
-        setQuestionResults((prevResults) => prevResults.filter((obj) => obj.socketID !== socketID));
-      })
+      // // When clients disconnect, remove their object from the questionResults
+      // socket.on("disconnect", (socketID) => {
+      //   setQuestionResults((prevResults) => prevResults.filter((obj) => obj.socketID !== socketID));
+      // })
     }
   }, [loading]);
 

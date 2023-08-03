@@ -31,8 +31,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ReplyBubble from "./ReplyBubble";
 import LiveQuizSelectorModal from "../forms/quiz/LiveQuizSelectorModal";
 import QuizPage from "../pages/quiz/QuizPage";
-import EmbeddedResults from "../quiz/EmbeddedResults";
-import LiveResults from "../quiz/LiveResults";
+import ViewQuizAttemptPage from "../pages/quiz/ViewQuizAttemptPage";
 
 function ChatBox({
   room,
@@ -314,6 +313,10 @@ function ChatBox({
       fetchMessages();
     });
 
+    newSocket.on("end-quiz", () => {
+      fetchMessages();
+    })
+
     // Listen for the 'delete-message' event from the WS server which signals that another WS client has posted a message.
     // Retrieve the latest messages from the API when this event is detected
     newSocket.on("delete-message", () => {
@@ -355,15 +358,6 @@ function ChatBox({
         resultsModalOpen={resultsModalOpen}
         setResultsModalOpen={setResultsModalOpen}
       />
-
-      {/* Modal for controlling quizzes/viewing quiz results (for Teachers to see after they have launched a quiz)
-      <LiveResults
-        socket={socket}
-        activeUsers={activeUsers}
-        setActiveUsers={setActiveUsers}
-        resultsModalOpen={resultsModalOpen}
-        setResultsModalOpen={setResultsModalOpen}
-      /> */}
 
       <Stack width="100%" height="75vh" justifyContent="space-between">
         <Stack
@@ -420,10 +414,20 @@ function ChatBox({
                     )}
                     {message.hidden ? (
                       <i>--- Message Hidden ---</i>
-                    ) : message.quiz_id && user.isTeacher ? (
-                      <EmbeddedResults quizID={message.quiz_id} socket={socket} activeUsers={activeUsers} />
-                    ) : message.quiz_id && !user.isTeacher ? (
-                      <QuizPage quizID={message.quiz_id} socket={socket} />
+                    ) : message.quiz_id &&
+                      message.quiz_ended &&
+                      user.isTeacher ? (
+                      <i>--- Quiz Ended--- </i>
+                    ) : message.quiz_id &&
+                      message.quiz_ended &&
+                      !user.isTeacher ? (
+                      <ViewQuizAttemptPage quizID={message.quiz_id} />
+                    ) : message.quiz_id && !message.quiz_ended ? (
+                      <QuizPage
+                        quizID={message.quiz_id}
+                        messageID={message.message_id}
+                        socket={socket}
+                      />
                     ) : (
                       message?.content
                     )}

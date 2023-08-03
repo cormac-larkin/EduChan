@@ -126,6 +126,7 @@ const getMessages = async (req, res) => {
     message.member_id,
     message.quiz_id,
     message.hidden,
+    message.quiz_ended,
     parent.message_id AS parent_id,
     parent.hidden AS parent_hidden,
     CASE
@@ -179,8 +180,10 @@ const postMessage = async (req, res) => {
     }
 
     // Verify that the room is not set as 'read only'
-    if(findRoomResult.rows[0].read_only) {
-      return res.status(403).json({error: `Error: Failed to post message. Room is set to 'read-only'`})
+    if (findRoomResult.rows[0].read_only) {
+      return res.status(403).json({
+        error: `Error: Failed to post message. Room is set to 'read-only'`,
+      });
     }
 
     const addMessageQuery =
@@ -191,7 +194,7 @@ const postMessage = async (req, res) => {
       roomID,
       parentID,
       authorID,
-      quizID || null
+      quizID || null,
     ]);
 
     return res.sendStatus(204);
@@ -874,7 +877,8 @@ const changeReadOnlyStatus = async (req, res) => {
     // Verify the request body contains the required property
     if (readOnly === null || readOnly === undefined) {
       return res.status(400).json({
-        error: "Request body must contain the 'readOnly' property with a value of 'true' or 'false'",
+        error:
+          "Request body must contain the 'readOnly' property with a value of 'true' or 'false'",
       });
     }
 
@@ -902,14 +906,46 @@ const changeReadOnlyStatus = async (req, res) => {
     }
 
     // Set the read-only status of the room
-    const setReadOnlyQuery = "UPDATE room SET read_only = $1 WHERE room_id = $2";
+    const setReadOnlyQuery =
+      "UPDATE room SET read_only = $1 WHERE room_id = $2";
     await pool.query(setReadOnlyQuery, [readOnly, roomID]);
 
-    return res.status(200).json({message: `Read-only status of room '${roomID}' set to ''${readOnly}`});
-
+    return res.status(200).json({
+      message: `Read-only status of room '${roomID}' set to ''${readOnly}`,
+    });
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
+  }
+};
+
+// Links a quiz attempt to a message which contains a quiz - so results can be displayed after quiz is submitted
+const endQuiz = async (req, res) => {
+  try {
+    const messageID = req.params.messageID;
+
+    // Verify that the messageID only contains digits
+    if (!isNumber(messageID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the messageID exists and is associated with a quiz
+    const findMessageQuery =
+      "SELECT * FROM message WHERE message_id = $1 AND quiz_id IS NOT NULL";
+    const findMessageResult = await pool.query(findMessageQuery, [messageID]);
+    if (!findMessageResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Mark the quiz in the message as ended
+    const endQuizQuery =
+      "UPDATE message SET quiz_ended = true WHERE message_id = $1";
+    await pool.query(endQuizQuery, [messageID]);
+
+    return res.status(200).json({ message: "Quiz ended successfully" });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
 };
 
@@ -930,4 +966,5 @@ export {
   likeMessage,
   unlikeMessage,
   changeReadOnlyStatus,
+  endQuiz,
 };

@@ -11,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 
-function QuizQuestion({ question, questionNumber, setQuizAttempt, socket }) {
+function QuizQuestion({ question, questionNumber, setQuizAttempt }) {
   const { question_id, content: questionText, answers: answerList } = question;
 
   // Object containing the question_id and an array of answers objects
@@ -69,13 +69,6 @@ function QuizQuestion({ question, questionNumber, setQuizAttempt, socket }) {
                   <Checkbox
                     edge="start"
                     checked={isChecked} // Box is checked if the answer object in the array of answers is set as chosen
-                    onChange={async (e) => {
-                      await socket.emit("new-answer", {
-                        socketID: socket.id,
-                        questionIndex: (questionNumber - 1),
-                        isCorrect: (is_correct && e.target.checked) ? true : (!is_correct && e.target.checked) ? false : null
-                      });
-                    }}
                   />
                 </ListItemIcon>
                 <ListItemText primary={answerText} />

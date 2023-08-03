@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Stack,
   Typography,
@@ -6,6 +6,8 @@ import {
   Alert,
   Divider,
   Paper,
+  Fab,
+  Tooltip,
 } from "@mui/material";
 import Error404Page from "../error/Error404Page";
 import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
@@ -13,8 +15,11 @@ import paperStyles from "../../../styles/paperStyles";
 import QuizIcon from "@mui/icons-material/Quiz";
 import axios from "axios";
 import Quiz from "../../forms/quiz/Quiz";
+import { AuthContext } from "../../authentication/AuthProvider";
+import StopCircleIcon from "@mui/icons-material/StopCircle";
 
-function QuizPage({ quizID, socket }) {
+function QuizPage({ quizID, messageID, socket }) {
+  const { user } = useContext(AuthContext);
 
   // State for holding the Quiz object retrieved from the API
   const [quiz, setQuiz] = useState();
@@ -45,8 +50,21 @@ function QuizPage({ quizID, socket }) {
     }
   };
 
+  // Mark the quiz as ended in the database and emit the end-quiz event over websocket, which force submits all open quizzes
+  const endQuiz = async () => {
+    try {
+      await axios.put(`http://localhost:5000/chats/messages/${messageID}/end-quiz`, {}, {
+        withCredentials: true
+      })
+      await socket.emit("end-quiz");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchQuiz();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,19 +84,37 @@ function QuizPage({ quizID, socket }) {
         <Stack justifyContent="center">
           <QuizIcon />
         </Stack>
-        <Stack pl="0.5rem">
-          <Typography component="h1" variant="h5" align="left">
-            <b>{`Take the '${quiz.title}' quiz`}</b>
-          </Typography>
-          {quiz.description && (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              align="left"
-              paddingLeft="0.2rem"
-            >
-              {quiz.description}
+        <Stack
+          direction="row"
+          width="100%"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Stack pl="0.5rem">
+            <Typography component="h1" variant="h5" align="left">
+              {user.isTeacher ? (
+                <b>{`'${quiz.title}'`}</b>
+              ) : (
+                <b>{`Take the '${quiz.title}' quiz`}</b>
+              )}
             </Typography>
+            {quiz.description && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="left"
+                paddingLeft="0.2rem"
+              >
+                {quiz.description}
+              </Typography>
+            )}
+          </Stack>
+          {user.isTeacher && (
+            <Tooltip title="End Quiz">
+              <Fab size="small" onClick={endQuiz}>
+                <StopCircleIcon />
+              </Fab>
+            </Tooltip>
           )}
         </Stack>
       </Stack>

@@ -42,10 +42,6 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("delete-message");
   });
 
-  socket.on("new-answer", (newAnswer) => {
-    socket.broadcast.emit("new-answer", newAnswer)
-  })
-
   // End quizzes
   socket.on("end-quiz", () => {
     socket.broadcast.emit("end-quiz")

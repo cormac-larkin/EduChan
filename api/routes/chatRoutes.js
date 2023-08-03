@@ -17,7 +17,8 @@ import {
   hideRoom,
   likeMessage,
   unlikeMessage,
-  changeReadOnlyStatus
+  changeReadOnlyStatus,
+  endQuiz,
 } from "../controllers/chatControllers.js";
 
 const router = Router();
@@ -42,6 +43,8 @@ router.put("/:roomID/show", verifyTeacherRole, showRoom);
 
 router.put("/:roomID/messages/:messageID/hide", hideMessage);
 router.put("/:roomID/messages/:messageID/show", showMessage);
+
+router.put("/messages/:messageID/end-quiz", endQuiz);
 
 router.post("/:roomID/messages/:messageID/like", likeMessage);
 router.delete("/:roomID/messages/:messageID/like", unlikeMessage);
