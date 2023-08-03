@@ -165,7 +165,7 @@ function ChatBox({
       );
       // Emit 'send-message' event to WS server and fetch latest messages from the API
       // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
-      await socket.emit("send-message", messageData);
+      await socket.emit("send-message", room.title);
       setShouldScroll(true);
       fetchMessages();
       setNewMessage(""); // Clear the message input field
@@ -199,7 +199,7 @@ function ChatBox({
           withCredentials: true,
         }
       );
-      await socket.emit("delete-message");
+      await socket.emit("delete-message", room.title);
       fetchMessages();
       setShowDeleteConfirmationDialog(false);
       setShowDeletionMessage(true);
@@ -226,7 +226,7 @@ function ChatBox({
           withCredentials: true,
         }
       );
-      await socket.emit("delete-message");
+      await socket.emit("delete-message", room.title);
       fetchMessages();
       setShowHideConfirmationDialog(false);
       setDisplayHideMessage(true);
@@ -251,7 +251,7 @@ function ChatBox({
           withCredentials: true,
         }
       );
-      await socket.emit("delete-message");
+      await socket.emit("delete-message", room.title);
       fetchMessages();
       setShowUnhideConfirmationDialog(false);
       setDisplayUnhideMessage(true);
@@ -273,7 +273,7 @@ function ChatBox({
           withCredentials: true,
         }
       );
-      await socket.emit("delete-message");
+      await socket.emit("delete-message", room.title);
       fetchMessages();
     } catch (error) {
       setError(error?.response?.data?.error || "Error: Unable to like message");
@@ -290,7 +290,7 @@ function ChatBox({
           withCredentials: true,
         }
       );
-      await socket.emit("delete-message");
+      await socket.emit("delete-message", room.title);
       fetchMessages();
     } catch (error) {
       setError(
@@ -306,6 +306,9 @@ function ChatBox({
     fetchMessages();
     const newSocket = io.connect("http://localhost:4000");
     setSocket(newSocket);
+
+    // Join the socket room for this chat (so any events will only be emitted to other clients in this room)
+    newSocket.emit("join-room", room.title);
 
     // Listen for the 'receive-message' event from the WS server which signals that another WS client has posted a message.
     // Retrieve the latest messages from the API when this event is detected
@@ -427,6 +430,7 @@ function ChatBox({
                         quizID={message.quiz_id}
                         messageID={message.message_id}
                         socket={socket}
+                        room={room}
                       />
                     ) : (
                       message?.content

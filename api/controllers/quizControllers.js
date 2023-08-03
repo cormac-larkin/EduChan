@@ -296,4 +296,58 @@ const getAttempt = async (req, res) => {
   }
 };
 
-export { createQuiz, getQuiz, addQuestion, addAttempt, getAttempt };
+const editQuestion = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const quizID = req.params.quizID;
+    const questionID = req.params.questionID;
+
+    const { questionText, answers } = req.body;
+
+    console.log(req.body);
+
+    // Verify that the quizID and questionID are both numbers
+    if (!isNumber(quizID) || !isNumber(questionID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify body properties are present
+    if (!questionText || !answers) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the client has permission to edit questions in this quiz (must own the quiz)
+    const findQuizQuery =
+      "SELECT * FROM quiz WHERE quiz_id = $1 AND member_id = $2";
+    const findQuizResult = await pool.query(findQuizQuery, [quizID, userID]);
+    if (!findQuizResult.rowCount) {
+      return res.sendStatus(403);
+    }
+
+    // Edit the question
+    const editQuestionQuery =
+      "UPDATE question SET content = $1 WHERE question_id = $2";
+    const editQuestionResult = await pool.query(editQuestionQuery, [
+      questionText,
+      questionID,
+    ]);
+
+    // Edit the answers
+    for (const answer of answers) {
+      const editAnswerQuery =
+        "UPDATE answer SET content = $1, is_correct = $2 WHERE answer_id = $3";
+      await pool.query(editAnswerQuery, [
+        answer.answerText,
+        answer.isCorrect,
+        answer.id
+      ]);
+    }
+
+    return res.status(200).json({ message: "Question edited successfully" });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+}
+
+export { createQuiz, getQuiz, addQuestion, addAttempt, getAttempt, editQuestion };

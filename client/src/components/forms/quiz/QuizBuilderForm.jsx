@@ -1,9 +1,10 @@
-import { Stack, Typography, Fab, Tooltip } from "@mui/material";
+import { Stack, Typography, Fab, Tooltip, Divider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
 import QuestionBuilderForm from "./QuestionBuilderForm";
+import QuestionEditorForm from "./QuestionEditorForm";
 
-function QuizBuilderForm({ quiz }) {
+function QuizBuilderForm({ quiz, fetchQuiz }) {
   // State to hold the number of questions this quiz will have
   const [questionBuilderForms, setQuestionBuilderForms] = useState([]);
 
@@ -15,6 +16,8 @@ function QuizBuilderForm({ quiz }) {
         key={Date.now()}
         questionNumber={questionBuilderForms.length + 1}
         quiz={quiz}
+        fetchQuiz={fetchQuiz}
+        setQuestionBuilderForms={setQuestionBuilderForms}
       />,
     ]);
   };
@@ -43,24 +46,43 @@ function QuizBuilderForm({ quiz }) {
           </Fab>
         </Tooltip>
       </Stack>
-      <Typography
-        component="h1"
-        variant="h4"
-        align="center"
-        paddingTop="0.5rem"
-      >
-        {quiz.title}
-      </Typography>
-      {quiz.description && (
+
+      {/* Render header only if there are existing questions */}
+      {quiz?.questions[0]?.question_id && (
         <Typography
-          variant="body2"
-          color="text.secondary"
+          component="h1"
+          variant="h4"
           align="center"
-          paddingBottom="0.5rem"
+          paddingTop="0.5rem"
         >
-          {quiz.description}
+          {"Edit Existing Questions"}
         </Typography>
       )}
+
+      {/* Render question editor forms only if there are existing questions to edit */}
+      {quiz?.questions[0]?.question_id &&
+        quiz?.questions.map((question, index) => (
+          <QuestionEditorForm
+            key={index}
+            question={question}
+            questionNumber={index + 1}
+            quiz={quiz}
+            fetchQuiz={fetchQuiz}
+          />
+        ))}
+
+      {questionBuilderForms.length > 0 && (
+        <Typography
+          component="h1"
+          variant="h4"
+          align="center"
+          paddingTop="0.5rem"
+          paddingBottom="0.5rem"
+        >
+          {"Add New Questions"}
+        </Typography>
+      )}
+      <Divider />
 
       {/* Render the array of QuestionBuilder forms constructed above */}
       {questionBuilderForms}

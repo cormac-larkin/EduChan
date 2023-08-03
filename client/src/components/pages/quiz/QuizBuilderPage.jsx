@@ -83,7 +83,7 @@ function QuizBuilderPage() {
         </Stack>
 
         <Typography component="h1" variant="h5" align="left" pl="0.5rem">
-          <b>{`Edit Quiz`}</b>
+          <b>{`Edit '${quiz.title}' Quiz`}</b>
         </Typography>
       </Stack>
       <Divider />
@@ -99,7 +99,7 @@ function QuizBuilderPage() {
           paddingTop: "0.5rem",
         }}
       >
-        <QuizBuilderForm quiz={quiz} />
+        <QuizBuilderForm quiz={quiz} fetchQuiz={fetchQuiz} />
       </Paper>
 
       {/* Error message if API call fails  */}

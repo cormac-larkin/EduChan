@@ -25,26 +25,35 @@ io.on("connection", (socket) => {
   io.sockets.emit("update-participants", connectedSocketIDs) // Each time theres a connection, broadcast the total number of connected sockets
 
   // When a connected client emits the 'join-room' event, add them to the specified room.
-  // Future messages addressed to this room will only be delivered to clients who have joined it.
-  socket.on("join-room", (room) => {
-    socket.join(room);
-    console.log(`User ID ${socket.id} joined room: ${room}`);
+  // Future messages/events addressed to this room will only be delivered to clients who have joined it.
+  socket.on("join-room", (roomTitle) => {
+
+    // Leave any previously joined rooms
+   const currentRoom = Object.keys(socket.rooms)[1];
+   if (currentRoom) {
+     socket.leave(currentRoom);
+     console.log(`User left room: ${currentRoom}`);
+   }
+
+    // Join the specified room
+    socket.join(roomTitle);
+    console.log(`User ID ${socket.id} joined room: '${roomTitle}'`);
   });
+
 
   // When a connected client emits the 'send-message' event, emit their message to all other clients.
   // Emit the 'receive-message' event along with the message, so clients know that a new message has been delivered.
-  socket.on("send-message", (message) => {
-    // socket.to(message.room).emit("receive-message", message)
-    socket.broadcast.emit("receive-message", message);
+  socket.on("send-message", (roomTitle) => {
+    socket.to(roomTitle).emit('receive-message');
   });
 
-  socket.on("delete-message", () => {
-    socket.broadcast.emit("delete-message");
+  socket.on("delete-message", (roomTitle) => {
+    socket.to(roomTitle).emit("delete-message");
   });
 
   // End quizzes
-  socket.on("end-quiz", () => {
-    socket.broadcast.emit("end-quiz")
+  socket.on("end-quiz", (roomTitle) => {
+    socket.to(roomTitle).emit("end-quiz")
   })
 
   socket.on("disconnect", () => {

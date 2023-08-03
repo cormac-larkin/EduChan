@@ -21,7 +21,7 @@ import { useTheme } from "@emotion/react";
 import AnswerInputField from "./AnswerInputField";
 import axios from "axios";
 
-function QuestionBuilderForm({ quiz, questionNumber }) {
+function QuestionBuilderForm({ quiz, fetchQuiz, questionNumber, setQuestionBuilderForms }) {
   const theme = useTheme();
 
   // Array to hold AnswerInputFields added by the user
@@ -41,6 +41,12 @@ function QuestionBuilderForm({ quiz, questionNumber }) {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const deleteThisForm = () => {
+    setQuestionBuilderForms((prevForms) =>
+      prevForms.filter((form) => form.props.questionNumber !== questionNumber)
+    );
+  };
+
   // Add a new answer input field when user clicks the 'add' button
   const addInputField = () => {
     setAnswerInputFields((prevFields) => [
@@ -57,10 +63,13 @@ function QuestionBuilderForm({ quiz, questionNumber }) {
   // Submit the question and its answers to the API
   const handleSubmit = async (e) => {
 
+    e.preventDefault();
+
     if(!questionText || savedAnswers.length === 0) {
         alert("Each Question must have a question prompt and at least one answer")
+        return;
     }
-    e.preventDefault();
+    
     try {
       await axios.post(
         `http://localhost:5000/quizzes/${quiz.quiz_id}/`,
@@ -74,6 +83,9 @@ function QuestionBuilderForm({ quiz, questionNumber }) {
       );
       setSubmitted(true);
       setShowSuccessMessage(true);
+      
+      fetchQuiz(); // Fetch the new version of the quiz from the API so all existing questions will be displayed on the QuizBuilderForm
+      deleteThisForm();
     } catch (error) {
       setErrorMessage(
         error?.response?.data?.error || "Error: Unable to save question"
@@ -102,7 +114,7 @@ function QuestionBuilderForm({ quiz, questionNumber }) {
             component="h1"
             variant="h5"
           >
-            {`Question ${questionNumber}`}
+            {`New Question`}
           </Typography>
         </AccordionSummary>
         <Box
