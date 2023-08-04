@@ -32,7 +32,6 @@ function LiveQuizSelectorModal({
   fetchMessages,
   selectorModalOpen,
   setSelectorModalOpen,
-  setResultsModalOpen
 }) {
   const { user } = useContext(AuthContext);
 
@@ -63,14 +62,13 @@ function LiveQuizSelectorModal({
     try {
       await axios.post(
         `http://localhost:5000/chats/${room.room_id}/messages`,
-        { content: "Live Quiz", authorID: user.id, parent_id: null, quizID: quizID },
+        { content: "--- Live Quiz ---", authorID: user.id, parent_id: null, quizID: quizID },
         { withCredentials: true }
       );
       // Emit 'send-message' event to WS server and fetch latest messages from the API
       // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
       await socket.emit("send-message", room.title);
       fetchMessages();
-      setResultsModalOpen(true);
     } catch (error) {
       console.error(error);
     }

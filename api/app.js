@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import promptRoutes from "./routes/promptRoutes.js"
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes)
 app.use("/chats", chatRoutes);
 app.use("/quizzes", quizRoutes);
+app.use("/prompts", promptRoutes);
 
 export default app;
 

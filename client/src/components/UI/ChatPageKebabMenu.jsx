@@ -4,18 +4,25 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-function ChatPageKebabMenu({ room, onReadOnlyChange, setSelectorModalOpen }) {
+function ChatPageKebabMenu({
+  room,
+  onReadOnlyChange,
+  setSelectorModalOpen,
+  setPromptModalOpen,
+}) {
   const navigate = useNavigate();
 
   // State to handle confirmation/success messages for setting room as read-only
-  const [showReadOnlySuccessMessage, setShowReadOnlySuccessMessage] = useState(false);
+  const [showReadOnlySuccessMessage, setShowReadOnlySuccessMessage] =
+    useState(false);
 
   // State to handle confirmation/success messages for setting room as NOT read-only
-  const [showNotReadOnlySuccessMessage, setShowNotReadOnlySuccessMessage] = useState(false);
+  const [showNotReadOnlySuccessMessage, setShowNotReadOnlySuccessMessage] =
+    useState(false);
 
   // States for handling showing error messages from the API
   const [errorMessage, setErrorMessage] = useState("");
-  const [showErrorMessage, setShowErrorMessage] = useState(false); 
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   // Sets the room as read only
   const setAsReadOnly = async () => {
@@ -30,14 +37,15 @@ function ChatPageKebabMenu({ room, onReadOnlyChange, setSelectorModalOpen }) {
       setShowReadOnlySuccessMessage(true);
     } catch (error) {
       setErrorMessage(
-        error?.response?.data?.error || "Error: Unable to set chat to read-only mode"
+        error?.response?.data?.error ||
+          "Error: Unable to set chat to read-only mode"
       );
       setShowErrorMessage(true);
     }
   };
 
   // Sets the room as NOT read only
-   const setAsNotReadOnly = async () => {
+  const setAsNotReadOnly = async () => {
     try {
       await axios.put(
         `http://localhost:5000/chats/${room.room_id}/read-only`,
@@ -49,21 +57,36 @@ function ChatPageKebabMenu({ room, onReadOnlyChange, setSelectorModalOpen }) {
       setShowNotReadOnlySuccessMessage(true);
     } catch (error) {
       setErrorMessage(
-        error?.response?.data?.error || "Error: Unable to disable read-only mode"
+        error?.response?.data?.error ||
+          "Error: Unable to disable read-only mode"
       );
       setShowErrorMessage(true);
     }
   };
 
   const menuItems = [
-    { text: "Launch Quiz", onClick: () => {setSelectorModalOpen(true); handleClose()} },
+    {
+      text: "Launch Quiz",
+      onClick: () => {
+        setSelectorModalOpen(true);
+        handleClose();
+      },
+    },
+    {
+      text: "Quick Prompt",
+      onClick: () => {
+        setPromptModalOpen(true);
+        handleClose();
+      },
+    },
     {
       text: "Enrol Students",
       onClick: () => navigate(`/chats/${room.room_id}/enrol`),
     },
+
     {
       text: room.read_only ? "Disable read only mode" : "Enable read only mode",
-      onClick: room.read_only ? setAsNotReadOnly : setAsReadOnly
+      onClick: room.read_only ? setAsNotReadOnly : setAsReadOnly,
     },
   ];
 
@@ -104,8 +127,6 @@ function ChatPageKebabMenu({ room, onReadOnlyChange, setSelectorModalOpen }) {
           </MenuItem>
         ))}
       </Menu>
-
-
 
       {/* Success notification upon setting room as 'read only' */}
       <Snackbar

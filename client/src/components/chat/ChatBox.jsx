@@ -32,13 +32,16 @@ import ReplyBubble from "./ReplyBubble";
 import LiveQuizSelectorModal from "../forms/quiz/LiveQuizSelectorModal";
 import QuizPage from "../pages/quiz/QuizPage";
 import ViewQuizAttemptPage from "../pages/quiz/ViewQuizAttemptPage";
+import PromptModal from "../prompt/PromptModal";
+import StudentPrompt from "../prompt/StudentPrompt";
+import TeacherPrompt from "../prompt/TeacherPrompt";
 
 function ChatBox({
   room,
   selectorModalOpen,
   setSelectorModalOpen,
-  resultsModalOpen,
-  setResultsModalOpen,
+  promptModalOpen,
+  setPromptModalOpen,
 }) {
   const { user } = useContext(AuthContext);
   const chatBox = useRef();
@@ -316,7 +319,13 @@ function ChatBox({
       fetchMessages();
     });
 
+    // Refresh the messages when a Teacher ends a quiz
     newSocket.on("end-quiz", () => {
+      fetchMessages();
+    });
+
+    // Refresh messages when a new prompt response is sent, so the Teacher can receive the latest responses
+    newSocket.on("prompt-response", () => {
       fetchMessages();
     })
 
@@ -358,8 +367,15 @@ function ChatBox({
         fetchMessages={fetchMessages}
         selectorModalOpen={selectorModalOpen}
         setSelectorModalOpen={setSelectorModalOpen}
-        resultsModalOpen={resultsModalOpen}
-        setResultsModalOpen={setResultsModalOpen}
+      />
+
+      {/* Modal for creating and posting Prompts in the chat */}
+      <PromptModal
+        room={room}
+        socket={socket}
+        fetchMessages={fetchMessages}
+        promptModalOpen={promptModalOpen}
+        setPromptModalOpen={setPromptModalOpen}
       />
 
       <Stack width="100%" height="75vh" justifyContent="space-between">
@@ -415,27 +431,39 @@ function ChatBox({
                         />
                       </span>
                     )}
-                    {message.hidden ? (
-                      <i>--- Message Hidden ---</i>
-                    ) : message.quiz_id &&
-                      message.quiz_ended &&
-                      user.isTeacher ? (
-                      <i>--- Quiz Ended---</i>
-                    ) : message.quiz_id &&
-                      message.quiz_ended &&
-                      !user.isTeacher ? (
-                      <ViewQuizAttemptPage quizID={message.quiz_id} />
-                    ) : message.quiz_id && !message.quiz_ended ? (
-                      <QuizPage
-                        quizID={message.quiz_id}
-                        messageID={message.message_id}
-                        socket={socket}
-                        room={room}
-                        fetchMessages={fetchMessages}
-                      />
-                    ) : (
-                      message?.content
-                    )}
+                    {(() => {
+                      if (message?.hidden) {
+                        return <i>--- Message Hidden ---</i>;
+                      } else if (
+                        message?.quiz_id &&
+                        message?.quiz_ended &&
+                        user?.isTeacher
+                      ) {
+                        return <i>--- Quiz Ended ---</i>;
+                      } else if (
+                        message?.quiz_id &&
+                        message?.quiz_ended &&
+                        !user?.isTeacher
+                      ) {
+                        return <ViewQuizAttemptPage quizID={message?.quiz_id} />;
+                      } else if (message?.quiz_id && !message?.quiz_ended) {
+                        return (
+                          <QuizPage
+                            quizID={message.quiz_id}
+                            messageID={message.message_id}
+                            socket={socket}
+                            room={room}
+                            fetchMessages={fetchMessages}
+                          />
+                        );
+                      } else if (message.prompt_id && !user.isTeacher) {
+                        return <StudentPrompt promptID={message?.prompt_id} socket={socket} room={room} />;
+                      } else if (message.prompt_id && user.isTeacher) {
+                        return <TeacherPrompt promptID={message?.prompt_id} messages={messages} />;
+                      } else {
+                        return message?.content;
+                      }
+                    })()}
                   </Typography>
                   <Stack
                     direction="row"

@@ -32,11 +32,13 @@ function ChatRoomPage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // State for controlling the LiveQuizSelectorModal
-  const [selectorModalOpen, setSelectorModalOpen] = useState(false);
-  const [resultsModalOpen, setResultsModalOpen] = useState(false);
+  // States for controlling the LiveQuizSelectorModal
+  const [selectorModalOpen, setSelectorModalOpen] = useState(false); // setter function passed as props to ChatPageKebabMenu
 
-  // State passed to the kebab menu so that we can force a re-render of this component when the room is set/unset as read-only
+  // States for controlling the Prompt Modal
+  const [promptModalOpen, setPromptModalOpen] = useState(false); // setter function passed as props to ChatPageKebabMenu
+
+  // Dummy State passed to the ChatPageKebabMenu so that we can force a re-render of this component when the room is set/unset as read-only
   const [readOnly, setReadOnly] = useState();
 
   /**
@@ -133,6 +135,7 @@ function ChatRoomPage() {
               room={room}
               onReadOnlyChange={setReadOnly}
               setSelectorModalOpen={setSelectorModalOpen}
+              setPromptModalOpen={setPromptModalOpen}
             />
           )}
         </Stack>
@@ -156,8 +159,8 @@ function ChatRoomPage() {
           room={room}
           selectorModalOpen={selectorModalOpen}
           setSelectorModalOpen={setSelectorModalOpen}
-          resultsModalOpen={resultsModalOpen}
-          setResultsModalOpen={setResultsModalOpen}
+          promptModalOpen={promptModalOpen}
+          setPromptModalOpen={setPromptModalOpen}
         />
       </Paper>
 
