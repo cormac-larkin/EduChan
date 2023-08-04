@@ -8,7 +8,8 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
-import promptRoutes from "./routes/promptRoutes.js"
+import promptRoutes from "./routes/promptRoutes.js";
+
 
 const app = express();
 

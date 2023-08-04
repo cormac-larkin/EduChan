@@ -22,6 +22,8 @@ import QuizBuilderPage from "./components/pages/quiz/QuizBuilderPage";
 import QuizPage from "./components/pages/quiz/QuizPage";
 import ViewQuizAttemptPage from "./components/pages/quiz/ViewQuizAttemptPage";
 import BrowseQuizzesPage from "./components/pages/quiz/BrowseQuizzesPage";
+import AnalyticsDashboardPage from "./components/pages/analytics/AnalyticsDashboardPage";
+import ChatAnalyticsPage from "./components/pages/analytics/ChatAnalyticsPage";
 
 function App() {
 
@@ -55,6 +57,10 @@ function App() {
         <Route path="/quizzes/:quizID/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute> <QuizPage /> </ProtectedRoute> </Layout>} />
         <Route path="/quizzes/:quizID/edit" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <QuizBuilderPage /> </ProtectedRoute> </Layout>} />
        
+        <Route path="/analytics" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <AnalyticsDashboardPage /> </ProtectedRoute> </Layout>} />
+        <Route path="/analytics/chats/:roomID" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Teacher"}> <ChatAnalyticsPage /> </ProtectedRoute> </Layout>} />
+
+
         <Route path="/approvals/" element={<Layout onThemeChange={setDarkTheme}> <ProtectedRoute permissionLevel={"Admin"}> <AccountApprovalPage /> </ProtectedRoute> </Layout>} />
 
         <Route path="*" element={<Error404Page />} />

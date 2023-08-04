@@ -72,7 +72,7 @@ function QuestionEditorForm({ quiz, question, questionNumber, fetchQuiz }) {
   return (
     <>
       <Accordion
-        defaultExpanded={true}
+        defaultExpanded={false}
         elevation={10}
         disableGutters
         sx={{ ...paperStyles, borderRadius: "5px", width: "100%" }}
@@ -88,7 +88,7 @@ function QuestionEditorForm({ quiz, question, questionNumber, fetchQuiz }) {
             component="h1"
             variant="h5"
           >
-            {`Question ${questionNumber}`}
+            {`Q${questionNumber}. ${question.content}`}
           </Typography>
         </AccordionSummary>
         <Box component="form" pt="1rem" onSubmit={handleSubmit}>

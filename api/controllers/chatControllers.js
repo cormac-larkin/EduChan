@@ -951,6 +951,50 @@ const endQuiz = async (req, res) => {
   }
 };
 
+const getWordCloudData = async (req, res) => {
+  try {
+    
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
+
+    // Verify that the roomID is a number
+    if(!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify that the client has permission to retrieve this data (must be the chatroom owner)
+    if(findRoomResult.rows[0].member_id !== userID) {
+      return res.sendStatus(403);
+    }
+
+    // Retrieve the content of every message from this room
+    const getAllMessagesQuery = "SELECT content FROM message WHERE room_id = $1";
+    const getAllMessagesResult = await pool.query(getAllMessagesQuery, [roomID]);
+
+    // Concatenate all of the words from each message into a string, which we will use as the input for the Word Cloud
+    const allWords = getAllMessagesResult.rows
+      .map((row) => row.content) // Extract 'content' field
+      .map((content) => content.split(/\s+/)) // Split into individual words
+      .flat() // Flatten the array of arrays
+      .join(' '); // Concatenate words into one long string
+
+    console.log(allWords);
+
+    return res.status(200).json({wordCloudData: allWords})
+
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+}
+
 export {
   getChatByID,
   getMessages,
@@ -969,4 +1013,5 @@ export {
   unlikeMessage,
   changeReadOnlyStatus,
   endQuiz,
+  getWordCloudData
 };

@@ -5,7 +5,7 @@ import {
   ListItemButton,
   ListItemText,
   ListItemIcon,
-  Divider,
+  CircularProgress,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import LoadingSpinnerPage from "../pages/error/LoadingSpinnerPage";
@@ -56,6 +56,8 @@ function TeacherPrompt({ promptID, messages }) {
 
   useEffect(() => {
     fetchResponses(); // Update the list of responses when new ones are posted
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   // While API call is in progress, show loading spinner
@@ -70,13 +72,28 @@ function TeacherPrompt({ promptID, messages }) {
 
   return (
     <Stack>
-      <Typography variant="h5" mt="1rem" align="center" pb="0.5rem" borderBottom="1px solid black">
-      {`Q: ${prompt.content}`}
+      <Typography
+        variant="h5"
+        mt="1rem"
+        align="center"
+        pb="0.5rem"
+        borderBottom="1px solid black"
+      >
+        {`Q: ${prompt.content}`}
       </Typography>
+
+      {responses.length === 0 && (
+        <Stack direction="row" pt="1rem">
+          <CircularProgress color="primary" />
+          <Typography variant="text.secondary" display="flex" alignItems="center" pl="1rem">
+            {"Awaiting responses..."}
+          </Typography>
+        </Stack>
+      )}
 
       <List>
         {responses.map((response, index) => (
-          <ListItemButton key={index} sx={{borderRadius: "5px"}}>
+          <ListItemButton key={index} sx={{ borderRadius: "5px" }}>
             <ListItemIcon>
               <QuestionAnswerIcon />
             </ListItemIcon>

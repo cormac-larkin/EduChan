@@ -29,7 +29,7 @@ const adminDashboardCards = [
     title: "Analytics",
     description: "View word clouds, sentiment analysis and more",
     imageURI: analyticsIcon,
-    href: "#",
+    href: "/analytics",
   },
   {
     title: "My Quizzes",
