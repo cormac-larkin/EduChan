@@ -32,10 +32,10 @@ const adminDashboardCards = [
     href: "#",
   },
   {
-    title: "Create Quizzes",
-    description: "Create new quizzes to test your Students",
+    title: "My Quizzes",
+    description: "Create, edit and manage your quizzes",
     imageURI: quizIcon,
-    href: "/quizzes/create",
+    href: "/quizzes"
   },
   {
     title: "My Account",

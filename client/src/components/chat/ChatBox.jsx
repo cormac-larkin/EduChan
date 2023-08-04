@@ -420,7 +420,7 @@ function ChatBox({
                     ) : message.quiz_id &&
                       message.quiz_ended &&
                       user.isTeacher ? (
-                      <i>--- Quiz Ended--- </i>
+                      <i>--- Quiz Ended---</i>
                     ) : message.quiz_id &&
                       message.quiz_ended &&
                       !user.isTeacher ? (
@@ -431,6 +431,7 @@ function ChatBox({
                         messageID={message.message_id}
                         socket={socket}
                         room={room}
+                        fetchMessages={fetchMessages}
                       />
                     ) : (
                       message?.content

@@ -18,7 +18,7 @@ import Quiz from "../../forms/quiz/Quiz";
 import { AuthContext } from "../../authentication/AuthProvider";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
 
-function QuizPage({ quizID, messageID, socket, room }) {
+function QuizPage({ quizID, messageID, socket, room, fetchMessages }) {
   const { user } = useContext(AuthContext);
 
   // State for holding the Quiz object retrieved from the API
@@ -57,6 +57,7 @@ function QuizPage({ quizID, messageID, socket, room }) {
         withCredentials: true
       })
       await socket.emit("end-quiz", room.title);
+      fetchMessages();
     } catch (error) {
       console.error(error);
     }

@@ -1,11 +1,12 @@
 import pool from "../database/config.js";
 import isNumber from "../utils/isNumber.js";
+import defaultCardImages from "../utils/defaultCardImages.js";
 import "dotenv/config";
 
 const createQuiz = async (req, res) => {
   try {
     const userID = req.session.user.id;
-    const { quizName, description } = req.body;
+    let { quizName, description, imageURL } = req.body;
 
     // Verify the required properties are present
     if (!quizName) {
@@ -27,12 +28,21 @@ const createQuiz = async (req, res) => {
       });
     }
 
+    // If no imageURL was provided by the user, pick a random image for this quiz
+    if (!imageURL) {
+      imageURL =
+        defaultCardImages[
+          Math.round(Math.random() * (defaultCardImages.length - 1))
+        ];
+    }
+
     // Insert the new quiz
     const createQuizQuery =
-      "INSERT INTO quiz (title, description, member_id) VALUES ($1, $2, $3) RETURNING *";
+      "INSERT INTO quiz (title, description, image_url, member_id) VALUES ($1, $2, $3, $4) RETURNING *";
     const result = await pool.query(createQuizQuery, [
       quizName,
       description,
+      imageURL,
       userID,
     ]);
 

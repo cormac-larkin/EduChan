@@ -68,7 +68,7 @@ function LiveQuizSelectorModal({
       );
       // Emit 'send-message' event to WS server and fetch latest messages from the API
       // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
-      await socket.emit("send-message", {});
+      await socket.emit("send-message", room.title);
       fetchMessages();
       setResultsModalOpen(true);
     } catch (error) {

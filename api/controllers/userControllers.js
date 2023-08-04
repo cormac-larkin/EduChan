@@ -287,14 +287,10 @@ const getQuizAttempt = async (req, res) => {
         q.title AS quiz_title,
         qn.question_id,
         qn.content AS question_content,
-        json_agg(
-          json_build_object(
-            'answer_id', ans.answer_id,
-            'content', ans.content,
-            'is_correct', ans.is_correct,
-            'was_selected', aa.was_selected
-          )
-        ) AS answers
+        ans.answer_id,
+        ans.content AS answer_content,
+        ans.is_correct,
+        aa.was_selected
       FROM
         member m
       JOIN
@@ -307,15 +303,33 @@ const getQuizAttempt = async (req, res) => {
         question qn ON aa.question_id = qn.question_id
       LEFT JOIN
         answer ans ON aa.answer_id = ans.answer_id
-        WHERE
-            a.member_id = $1
-        and a.quiz_id = $2
+      WHERE
+        a.member_id = $1
+        AND a.quiz_id = $2
+    ),
+    grouped_question_answers AS (
+      SELECT
+        attempt_id,
+        quiz_id,
+        quiz_title,
+        question_id,
+        question_content,
+        json_agg(
+          json_build_object(
+            'answer_id', answer_id,
+            'content', answer_content,
+            'is_correct', is_correct,
+            'was_selected', was_selected
+          )
+        ) AS answers
+      FROM
+        question_answers
       GROUP BY
-        a.attempt_id, q.quiz_id, q.title, qn.question_id, qn.content
+        attempt_id, quiz_id, quiz_title, question_id, question_content
     )
     SELECT
       json_build_object(
-        'attempt_id', attempt_id, -- Include attempt_id in the json_build_object
+        'attempt_id', attempt_id,
         'quiz_id', quiz_id,
         'quiz_title', quiz_title,
         'questions', json_agg(
@@ -323,15 +337,15 @@ const getQuizAttempt = async (req, res) => {
             'question_id', question_id,
             'content', question_content,
             'answers', answers
-          )
+          ) ORDER BY question_id -- Order the questions by question_id
         )
       ) AS quiz_attempt
     FROM
-      question_answers
+      grouped_question_answers
     GROUP BY
       attempt_id, quiz_id, quiz_title
     ORDER BY
-      attempt_id DESC;`;
+      attempt_id DESC`;
 
     const getQuizAttemptsResult = await pool.query(getQuizAttemptsQuery, [
       userID, quizID

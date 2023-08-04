@@ -9,9 +9,10 @@ import {
 } from "@mui/material";
 import AbcIcon from "@mui/icons-material/Abc";
 import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
 
 function QuizCreationForm() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function QuizCreationForm() {
   // States to hold form inputs
   const [quizName, setQuizName] = useState("");
   const [description, setDescription] = useState("");
+  const [imageURL, setImageURL] = useState("");
 
   // States for handling API error messages
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,6 +40,7 @@ function QuizCreationForm() {
         {
           quizName,
           description: description || null,
+          imageURL: imageURL || null,
         },
         { withCredentials: true }
       );
@@ -105,6 +108,25 @@ function QuizCreationForm() {
             ),
           }}
           inputProps={{ maxLength: 100 }}
+        />
+
+        <TextField
+          margin="normal"
+          fullWidth
+          id="imageURL"
+          label="Image URL (Optional)"
+          name="imageURL"
+          type="text"
+          autoFocus
+          value={imageURL}
+          onChange={(e) => setImageURL(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <ImageIcon />
+              </InputAdornment>
+            ),
+          }}
         />
 
         <Button

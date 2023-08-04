@@ -102,7 +102,6 @@ function QuestionEditorForm({ quiz, question, questionNumber, fetchQuiz }) {
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
             type="text"
-            autoFocus
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -160,7 +159,7 @@ function QuestionEditorForm({ quiz, question, questionNumber, fetchQuiz }) {
             sx={{ width: "100%", whiteSpace: "pre-wrap" }}
             onClose={() => setShowSuccessMessage(false)}
           >
-            {"Question Added Successfully!"}
+            {"Question Edited Successfully!"}
           </Alert>
         </Snackbar>
 
