@@ -1,12 +1,20 @@
 import { useState } from "react";
+import { Box, Stack, Divider, Typography, Select, MenuItem, Checkbox } from "@mui/material";
 import { Text } from "@visx/text";
 import { scaleLog } from "@visx/scale";
 import Wordcloud from "@visx/wordcloud/lib/Wordcloud";
+import stopWords from "../../../data/stopWords";
+import { useTheme } from "@emotion/react";
 
-const colors = ["#143059", "#2F6B9A", "#82a6c2"];
+
+const lightModeColors = ["#143059", "#2F6B9A", "#82a6c2"];
+const darkModeColors = ["#228c01", "#3bc910", "#76ff4d"];
 
 function wordFreq(text) {
-  const words = text.replace(/\./g, "").split(/\s/);
+  const words = text
+    .replace(/[.,;:!?-]/g, "")
+    .split(/\s/)
+    .filter((word) => !stopWords.includes(word.toLowerCase()));
   const freqMap = {};
 
   for (const w of words) {
@@ -28,6 +36,9 @@ function getRotationDegree() {
 const fixedValueGenerator = () => 0.5;
 
 const WordCloud = ({ inputWords, width, height, showControls }) => {
+
+  const theme = useTheme();
+
   const [spiralType, setSpiralType] = useState("archimedean");
   const [withRotation, setWithRotation] = useState(false);
 
@@ -44,7 +55,8 @@ const WordCloud = ({ inputWords, width, height, showControls }) => {
   const fontSizeSetter = (datum) => fontScale(datum.value);
 
   return (
-    <div className="wordcloud">
+    <Box className="wordcloudContainer">
+      
       <Wordcloud
         words={words}
         width={width}
@@ -60,7 +72,7 @@ const WordCloud = ({ inputWords, width, height, showControls }) => {
           cloudWords.map((w, i) => (
             <Text
               key={w.text}
-              fill={colors[i % colors.length]}
+              fill={theme.palette.mode === "light" ? lightModeColors[i % lightModeColors.length] : darkModeColors[i % darkModeColors.length]}
               textAnchor={"middle"}
               transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
               fontSize={w.size}
@@ -72,37 +84,39 @@ const WordCloud = ({ inputWords, width, height, showControls }) => {
         }
       </Wordcloud>
       {showControls && (
-        <div>
+        <Stack width="100%" pl="1rem">
           <label>
-            Spiral type &nbsp;
-            <select
-              onChange={(e) => setSpiralType(e.target.value)}
-              value={spiralType}
-            >
-              <option key={"archimedean"} value={"archimedean"}>
-                archimedean
-              </option>
-              <option key={"rectangular"} value={"rectangular"}>
-                rectangular
-              </option>
-            </select>
-          </label>
-          <label>
-            With rotation &nbsp;
-            <input
-              type="checkbox"
+            Rotate &nbsp;
+            <Checkbox
               checked={withRotation}
               onChange={() => setWithRotation(!withRotation)}
             />
           </label>
-          <br />
-        </div>
+          <label>
+            Pattern &nbsp;
+            <Select
+              onChange={(e) => setSpiralType(e.target.value)}
+              value={spiralType}
+              size="small"
+            >
+              <MenuItem key={"archimedean"} value={"archimedean"}>
+                Archimedean
+              </MenuItem>
+              <MenuItem key={"rectangular"} value={"rectangular"}>
+                Rectangular
+              </MenuItem>
+            </Select>
+          </label>
+        </Stack>
       )}
       <style>{`
-        .wordcloud {
+        .wordcloudContainer {
           display: flex;
           flex-direction: column;
+          align-items: center;
           user-select: none;
+          border-radius: 5px;
+          margin-top: 0.5rem;
         }
         .wordcloud svg {
           margin: 1rem 0;
@@ -119,7 +133,7 @@ const WordCloud = ({ inputWords, width, height, showControls }) => {
           min-height: 100px;
         }
       `}</style>
-    </div>
+    </Box>
   );
 };
 

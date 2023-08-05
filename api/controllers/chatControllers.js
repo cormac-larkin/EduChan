@@ -196,7 +196,7 @@ const postMessage = async (req, res) => {
       parentID,
       authorID,
       quizID || null,
-      promptID || null
+      promptID || null,
     ]);
 
     return res.sendStatus(204);
@@ -951,14 +951,13 @@ const endQuiz = async (req, res) => {
   }
 };
 
-const getWordCloudData = async (req, res) => {
+const getAnalyticsData = async (req, res) => {
   try {
-    
     const userID = req.session.user.id;
     const roomID = req.params.roomID;
 
     // Verify that the roomID is a number
-    if(!isNumber(roomID)) {
+    if (!isNumber(roomID)) {
       return res.sendStatus(400);
     }
 
@@ -970,30 +969,47 @@ const getWordCloudData = async (req, res) => {
     }
 
     // Verify that the client has permission to retrieve this data (must be the chatroom owner)
-    if(findRoomResult.rows[0].member_id !== userID) {
+    if (findRoomResult.rows[0].member_id !== userID) {
       return res.sendStatus(403);
     }
 
+    // Get the total number of enrolled members in this room
+    const getMemberCount = "SELECT COUNT(*) AS total_member_count FROM room_member WHERE room_id = $1";
+    const memberCount = await pool.query(getMemberCount, [roomID]);
+
+    // Get the total number of messages in the room
+    const getMessageCount =
+      "SELECT COUNT(*) AS total_message_count FROM message WHERE room_id = $1";
+    const messageCount = await pool.query(getMessageCount, [roomID]);
+
     // Retrieve the content of every message from this room
-    const getAllMessagesQuery = "SELECT content FROM message WHERE room_id = $1";
-    const getAllMessagesResult = await pool.query(getAllMessagesQuery, [roomID]);
+    const getAllMessagesQuery =
+      "SELECT content, timestamp FROM message WHERE room_id = $1 ORDER BY timestamp DESC";
+    const getAllMessagesResult = await pool.query(getAllMessagesQuery, [
+      roomID,
+    ]);
 
     // Concatenate all of the words from each message into a string, which we will use as the input for the Word Cloud
     const allWords = getAllMessagesResult.rows
       .map((row) => row.content) // Extract 'content' field
       .map((content) => content.split(/\s+/)) // Split into individual words
       .flat() // Flatten the array of arrays
-      .join(' '); // Concatenate words into one long string
+      .join(" "); // Concatenate words into one long string
 
-    console.log(allWords);
-
-    return res.status(200).json({wordCloudData: allWords})
-
+    return res
+      .status(200)
+      .json({
+        ...findRoomResult.rows[0],
+        memberCount: memberCount.rows[0].total_member_count,
+        messageCount: messageCount.rows[0].total_message_count,
+        lastMessageTime: getAllMessagesResult.rows[0].timestamp,
+        wordCloudData: allWords,
+      });
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
   }
-}
+};
 
 export {
   getChatByID,
@@ -1013,5 +1029,5 @@ export {
   unlikeMessage,
   changeReadOnlyStatus,
   endQuiz,
-  getWordCloudData
+  getAnalyticsData,
 };
