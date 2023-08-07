@@ -6,11 +6,11 @@ import "./index.css";
 import { AuthProvider } from "./components/authentication/AuthProvider.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <AuthProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </AuthProvider>
-  </React.StrictMode>
+  // </React.StrictMode>
 );

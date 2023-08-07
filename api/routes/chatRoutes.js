@@ -19,7 +19,8 @@ import {
   unlikeMessage,
   changeReadOnlyStatus,
   endQuiz,
-  getAnalyticsData
+  getAnalyticsData,
+  getSentimentData
 } from "../controllers/chatControllers.js";
 
 const router = Router();
@@ -53,5 +54,6 @@ router.delete("/:roomID/messages/:messageID/like", unlikeMessage);
 router.delete("/:roomID/messages/:messageID", verifyTeacherRole, deleteMessage);
 
 router.get("/:roomID/analytics", verifyTeacherRole, getAnalyticsData);
+router.get("/:roomID/sentiment", verifyTeacherRole, getSentimentData);
 
 export default router;

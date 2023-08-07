@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Stack, Divider, Typography, Select, MenuItem, Checkbox } from "@mui/material";
+import { Box, Stack, Select, MenuItem, Checkbox } from "@mui/material";
 import { Text } from "@visx/text";
 import { scaleLog } from "@visx/scale";
 import Wordcloud from "@visx/wordcloud/lib/Wordcloud";

@@ -5,6 +5,8 @@ import parseEnrolmentCsv from "../utils/parseEnrolmentCsv.js";
 import validateCsv from "../utils/validateCsv.js";
 import defaultCardImages from "../utils/defaultCardImages.js";
 import groupLikesByMessage from "../utils/groupLikesByMessage.js";
+import { Configuration, OpenAIApi } from "openai";
+import "dotenv/config";
 
 const createRoom = async (req, res) => {
   try {
@@ -974,7 +976,8 @@ const getAnalyticsData = async (req, res) => {
     }
 
     // Get the total number of enrolled members in this room
-    const getMemberCount = "SELECT COUNT(*) AS total_member_count FROM room_member WHERE room_id = $1";
+    const getMemberCount =
+      "SELECT COUNT(*) AS total_member_count FROM room_member WHERE room_id = $1";
     const memberCount = await pool.query(getMemberCount, [roomID]);
 
     // Get the total number of messages in the room
@@ -996,15 +999,103 @@ const getAnalyticsData = async (req, res) => {
       .flat() // Flatten the array of arrays
       .join(" "); // Concatenate words into one long string
 
-    return res
-      .status(200)
-      .json({
-        ...findRoomResult.rows[0],
-        memberCount: memberCount.rows[0].total_member_count,
-        messageCount: messageCount.rows[0].total_message_count,
-        lastMessageTime: getAllMessagesResult.rows[0].timestamp,
-        wordCloudData: allWords,
+    return res.status(200).json({
+      ...findRoomResult.rows[0],
+      memberCount: memberCount.rows[0].total_member_count,
+      messageCount: messageCount.rows[0].total_message_count,
+      lastMessageTime: getAllMessagesResult.rows[0].timestamp,
+      wordCloudData: allWords,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+const getSentimentData = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
+
+    // Verify that the roomID is a number
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify that the client has permission to retrieve this data (must be the chatroom owner)
+    if (findRoomResult.rows[0].member_id !== userID) {
+      return res.sendStatus(403);
+    }
+
+    // Retrieve all messages from this room as one string, each message is delimited with the pipe character ('|')
+    const getMessages =
+      "SELECT STRING_AGG(content, '|') AS concatenated_messages FROM message WHERE room_id = $1";
+    const messages = await pool.query(getMessages, [roomID]);
+
+    // Configure the OpenAI API client
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+    if (!configuration.apiKey) {
+      return res.status(500).json({
+        error:
+          "OpenAI API key not configured, please follow instructions in README.md",
       });
+    }
+
+    // Prompt the GPT 3.5 turbo model to perform sentiment analysis on the messages
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      temperature: 0.6,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Perform sentiment analysis on a string of messages delimited with the '|' character. Output 1 for positive messages, -1 for negative, 0 for neutral. Output only these numbers.",
+        },
+        {
+          role: "user",
+          content: `${messages.rows[0].concatenated_messages}`
+        }
+      ],
+    });
+
+    const openAiResponse = completion.data.choices[0].message.content // String containing the sentiment indicators for each message (1/0/-1 for positive/neutral/negative)
+    const sentimentIndicators = openAiResponse.split('|').map(Number); // Transform the response string into an Array of Numbers
+
+    console.log(`Sentiment Indicators: ${sentimentIndicators}`)
+
+    // Get the totals for each type of sentiment
+    let positiveMessages = 0, neutralMessages = 0, negativeMessages = 0;
+    sentimentIndicators.forEach((indicator) => {
+      switch(indicator) {
+        case 1: 
+          positiveMessages++;
+          break;
+        case 0:
+          neutralMessages++;
+          break;
+        case -1:
+          negativeMessages++;
+          break;
+      }
+    });
+
+    // Get the percentages for each sentiment, rounded to 2 decimal places
+    const positivePercentage = parseFloat((positiveMessages / sentimentIndicators.length * 100).toFixed(2));
+    const neutralPercentage = parseFloat((neutralMessages / sentimentIndicators.length * 100).toFixed(2));
+    const negativePercentage = parseFloat((negativeMessages / sentimentIndicators.length * 100).toFixed(2));
+
+    return res.status(200).json({ positivePercentage, neutralPercentage, negativePercentage });
+
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -1030,4 +1121,5 @@ export {
   changeReadOnlyStatus,
   endQuiz,
   getAnalyticsData,
+  getSentimentData,
 };
