@@ -63,7 +63,7 @@ function ViewQuizAttemptPage({ quizID }) {
   }
 
   // If no room with the specified ID is found, render the 404 Error Page
-  if (quizAttempt === null) {
+  if (!quizAttempt) {
     return <>--- Quiz Ended ---</>;
   }
 

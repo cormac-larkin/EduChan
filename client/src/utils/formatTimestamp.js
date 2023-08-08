@@ -5,6 +5,12 @@
  * @returns {String} A string containing the formatted timestamp
  */
 function formatTimestamp(timestampString) {
+
+  // If the timestamp is falsy, return N/A
+  if(!timestampString) {
+    return "N/A"
+  }
+
   const timestamp = new Date(timestampString);
 
   const monthNames = [

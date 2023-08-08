@@ -6,8 +6,8 @@ import {
   Alert,
   Divider,
   Paper,
-  Fab,
-  Tooltip,
+  CircularProgress,
+  Button,
 } from "@mui/material";
 import Error404Page from "../error/Error404Page";
 import LoadingSpinnerPage from "../error/LoadingSpinnerPage";
@@ -16,7 +16,6 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import axios from "axios";
 import Quiz from "../../forms/quiz/Quiz";
 import { AuthContext } from "../../authentication/AuthProvider";
-import StopCircleIcon from "@mui/icons-material/StopCircle";
 
 function QuizPage({ quizID, messageID, socket, room, fetchMessages }) {
   const { user } = useContext(AuthContext);
@@ -53,9 +52,13 @@ function QuizPage({ quizID, messageID, socket, room, fetchMessages }) {
   // Mark the quiz as ended in the database and emit the end-quiz event over websocket, which force submits all open quizzes
   const endQuiz = async () => {
     try {
-      await axios.put(`http://localhost:5000/chats/messages/${messageID}/end-quiz`, {}, {
-        withCredentials: true
-      })
+      await axios.put(
+        `http://localhost:5000/chats/messages/${messageID}/end-quiz`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       await socket.emit("end-quiz", room.title);
       fetchMessages();
     } catch (error) {
@@ -94,12 +97,15 @@ function QuizPage({ quizID, messageID, socket, room, fetchMessages }) {
           <Stack pl="0.5rem">
             <Typography component="h1" variant="h5" align="left">
               {user.isTeacher ? (
-                <b>{`'${quiz.title}'`}</b>
+                <b>{`${quiz.title}`}</b>
               ) : (
-                <b>{`Take the '${quiz.title}' quiz`}</b>
+                <Stack direction="row">
+                  <b style={{paddingRight: "1rem"}}>{`Take the ${quiz.title} quiz`}</b>
+                  <CircularProgress color="secondary" />
+                </Stack>
               )}
             </Typography>
-            {quiz.description && (
+            {quiz.description && !user.isTeacher && (
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -110,30 +116,38 @@ function QuizPage({ quizID, messageID, socket, room, fetchMessages }) {
               </Typography>
             )}
           </Stack>
-          {user.isTeacher && (
-            <Tooltip title="End Quiz">
-              <Fab size="small" onClick={endQuiz}>
-                <StopCircleIcon />
-              </Fab>
-            </Tooltip>
-          )}
         </Stack>
       </Stack>
       <Divider />
+      {user.isTeacher && (
+        <Stack mb="0.5rem">
+          <Stack direction="row" mt="1rem" mb="1rem" justifyContent="center">
+            <CircularProgress color="warning" />
+            <Typography mt="0.5rem" ml="0.5rem">
+              Quiz in Progress...
+            </Typography>
+          </Stack>
+          <Button variant="contained" color="primary" onClick={endQuiz}>
+            End Quiz
+          </Button>
+        </Stack>
+      )}
 
-      <Paper
-        elevation={6}
-        sx={{
-          ...paperStyles,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          paddingTop: "0.5rem",
-        }}
-      >
-        <Quiz quiz={quiz} socket={socket} />
-      </Paper>
+      {!user.isTeacher && (
+        <Paper
+          elevation={6}
+          sx={{
+            ...paperStyles,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: "0.5rem",
+          }}
+        >
+          <Quiz quiz={quiz} socket={socket} />
+        </Paper>
+      )}
 
       {/* Error message if API call fails  */}
       <Snackbar

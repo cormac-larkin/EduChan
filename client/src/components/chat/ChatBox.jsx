@@ -35,6 +35,7 @@ import ViewQuizAttemptPage from "../pages/quiz/ViewQuizAttemptPage";
 import PromptModal from "../prompt/PromptModal";
 import StudentPrompt from "../prompt/StudentPrompt";
 import TeacherPrompt from "../prompt/TeacherPrompt";
+import QuizReportPage from "../pages/quiz/QuizReportPage";
 
 function ChatBox({
   room,
@@ -439,7 +440,7 @@ function ChatBox({
                         message?.quiz_ended &&
                         user?.isTeacher
                       ) {
-                        return <i>--- Quiz Ended ---</i>;
+                        return <QuizReportPage embeddedQuizID={message?.quiz_id}/>;
                       } else if (
                         message?.quiz_id &&
                         message?.quiz_ended &&

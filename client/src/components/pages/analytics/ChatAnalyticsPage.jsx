@@ -27,7 +27,9 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import FilterDramaIcon from "@mui/icons-material/FilterDrama";
 import PsychologyAltIcon from "@mui/icons-material/PsychologyAlt";
+import SummarizeIcon from '@mui/icons-material/Summarize';
 import SentimentAnalysisChart from "./SentimentAnalysisChart";
+
 
 function ChatAnalyticsPage() {
   const smallScreen = useMediaQuery("(max-width:800px)");
@@ -198,11 +200,11 @@ function ChatAnalyticsPage() {
                   Sentiment Analysis
                 </Typography>
               </Stack>
-              <Divider sx={{ width: "100%", mr:"1rem", ml:"1rem"}} />
+              <Divider sx={{ width: "100%", mr: "1rem", ml: "1rem" }} />
               <Stack height="100%" justifyContent="center" alignItems="center">
                 {loadingSentiments ? (
                   <Stack pt="0.5rem">
-                    <CircularProgress size="md" thickness={1}/>
+                    <CircularProgress size="md" thickness={1} />
                     <Typography mt="1rem">
                       Performing analysis, please wait...
                     </Typography>
@@ -256,6 +258,35 @@ function ChatAnalyticsPage() {
             }}
           </ParentSize>
         </Box>
+      </Paper>
+
+      <Paper
+        elevation={6}
+        sx={{
+          ...paperStyles,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          paddingTop: "0.5rem",
+        }}
+      >
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          pb="0.3rem"
+        >
+          <SummarizeIcon />
+          <Typography
+            sx={{ flexShrink: 0, pl: "0.7rem" }}
+            component="h1"
+            variant="h5"
+            align="center"
+          >
+            Prompt Reports
+          </Typography>
+        </Stack>
       </Paper>
     </Stack>
   );

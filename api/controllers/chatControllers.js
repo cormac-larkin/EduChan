@@ -1001,9 +1001,9 @@ const getAnalyticsData = async (req, res) => {
 
     return res.status(200).json({
       ...findRoomResult.rows[0],
-      memberCount: memberCount.rows[0].total_member_count,
-      messageCount: messageCount.rows[0].total_message_count,
-      lastMessageTime: getAllMessagesResult.rows[0].timestamp,
+      memberCount: memberCount.rows[0]?.total_member_count,
+      messageCount: messageCount.rows[0]?.total_message_count,
+      lastMessageTime: getAllMessagesResult.rows[0]?.timestamp,
       wordCloudData: allWords,
     });
   } catch (error) {

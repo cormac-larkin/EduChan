@@ -208,7 +208,7 @@ const addAttempt = async (req, res) => {
       }
     }
 
-    return res.status(200).json({attemptID: newAttemptID});
+    return res.status(200).json({ attemptID: newAttemptID });
   } catch (error) {
     console.error(error);
     return res.sendStatus(500);
@@ -349,7 +349,7 @@ const editQuestion = async (req, res) => {
       await pool.query(editAnswerQuery, [
         answer.answerText,
         answer.isCorrect,
-        answer.id
+        answer.id,
       ]);
     }
 
@@ -358,6 +358,101 @@ const editQuestion = async (req, res) => {
     console.error(error);
     res.sendStatus(500);
   }
-}
+};
 
-export { createQuiz, getQuiz, addQuestion, addAttempt, getAttempt, editQuestion };
+const getReportByQuiz = async (req, res) => {
+  try {
+    const { quizID } = req.params;
+
+    // Verify that the quizID is a number
+    if (!isNumber(quizID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the quizID exists
+    const findQuizQuery = "SELECT * FROM quiz WHERE quiz_id = $1";
+    const findQuizResult = await pool.query(findQuizQuery, [quizID]);
+    if (!findQuizResult.rowCount) {
+      return res
+        .status(404)
+        .json({ error: `Quiz with ID '${quizID}' not found` });
+    }
+
+    // Get the breakdown of how many users got each question correct for this quiz
+    const getReportQuery = `WITH FullyCorrectPercentage AS (
+      SELECT
+        q.quiz_id,
+        qq.question_id,
+        COUNT(DISTINCT a.attempt_id) AS total_attempts,
+        CASE
+          WHEN COUNT(DISTINCT CASE WHEN ans.is_correct THEN a.attempt_id END) > 0 THEN
+            (COUNT(DISTINCT CASE WHEN ans.is_correct AND aa.was_selected THEN a.attempt_id END)::float / COUNT(DISTINCT CASE WHEN ans.is_correct THEN a.attempt_id END)) * 100
+          ELSE
+            0
+        END AS percentage_fully_correct
+      FROM
+        quiz q
+      JOIN
+        question qq ON q.quiz_id = qq.quiz_id
+      JOIN
+        attempt a ON q.quiz_id = a.quiz_id
+      JOIN
+        attempt_answer aa ON a.attempt_id = aa.attempt_id
+      JOIN
+        answer ans ON qq.question_id = ans.question_id AND aa.answer_id = ans.answer_id
+      WHERE
+        q.quiz_id = $1 -- Replace with the desired quiz ID
+      GROUP BY
+        q.quiz_id, qq.question_id
+    )
+    SELECT
+      q.quiz_id,
+      q.title AS quiz_title,
+      fc.question_id,
+      qq.content AS question_content,
+      fc.total_attempts,
+      fc.percentage_fully_correct,
+      jsonb_agg(DISTINCT
+        jsonb_build_object(
+          'answer_id', ans.answer_id,
+          'content', ans.content,
+          'is_correct', ans.is_correct
+        )
+      ) AS answers
+    FROM
+      quiz q
+    JOIN
+      question qq ON q.quiz_id = qq.quiz_id
+    JOIN
+      FullyCorrectPercentage fc ON q.quiz_id = fc.quiz_id AND qq.question_id = fc.question_id
+    JOIN
+      attempt a ON q.quiz_id = a.quiz_id
+    JOIN
+      attempt_answer aa ON a.attempt_id = aa.attempt_id
+    JOIN
+      answer ans ON qq.question_id = ans.question_id AND aa.answer_id = ans.answer_id
+    GROUP BY
+      q.quiz_id, q.title, fc.question_id, qq.content, fc.total_attempts, fc.percentage_fully_correct
+    ORDER BY
+      q.quiz_id, fc.question_id;
+    `;
+
+    const getReportResult = await pool.query(getReportQuery, [quizID]);
+    
+    return res.status(200).json(getReportResult.rows)
+
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+};
+
+export {
+  createQuiz,
+  getQuiz,
+  addQuestion,
+  addAttempt,
+  getAttempt,
+  editQuestion,
+  getReportByQuiz,
+};

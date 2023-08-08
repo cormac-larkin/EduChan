@@ -7,13 +7,11 @@ import {
   CardMedia,
   Typography,
   CardActions,
-  useTheme
 } from "@mui/material";
 
-function QuizCard({ quiz }) {
+function QuizCard({ quiz, hasReportLink }) {
   const { quiz_id, title, description, image_url } = quiz;
 
-  const theme = useTheme();
   const smallScreen = useMediaQuery("(max-width:500px)");
 
   return (
@@ -29,7 +27,7 @@ function QuizCard({ quiz }) {
       elevation={6}
     >
       <Link
-        to={`/quizzes/${quiz_id}/edit`}
+        to={hasReportLink ? `/quizzes/${quiz_id}/report` : `/quizzes/${quiz_id}/edit`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <CardActionArea>
