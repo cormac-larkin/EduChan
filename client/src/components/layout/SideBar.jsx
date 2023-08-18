@@ -9,8 +9,36 @@ import {
   Box,
 } from "@mui/material";
 import MailIcon from "@mui/icons-material/Mail";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ChatIcon from "@mui/icons-material/Chat";
+import AddCommentIcon from "@mui/icons-material/AddComment";
+import QuizIcon from "@mui/icons-material/Quiz";
+import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import { useContext } from "react";
+import { AuthContext } from "../authentication/AuthProvider";
+import { Link } from "react-router-dom";
 
 function SideBar({ collapseSideBar }) {
+  const { user } = useContext(AuthContext);
+
+  const teacherSideBarItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, href: "/dashboard" },
+    { text: "Browse Chats", icon: <ChatIcon />, href: "/chats" },
+    { text: "Create Chat", icon: <AddCommentIcon />, href: "/chats/create" },
+    { text: "My Quizzes", icon: <QuizIcon />, href: "/quizzes/" },
+    { text: "Create Quiz", icon: <AddToPhotosIcon />, href: "/quizzes/create" },
+    { text: "Analytics", icon: <AutoGraphIcon />, href: "/analytics" },
+  ];
+
+  const studentSideBarItems = [
+    { text: "Dashboard", icon: DashboardIcon },
+    { text: "Browse Chats", icon: ChatIcon },
+    { text: "Analytics", icon: AutoGraphIcon },
+  ];
+
+  const sideBarItems = user.isTeacher ? teacherSideBarItems : studentSideBarItems;
+
   return (
     <Box
       sx={{
@@ -18,21 +46,23 @@ function SideBar({ collapseSideBar }) {
         transition: "width 0.4s ease",
         borderRight: collapseSideBar ? "none" : "1px solid grey",
         overflow: "hidden",
-        marginRight: collapseSideBar ? "0" : "0.5rem"
+        marginRight: collapseSideBar ? "0" : "0.5rem",
       }}
     >
       <Toolbar />
       <Divider />
       <List>
-        {["Dashboard", "Chats", "Quizzes", "Analytics"].map((text, index) => (
-          <ListItem key={index} disablePadding>
+        {sideBarItems.map((item, index) => (
+          <Link key={index} style={{ textDecoration: "none"}} to={item.href}>
+          <ListItem disablePadding>
             <ListItemButton>
               <ListItemIcon>
-                <MailIcon />
+                {item.icon}
               </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
+          </Link>
         ))}
       </List>
       <Divider />

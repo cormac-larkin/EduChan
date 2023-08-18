@@ -176,12 +176,12 @@ const getOwnedChats = async (req, res) => {
 
     // Verify that the userID contains only digits
     if (!isNumber(userID)) {
-      return res.sendStatus(400);
+      return res.status(400).json({error: "The user ID must contain only numeric characters (0-9)"});
     }
 
     // Verify that the client has permission to retrieve this data (users can only retrieve their own chats)
     if (userID != req.session.user.id) {
-      return res.sendStatus(401);
+      return res.status(403).json({error: "You do not have permission to access this resource"});
     }
 
     // Find and return any chats owned by the user (put all archived/hidden chats at the end of the result set)

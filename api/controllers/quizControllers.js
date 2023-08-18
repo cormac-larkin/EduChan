@@ -314,8 +314,6 @@ const editQuestion = async (req, res) => {
 
     const { questionText, answers } = req.body;
 
-    console.log(req.body);
-
     // Verify that the quizID and questionID are both numbers
     if (!isNumber(quizID) || !isNumber(questionID)) {
       return res.sendStatus(400);

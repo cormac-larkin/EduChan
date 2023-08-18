@@ -243,7 +243,7 @@ const getChatByID = async (req, res) => {
 
     // Verify that the roomID parameter contains only numbers
     if (!isNumber(roomID)) {
-      return res.sendStatus(400);
+      return res.status(400).json({error: "The Room ID must contain only numeric characters (0-9)"});
     }
 
     // Verify that the chatroom exists
@@ -1034,9 +1034,9 @@ const getSentimentData = async (req, res) => {
       return res.sendStatus(403);
     }
 
-    // Retrieve all messages from this room as one string, each message is delimited with the pipe character ('|')
+    // Retrieve all messages from the chat-room as one string, each message is delimited with '╡' character 
     const getMessages =
-      "SELECT STRING_AGG(content, '|') AS concatenated_messages FROM message WHERE room_id = $1";
+      "SELECT STRING_AGG(content, '╡') AS concatenated_messages FROM message WHERE room_id = $1";
     const messages = await pool.query(getMessages, [roomID]);
 
     // Configure the OpenAI API client
@@ -1054,12 +1054,14 @@ const getSentimentData = async (req, res) => {
     // Prompt the GPT 3.5 turbo model to perform sentiment analysis on the messages
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
-      temperature: 0.6,
+      temperature: 0, // Set temperature to 0 to achieve maximum consistency in responses (higher number allows more randomness)
       messages: [
         {
           role: "system",
           content:
-            "Perform sentiment analysis on a string of messages delimited with the '|' character. Output 1 for positive messages, -1 for negative, 0 for neutral. Output only these numbers.",
+            `Perform sentiment analysis on a string of messages delimited with the '╡'character.
+            Output 1 for positive messages, -1 for negative, 0 for neutral. 
+            Output only these numbers separated by commas.`,
         },
         {
           role: "user",
@@ -1069,7 +1071,8 @@ const getSentimentData = async (req, res) => {
     });
 
     const openAiResponse = completion.data.choices[0].message.content // String containing the sentiment indicators for each message (1/0/-1 for positive/neutral/negative)
-    const sentimentIndicators = openAiResponse.split('|').map(Number); // Transform the response string into an Array of Numbers
+    console.log(openAiResponse);
+    const sentimentIndicators = openAiResponse.split(',').map(Number); // Transform the response string into an Array of Numbers
 
     console.log(`Sentiment Indicators: ${sentimentIndicators}`)
 

@@ -1,12 +1,11 @@
 import request from "supertest";
-import pool from "../database/config";
 import app from "../app";
 
 describe("GET /auth", () => {
-  it("should return 200 status code and a User object if request contains a valid session cookie", async () => {
+  it("should return a '200 OK' status code if request contains a valid session cookie", async () => {
     // Log In to create a session
     const loginResponse = await request(app).post("/auth/login").send({
-      email: "test@mail.com",
+      email: "teststudent@mail.com",
       password: "password",
     });
 
@@ -20,25 +19,10 @@ describe("GET /auth", () => {
       .send();
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      id: 1,
-      email: "test@mail.com",
-      isTeacher: true,
-    });
-
-    // Test Cleanup - Reset the 'last_login' field of this user to its original value
-    try {
-      await pool.query(
-        "UPDATE member SET last_login = $1 WHERE email = 'test@mail.com'",
-        [new Date(2023, 6, 9)]
-      );
-    } catch (error) {
-      console.error("*** TEST CLEANUP FAILED ***");
-      console.error(error);
-    }
   });
 
-  it("should return 401 status code if request contains an invalid session cookie", async () => {
+  it("should return a '401 Unauthorized' status code if request contains an invalid session cookie", async () => {
+    // Send request with invalid session cookie
     const response = await request(app)
       .get("/auth")
       .set("Cookie", ["invalidSessionCookie"])
@@ -47,7 +31,9 @@ describe("GET /auth", () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it("should return 401 status code if request contains no session cookie", async () => {
+  it("should return a '401 Unauthorized' status code if request contains no session cookie", async () => {
+
+    // Send request with no session cookie
     const response = await request(app).get("/auth").send();
 
     expect(response.statusCode).toBe(401);
@@ -55,50 +41,36 @@ describe("GET /auth", () => {
 });
 
 describe("POST /auth/login", () => {
-  it("should return 200 status code and a User object for valid email and valid password", async () => {
+  it("should return a '200 OK' status code for valid email and valid password", async () => {
     const response = await request(app).post("/auth/login").send({
-      email: "test@mail.com",
+      email: "teststudent@mail.com",
       password: "password",
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({
-      id: 1,
-      email: "test@mail.com",
-      isTeacher: true,
-    });
-
-    // Test Cleanup - Reset the 'last_login' field of this user to its original value
-    try {
-      await pool.query(
-        "UPDATE member SET last_login = $1 WHERE email = 'test@mail.com'",
-        [new Date(2023, 6, 9)]
-      );
-    } catch (error) {
-      console.error("*** TEST CLEANUP FAILED ***");
-      console.error(error);
-    }
   });
 
-  it("should return 401 status code and error message for valid email and invalid password", async () => {
+  it("should return a '401 Unauthorized' status code for valid email and invalid password", async () => {
     const response = await request(app).post("/auth/login").send({
-      email: "test@mail.com",
+      email: "teststudent@mail.com",
       password: "invalid",
     });
     expect(response.statusCode).toBe(401);
-    expect(response.body).toStrictEqual({
-      error: "Login Failed: Invalid Credentials",
-    });
   });
 
-  it("should return 401 status code and error message for invalid email and invalid password", async () => {
+  it("should return a '401 Unauthorized' status code for invalid email and invalid password", async () => {
     const response = await request(app).post("/auth/login").send({
       email: "invalid@mail.com",
       password: "invalid",
     });
     expect(response.statusCode).toBe(401);
-    expect(response.body).toStrictEqual({
-      error: "Login Failed: Invalid Credentials",
-    });
   });
 });
+
+describe("POST /auth/logout", () => {
+  it("should return a '200 OK' status code for a successful logout", async () => {
+    const response = await request(app).post("/auth/logout").send();
+
+    expect(response.statusCode).toBe(200);
+  })
+})

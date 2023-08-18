@@ -59,6 +59,11 @@ function LiveQuizSelectorModal({
 
     event.preventDefault();
 
+    if(!quizToLaunch) {
+      alert("You must select a quiz to launch");
+      return;
+    }
+
     try {
       await axios.post(
         `http://localhost:5000/chats/${room.room_id}/messages`,
@@ -66,7 +71,7 @@ function LiveQuizSelectorModal({
         { withCredentials: true }
       );
       // Emit 'send-message' event to WS server and fetch latest messages from the API
-      // The chat server will emit the 'receive' message event which will cause all other clients to refresh their messages
+      // The chat server will emit the 'receive-message' event which will cause all other clients to refresh their messages
       await socket.emit("send-message", room.title);
       fetchMessages();
     } catch (error) {

@@ -1,5 +1,5 @@
 /**
- * Verifies that the request is coming from a client with Administrator privileges before passing the request to the next middleware function.
+ * Verifies that the request is coming from a client with Administrator privileges.
  * Returns a 403 Forbidden status code if the request is not authenticated.
  * 
  * @param {Object} req - Express Request Object
