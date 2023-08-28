@@ -9,6 +9,7 @@ function ChatPageKebabMenu({
   onReadOnlyChange,
   setSelectorModalOpen,
   setPromptModalOpen,
+  setQRCodeModalOpen
 }) {
   const navigate = useNavigate();
 
@@ -76,6 +77,13 @@ function ChatPageKebabMenu({
       text: "Quick Prompt",
       onClick: () => {
         setPromptModalOpen(true);
+        handleClose();
+      },
+    },
+    {
+      text: "Show QR Code",
+      onClick: () => {
+        setQRCodeModalOpen(true);
         handleClose();
       },
     },

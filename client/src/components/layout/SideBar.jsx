@@ -32,12 +32,12 @@ function SideBar({ collapseSideBar }) {
   ];
 
   const studentSideBarItems = [
-    { text: "Dashboard", icon: DashboardIcon },
-    { text: "Browse Chats", icon: ChatIcon },
-    { text: "Analytics", icon: AutoGraphIcon },
+    { text: "Dashboard", icon: <DashboardIcon />, href: "/dashboard" },
+    { text: "Browse Chats", icon: <ChatIcon />, href: "/chats" },
+    { text: "Analytics", icon: <AutoGraphIcon />, href: "/analytics" },
   ];
 
-  const sideBarItems = user.isTeacher ? teacherSideBarItems : studentSideBarItems;
+  const sideBarItems = user?.isTeacher ? teacherSideBarItems : studentSideBarItems;
 
   return (
     <Box

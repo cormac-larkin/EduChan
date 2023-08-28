@@ -32,11 +32,14 @@ function ChatRoomPage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // States for controlling the LiveQuizSelectorModal
+  // State for controlling the LiveQuizSelectorModal
   const [selectorModalOpen, setSelectorModalOpen] = useState(false); // setter function passed as props to ChatPageKebabMenu
 
-  // States for controlling the Prompt Modal
+  // State for controlling the Prompt Modal
   const [promptModalOpen, setPromptModalOpen] = useState(false); // setter function passed as props to ChatPageKebabMenu
+
+  // State for controlling the QR Code Modal
+  const [QRCodeModalOpen, setQRCodeModalOpen] = useState(false); // setter function passed as props to ChatPageKebabMenu
 
   // Dummy State passed to the ChatPageKebabMenu so that we can force a re-render of this component when the room is set/unset as read-only
   const [readOnly, setReadOnly] = useState();
@@ -136,6 +139,7 @@ function ChatRoomPage() {
               onReadOnlyChange={setReadOnly}
               setSelectorModalOpen={setSelectorModalOpen}
               setPromptModalOpen={setPromptModalOpen}
+              setQRCodeModalOpen={setQRCodeModalOpen}
             />
           )}
         </Stack>
@@ -161,6 +165,8 @@ function ChatRoomPage() {
           setSelectorModalOpen={setSelectorModalOpen}
           promptModalOpen={promptModalOpen}
           setPromptModalOpen={setPromptModalOpen}
+          QRCodeModalOpen={QRCodeModalOpen}
+          setQRCodeModalOpen={setQRCodeModalOpen}
         />
       </Paper>
 

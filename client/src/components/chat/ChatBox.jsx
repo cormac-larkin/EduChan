@@ -36,6 +36,7 @@ import PromptModal from "../prompt/PromptModal";
 import StudentPrompt from "../prompt/StudentPrompt";
 import TeacherPrompt from "../prompt/TeacherPrompt";
 import QuizReportPage from "../pages/quiz/QuizReportPage";
+import QRCodeModal from "../UI/QRCodeModal";
 
 function ChatBox({
   room,
@@ -43,6 +44,8 @@ function ChatBox({
   setSelectorModalOpen,
   promptModalOpen,
   setPromptModalOpen,
+  QRCodeModalOpen,
+  setQRCodeModalOpen,
 }) {
   const { user } = useContext(AuthContext);
   const chatBox = useRef();
@@ -328,7 +331,7 @@ function ChatBox({
     // Refresh messages when a new prompt response is sent, so the Teacher can receive the latest responses
     newSocket.on("prompt-response", () => {
       fetchMessages();
-    })
+    });
 
     // Listen for the 'delete-message' event from the WS server which signals that another WS client has posted a message.
     // Retrieve the latest messages from the API when this event is detected
@@ -377,6 +380,12 @@ function ChatBox({
         fetchMessages={fetchMessages}
         promptModalOpen={promptModalOpen}
         setPromptModalOpen={setPromptModalOpen}
+      />
+
+      {/* Modal for viewing QR Code */}
+      <QRCodeModal
+        QRCodeModalOpen={QRCodeModalOpen}
+        setQRCodeModalOpen={setQRCodeModalOpen}
       />
 
       <Stack width="100%" height="75vh" justifyContent="space-between">
@@ -440,13 +449,17 @@ function ChatBox({
                         message?.quiz_ended &&
                         user?.isTeacher
                       ) {
-                        return <QuizReportPage embeddedQuizID={message?.quiz_id}/>;
+                        return (
+                          <QuizReportPage embeddedQuizID={message?.quiz_id} />
+                        );
                       } else if (
                         message?.quiz_id &&
                         message?.quiz_ended &&
                         !user?.isTeacher
                       ) {
-                        return <ViewQuizAttemptPage quizID={message?.quiz_id} />;
+                        return (
+                          <ViewQuizAttemptPage quizID={message?.quiz_id} />
+                        );
                       } else if (message?.quiz_id && !message?.quiz_ended) {
                         return (
                           <QuizPage
@@ -458,9 +471,20 @@ function ChatBox({
                           />
                         );
                       } else if (message.prompt_id && !user.isTeacher) {
-                        return <StudentPrompt promptID={message?.prompt_id} socket={socket} room={room} />;
+                        return (
+                          <StudentPrompt
+                            promptID={message?.prompt_id}
+                            socket={socket}
+                            room={room}
+                          />
+                        );
                       } else if (message.prompt_id && user.isTeacher) {
-                        return <TeacherPrompt promptID={message?.prompt_id} messages={messages} />;
+                        return (
+                          <TeacherPrompt
+                            promptID={message?.prompt_id}
+                            messages={messages}
+                          />
+                        );
                       } else {
                         return message?.content;
                       }
