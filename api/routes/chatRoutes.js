@@ -20,7 +20,8 @@ import {
   changeReadOnlyStatus,
   endQuiz,
   getAnalyticsData,
-  getSentimentData
+  getSentimentData,
+  getPromptReports
 } from "../controllers/chatControllers.js";
 
 const router = Router();
@@ -55,5 +56,7 @@ router.delete("/:roomID/messages/:messageID", verifyTeacherRole, deleteMessage);
 
 router.get("/:roomID/analytics", verifyTeacherRole, getAnalyticsData);
 router.get("/:roomID/sentiment", verifyTeacherRole, getSentimentData);
+
+router.get("/:roomID/prompts", verifyTeacherRole, getPromptReports);
 
 export default router;

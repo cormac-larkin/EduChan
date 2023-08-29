@@ -5,7 +5,8 @@ import {
   createPrompt,
   getPrompt,
   postResponse,
-  getResponses
+  getResponses,
+  getInsights,
 } from "../controllers/promptControllers.js";
 
 const router = Router();
@@ -16,5 +17,6 @@ router.post("/", verifyTeacherRole, createPrompt);
 router.get("/:promptID", getPrompt);
 router.post("/:promptID/responses", postResponse);
 router.get("/:promptID/responses", verifyTeacherRole, getResponses);
+router.get("/:promptID/insights", verifyTeacherRole, getInsights);
 
 export default router;

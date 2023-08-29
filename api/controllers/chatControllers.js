@@ -243,7 +243,9 @@ const getChatByID = async (req, res) => {
 
     // Verify that the roomID parameter contains only numbers
     if (!isNumber(roomID)) {
-      return res.status(400).json({error: "The Room ID must contain only numeric characters (0-9)"});
+      return res.status(400).json({
+        error: "The Room ID must contain only numeric characters (0-9)",
+      });
     }
 
     // Verify that the chatroom exists
@@ -1034,7 +1036,7 @@ const getSentimentData = async (req, res) => {
       return res.sendStatus(403);
     }
 
-    // Retrieve all messages from the chat-room as one string, each message is delimited with '╡' character 
+    // Retrieve all messages from the chat-room as one string, each message is delimited with '╡' character
     const getMessages =
       "SELECT STRING_AGG(content, '╡') AS concatenated_messages FROM message WHERE room_id = $1";
     const messages = await pool.query(getMessages, [roomID]);
@@ -1058,29 +1060,30 @@ const getSentimentData = async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            `Perform sentiment analysis on a string of messages delimited with the '╡'character.
+          content: `Perform sentiment analysis on a string of messages delimited with the '╡'character.
             Output 1 for positive messages, -1 for negative, 0 for neutral. 
             Output only these numbers separated by commas.`,
         },
         {
           role: "user",
-          content: `${messages.rows[0].concatenated_messages}`
-        }
+          content: `${messages.rows[0].concatenated_messages}`,
+        },
       ],
     });
 
-    const openAiResponse = completion.data.choices[0].message.content // String containing the sentiment indicators for each message (1/0/-1 for positive/neutral/negative)
+    const openAiResponse = completion.data.choices[0].message.content; // String containing the sentiment indicators for each message (1/0/-1 for positive/neutral/negative)
     console.log(openAiResponse);
-    const sentimentIndicators = openAiResponse.split(',').map(Number); // Transform the response string into an Array of Numbers
+    const sentimentIndicators = openAiResponse.split(",").map(Number); // Transform the response string into an Array of Numbers
 
-    console.log(`Sentiment Indicators: ${sentimentIndicators}`)
+    console.log(`Sentiment Indicators: ${sentimentIndicators}`);
 
     // Get the totals for each type of sentiment
-    let positiveMessages = 0, neutralMessages = 0, negativeMessages = 0;
+    let positiveMessages = 0,
+      neutralMessages = 0,
+      negativeMessages = 0;
     sentimentIndicators.forEach((indicator) => {
-      switch(indicator) {
-        case 1: 
+      switch (indicator) {
+        case 1:
           positiveMessages++;
           break;
         case 0:
@@ -1093,11 +1096,66 @@ const getSentimentData = async (req, res) => {
     });
 
     // Get the percentages for each sentiment, rounded to 2 decimal places
-    const positivePercentage = parseFloat((positiveMessages / sentimentIndicators.length * 100).toFixed(2));
-    const neutralPercentage = parseFloat((neutralMessages / sentimentIndicators.length * 100).toFixed(2));
-    const negativePercentage = parseFloat((negativeMessages / sentimentIndicators.length * 100).toFixed(2));
+    const positivePercentage = parseFloat(
+      ((positiveMessages / sentimentIndicators.length) * 100).toFixed(2)
+    );
+    const neutralPercentage = parseFloat(
+      ((neutralMessages / sentimentIndicators.length) * 100).toFixed(2)
+    );
+    const negativePercentage = parseFloat(
+      ((negativeMessages / sentimentIndicators.length) * 100).toFixed(2)
+    );
 
-    return res.status(200).json({ positivePercentage, neutralPercentage, negativePercentage });
+    return res
+      .status(200)
+      .json({ positivePercentage, neutralPercentage, negativePercentage });
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
+};
+
+const getPromptReports = async (req, res) => {
+  try {
+    const userID = req.session.user.id;
+    const roomID = req.params.roomID;
+
+    // Verify that the roomID is a number
+    if (!isNumber(roomID)) {
+      return res.sendStatus(400);
+    }
+
+    // Verify that the roomID exists
+    const findRoomQuery = "SELECT * FROM room WHERE room_id = $1";
+    const findRoomResult = await pool.query(findRoomQuery, [roomID]);
+    if (!findRoomResult.rowCount) {
+      return res.sendStatus(404);
+    }
+
+    // Verify that the client has permission to retrieve this data (must be the chatroom owner)
+    if (findRoomResult.rows[0].member_id !== userID) {
+      return res.sendStatus(403);
+    }
+
+    // Retrieve the list of prompts that have been posted in this room, along with the list of responses for each prompt
+    const getPromptsQuery = `WITH prompts_with_responses AS (
+      SELECT 
+        p.prompt_id AS prompt_id,
+        p.content AS prompt_content,
+        json_agg(json_build_object('response_id', r.response_id, 'content', r.content)) AS responses
+      FROM prompt p
+      LEFT JOIN response r ON p.prompt_id = r.prompt_id
+      WHERE p.room_id = $1
+      GROUP BY p.prompt_id
+    )
+    SELECT json_agg(
+        json_build_object('prompt_id', prompt_id, 'content', prompt_content, 'responses', responses)
+    ) AS result
+    FROM prompts_with_responses`;
+
+    const getPromptsResult = await pool.query(getPromptsQuery, [roomID]);
+
+    return res.status(200).json(getPromptsResult.rows);
 
   } catch (error) {
     console.error(error);
@@ -1125,4 +1183,5 @@ export {
   endQuiz,
   getAnalyticsData,
   getSentimentData,
+  getPromptReports
 };

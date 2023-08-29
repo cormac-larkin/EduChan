@@ -52,7 +52,7 @@ function PromptModal({
       // Create the prompt in the DB and get its promptID
       const response = await axios.post(
         "http://localhost:5000/prompts",
-        { content: promptText },
+        { content: promptText, roomID: room.room_id },
         { withCredentials: true }
       );
       const newPromptID = response?.data?.promptID;

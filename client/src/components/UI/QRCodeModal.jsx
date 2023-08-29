@@ -36,7 +36,7 @@ function QRCodeModal({ QRCodeModalOpen, setQRCodeModalOpen }) {
         <Fade in={QRCodeModalOpen}>
           <Stack sx={{ ...style, maxWidth: "95vw", borderRadius: "5px" }}>
             <Box sx={{display: "flex", justifyContent: "center"}}>
-              <QRCode value="test" />
+              <QRCode value={window.location.href} /> {/* Display the current pages URL as a QR Code */}
             </Box>
             <Typography variant="h4" pt="2rem" align="center">
               Scan QR code to join!

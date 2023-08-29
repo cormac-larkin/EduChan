@@ -10,6 +10,10 @@ import {
   ListItemText,
   ListItemIcon,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  ListItem,
+  Button,
 } from "@mui/material";
 import paperStyles from "../../../styles/paperStyles";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -27,9 +31,12 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import FilterDramaIcon from "@mui/icons-material/FilterDrama";
 import PsychologyAltIcon from "@mui/icons-material/PsychologyAlt";
-import SummarizeIcon from '@mui/icons-material/Summarize';
+import SummarizeIcon from "@mui/icons-material/Summarize";
 import SentimentAnalysisChart from "./SentimentAnalysisChart";
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CommentIcon from "@mui/icons-material/Comment";
+import InsightsIcon from "@mui/icons-material/Insights";
+import PromptInsightsModal from "./PromptInsightsModal";
 
 function ChatAnalyticsPage() {
   const smallScreen = useMediaQuery("(max-width:800px)");
@@ -39,11 +46,19 @@ function ChatAnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState();
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
-  // State to hold the sentiment analysis data retrieved from the API
+  // States to hold the sentiment analysis data retrieved from the API
   const [positiveSentiment, setPositiveSentiment] = useState(0);
   const [neutralSentiment, setNeutralSentiment] = useState(0);
   const [negativeSentiment, setNegativeSentiment] = useState(0);
   const [loadingSentiments, setLoadingSentiments] = useState(true);
+
+  // States to hold the prompt reports retrieved from the API
+  const [promptReports, setPromptReports] = useState();
+  const [loadingPromptReports, setLoadingPromptReports] = useState(true);
+
+  // States to handle the insights data and the modal to display it
+  const [insightsData, setInsightsData] = useState();
+  const [insightsModalOpen, setInsightsModalOpen] = useState(false);
 
   const fetchAnalyticsData = async () => {
     try {
@@ -76,12 +91,40 @@ function ChatAnalyticsPage() {
     }
   };
 
+  const fetchPromptReports = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/chats/${roomID}/prompts`,
+        { withCredentials: true }
+      );
+      setLoadingPromptReports(false);
+      setPromptReports(response?.data);
+      console.log(response?.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchInsightData = async (promptID) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/prompts/${promptID}/insights`,
+        { withCredentials: true }
+      );
+      setInsightsData(response?.data?.insights);
+    } catch (error) {
+      console.error(error);
+      setInsightsData("Sorry, we are currently unable to generate insights, please try again later")
+    }
+  };
+
   useEffect(() => {
     fetchAnalyticsData();
+    fetchPromptReports();
     //fetchSentiments();
   }, []);
 
-  if (loadingAnalytics) {
+  if (loadingAnalytics || loadingPromptReports) {
     return <LoadingSpinnerPage />;
   }
 
@@ -287,7 +330,74 @@ function ChatAnalyticsPage() {
             Prompt Reports
           </Typography>
         </Stack>
+
+        {promptReports[0]?.result?.map((prompt, index) => {
+          const { prompt_id, content, responses } = prompt;
+
+          return (
+            <Accordion
+              key={index}
+              elevation={6}
+              disableGutters
+              sx={{ ...paperStyles, borderRadius: "5px", width: "100%" }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1bh-content"
+                id="panel1bh-header"
+                sx={{ borderBottom: "1px solid grey" }}
+              >
+                <Typography
+                  sx={{ width: "75%", flexShrink: 0 }}
+                  component="h1"
+                  variant="h5"
+                >
+                  {content}
+                </Typography>
+              </AccordionSummary>
+              <List>
+                <ListItem key={index}>
+                  <Button
+                    variant="contained"
+                    startIcon={<InsightsIcon />}
+                    disabled={responses[0]?.content === null}
+                    onClick={() => {
+                      setInsightsData("");
+                      fetchInsightData(prompt_id);
+                      setInsightsModalOpen(true);
+                    }}
+                  >
+                    Generate Insights
+                  </Button>
+                </ListItem>
+                <Divider />
+                {responses.map((response, index) => {
+                  return (
+                    <ListItemButton key={index}>
+                      <ListItemIcon>
+                        <CommentIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          response.content || "No responses available..."
+                        }
+                      />
+                    </ListItemButton>
+                  );
+                })}
+              </List>
+            </Accordion>
+          );
+        })}
       </Paper>
+
+      {/* Modal to display Prompt Insights Data */}
+      <PromptInsightsModal
+        insightsModalOpen={insightsModalOpen}
+        setInsightsModalOpen={setInsightsModalOpen}
+        insightsData={insightsData}
+        setInsightsData={setInsightsData}
+      />
     </Stack>
   );
 }
