@@ -16,18 +16,19 @@ const io = new Server(server, {
   },
 });
 
-let connectedSocketIDs = []; // Store the unique ID of each connected client socket
+let connectedSocketIDs = []; // Array to store the unique ID of each connected WebSocket client
 
 // Listen for connection events
 io.on("connection", (socket) => {
   console.log(`Connection from ${socket.id}`);
   connectedSocketIDs.push(socket.id);
-  io.sockets.emit("update-participants", connectedSocketIDs); // Each time theres a connection, broadcast the total number of connected sockets
+  // Each time theres a connection, broadcast the array of connected clients
+  io.sockets.emit("update-participants", connectedSocketIDs);
 
   // When a connected client emits the 'join-room' event, add them to the specified room.
   // Future messages/events addressed to this room will only be delivered to clients who have joined it.
   socket.on("join-room", (roomTitle) => {
-    // Leave any previously joined rooms
+    // First, leave any previously joined rooms
     const currentRoom = Object.keys(socket.rooms)[1];
     if (currentRoom) {
       socket.leave(currentRoom);
@@ -39,17 +40,17 @@ io.on("connection", (socket) => {
     console.log(`User ID ${socket.id} joined room: '${roomTitle}'`);
   });
 
-  // When a connected client emits the 'send-message' event, emit their message to all other clients.
-  // Emit the 'receive-message' event along with the message, so clients know that a new message has been delivered.
+  // Notify clients when a new message has been posted in their chat-room
   socket.on("send-message", (roomTitle) => {
     socket.to(roomTitle).emit("receive-message");
   });
 
+  // Notify clients when a message has been deleted in their chat-room
   socket.on("delete-message", (roomTitle) => {
     socket.to(roomTitle).emit("delete-message");
   });
 
-  // End quizzes
+  // Notify clients when the current quiz has ended in their chat-room
   socket.on("end-quiz", (roomTitle) => {
     socket.to(roomTitle).emit("end-quiz");
   });

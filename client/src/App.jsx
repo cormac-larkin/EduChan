@@ -12,6 +12,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline, createTheme } from "@mui/material";
 
 import "./App.css";
+import LandingPage from "./components/pages/LandingPage";
 import Error404Page from "./components/pages/error/Error404Page";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/authentication/ProtectedRoute";
@@ -40,6 +41,7 @@ function App() {
       <CssBaseline />
 
       <Routes>
+        <Route path="/" element={<LandingPage />}/>
         <Route path="/login" element={<NoSideBarLayout onThemeChange={setDarkTheme}> <LoginPage /> </NoSideBarLayout>} />
         <Route path="/register/teacher" element={<NoSideBarLayout onThemeChange={setDarkTheme}> <TeacherRegistrationPage /> </NoSideBarLayout>} />
         <Route path="/register/student" element={<NoSideBarLayout onThemeChange={setDarkTheme}> <StudentRegistrationPage /> </NoSideBarLayout>} />

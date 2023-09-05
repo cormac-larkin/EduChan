@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import {
   Box,
   Grid,
-  Link,
   Snackbar,
   Alert,
   TextField,
@@ -235,8 +234,10 @@ function StudentRegistrationForm() {
         </Button>
         <Grid container display="flex" justifyContent="center">
           <Grid item>
-            <Link href="/login" variant="body2">
-              Already have an account? Log In
+            <Link to={"/login"}>
+              <Typography href="/login" variant="body2" color={"primary"}>
+                Already have an account? Log In
+              </Typography>
             </Link>
           </Grid>
         </Grid>

@@ -999,7 +999,7 @@ const getAnalyticsData = async (req, res) => {
       .map((row) => row.content) // Extract 'content' field
       .map((content) => content.split(/\s+/)) // Split into individual words
       .flat() // Flatten the array of arrays
-      .join(" "); // Concatenate words into one long string
+      .join(" "); // Concatenate all words into one string
 
     return res.status(200).json({
       ...findRoomResult.rows[0],

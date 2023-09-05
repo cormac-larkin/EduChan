@@ -10,17 +10,16 @@ import chatRoutes from "./routes/chatRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import promptRoutes from "./routes/promptRoutes.js";
 
-
 const app = express();
 
 // Allow incoming requests from React App on localhost
-app.use(cors({ credentials: true, origin: "http://localhost:3000" })); 
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 // Allow parsing JSON data from incoming requests
 app.use(express.json());
 
 // Allow file uploads
-app.use(fileUpload());
+app.use(fileUpload({ limits: { fileSize: 1000000 } }));
 
 // Configuration for session cookies
 app.use(
@@ -29,15 +28,14 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    unset: "destroy"
+    unset: "destroy",
   })
 );
 
 app.use("/auth", authRoutes);
-app.use("/users", userRoutes)
+app.use("/users", userRoutes);
 app.use("/chats", chatRoutes);
 app.use("/quizzes", quizRoutes);
 app.use("/prompts", promptRoutes);
 
 export default app;
-

@@ -15,6 +15,10 @@ import AddCommentIcon from "@mui/icons-material/AddComment";
 import QuizIcon from "@mui/icons-material/Quiz";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
+import SupportIcon from '@mui/icons-material/Support';
 import { useContext } from "react";
 import { AuthContext } from "../authentication/AuthProvider";
 import { Link } from "react-router-dom";
@@ -34,7 +38,7 @@ function SideBar({ collapseSideBar }) {
   const studentSideBarItems = [
     { text: "Dashboard", icon: <DashboardIcon />, href: "/dashboard" },
     { text: "Browse Chats", icon: <ChatIcon />, href: "/chats" },
-    { text: "Analytics", icon: <AutoGraphIcon />, href: "/analytics" },
+    { text: "Analytics", icon: <AutoGraphIcon />, href: "#" },
   ];
 
   const sideBarItems = user?.isTeacher ? teacherSideBarItems : studentSideBarItems;
@@ -67,26 +71,26 @@ function SideBar({ collapseSideBar }) {
       </List>
       <Divider />
       <List>
-        {["My Account", "Settings", "Log Out"].map((text, index) => (
+        {[{text: "My Account", icon: <AccountBoxIcon />}, {text: "Settings", icon: <SettingsIcon/>}, {text: "Log Out", icon: <LogoutIcon/>}].map((obj, index) => (
           <ListItem key={index} disablePadding>
             <ListItemButton>
               <ListItemIcon>
-                <MailIcon />
+                {obj.icon}
               </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={obj.text} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
       <Divider />
       <List>
-        {["Help", "Contact Us"].map((text, index) => (
+        {[{text: "Help", icon: <SupportIcon />}, {text: "Contact Us", icon: <MailIcon />}].map((obj, index) => (
           <ListItem key={index} disablePadding>
             <ListItemButton>
               <ListItemIcon>
-                <MailIcon />
+                {obj.icon}
               </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={obj.text} />
             </ListItemButton>
           </ListItem>
         ))}

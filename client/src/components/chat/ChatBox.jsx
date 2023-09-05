@@ -16,6 +16,7 @@ import {
   Button,
   Badge,
   useMediaQuery,
+  Divider,
 } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
@@ -28,6 +29,7 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import ReplyIcon from "@mui/icons-material/Reply";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import CampaignIcon from '@mui/icons-material/Campaign';
 import ReplyBubble from "./ReplyBubble";
 import LiveQuizSelectorModal from "../forms/quiz/LiveQuizSelectorModal";
 import QuizPage from "../pages/quiz/QuizPage";
@@ -431,6 +433,10 @@ function ChatBox({
                     borderBottom="1px solid black"
                     whiteSpace="pre-line" // Preserves newline characters in the message
                   >
+
+                    {/* If the author of the message is the room owner, show their name at the top */}
+                    {message.member_id === room.member_id && <Stack alignItems="center"><Stack direction="row"> <CampaignIcon />  <p style={{margin: 0, padding: 0, paddingLeft: "0.5rem"}}>Module Owner</p></Stack> <Divider sx={{width: "100%", marginBottom: "0.5rem"}}/></Stack>}
+
                     {/* If the message is a reply, render the reply bubble with the parent message inside */}
                     {message.parent_id && !message.hidden && (
                       <span>

@@ -13,14 +13,37 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import ThemeToggleSwitch from "../UI/ThemeToggleSwitch";
 import TerminalIcon from "@mui/icons-material/Terminal";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ChatIcon from "@mui/icons-material/Chat";
+import AddCommentIcon from "@mui/icons-material/AddComment";
+import QuizIcon from "@mui/icons-material/Quiz";
+import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import { AuthContext } from "../authentication/AuthProvider";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const pages = ["Chats", "Quizzes", "About"];
+const teacherMenuItems = [
+  { text: "Dashboard", icon: <DashboardIcon />, href: "/dashboard" },
+  { text: "Browse Chats", icon: <ChatIcon />, href: "/chats" },
+  { text: "Create Chat", icon: <AddCommentIcon />, href: "/chats/create" },
+  { text: "My Quizzes", icon: <QuizIcon />, href: "/quizzes/" },
+  { text: "Create Quiz", icon: <AddToPhotosIcon />, href: "/quizzes/create" },
+  { text: "Analytics", icon: <AutoGraphIcon />, href: "/analytics" },
+];
+
+const studentMenuItems = [
+  { text: "Dashboard", icon: <DashboardIcon />, href: "/dashboard" },
+  { text: "Browse Chats", icon: <ChatIcon />, href: "/chats" },
+  { text: "Analytics", icon: <AutoGraphIcon />, href: "#" },
+];
+
 const settings = ["Account", "Dashboard", "Logout"];
 
 function NavBar({ onThemeChange }) {
   const { user, logout } = useContext(AuthContext);
+  const hamburgerMenuItems = user?.isTeacher
+    ? teacherMenuItems
+    : studentMenuItems;
   const navigate = useNavigate();
 
   const [anchorElNav, setAnchorElNav] = useState(null);
@@ -48,7 +71,7 @@ function NavBar({ onThemeChange }) {
       handleCloseUserMenu();
       navigate("/login", {
         state: {
-          message: "Logout Successful", // Pass success message to the login page so we can display notification
+          message: "Logout Successful", // Pass success message to the logout page so we can display notification
         },
       });
     } catch (error) {
@@ -140,10 +163,19 @@ function NavBar({ onThemeChange }) {
                   display: { xs: "block", md: "none" },
                 }}
               >
-                {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
-                  </MenuItem>
+                {hamburgerMenuItems.map((obj, index) => (
+                  <Link  key={index} to={obj.href} style={{ textDecoration: "none" }}>
+                    <MenuItem key={index} onClick={handleCloseNavMenu}>
+                      {obj.icon}
+
+                      <Typography
+                        textAlign="center"
+                        sx={{ paddingLeft: "0.7rem" }}
+                      >
+                        {obj.text}
+                      </Typography>
+                    </MenuItem>
+                  </Link>
                 ))}
               </Menu>
             </Box>
@@ -154,13 +186,13 @@ function NavBar({ onThemeChange }) {
 
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {user &&
-              pages.map((page) => (
+              [].map((obj, index) => (
                 <Button
-                  key={page}
+                  key={index}
                   onClick={handleCloseNavMenu}
                   sx={{ my: 2, color: "white", display: "block" }}
                 >
-                  {page}
+                  {obj.href}
                 </Button>
               ))}
           </Box>
@@ -178,10 +210,10 @@ function NavBar({ onThemeChange }) {
               </Tooltip>
             ) : (
               <Box sx={{ flexGrow: 1, display: "flex" }}>
-                <Button sx={{ my: 2, color: "white", display: "block" }}>
+                <Button sx={{ my: 2, color: "white", display: "block" }} onClick={() => navigate("/login")}>
                   {"Log In"}
                 </Button>
-                <Button sx={{ my: 2, color: "white", display: "block" }}>
+                <Button sx={{ my: 2, color: "white", display: "block" }} onClick={() => navigate("/")}>
                   {"Sign Up"}
                 </Button>
               </Box>

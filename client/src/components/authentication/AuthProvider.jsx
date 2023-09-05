@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { ThreeCircles } from "react-loader-spinner";
 import axios from "axios";
+import LoadingSpinnerPage from "../pages/error/LoadingSpinnerPage";
 
 const AuthContext = createContext();
 
@@ -32,10 +33,10 @@ const AuthProvider = ({ children }) => {
 
   /**
    * POSTS User login credentials to the API login endpoint.
-   * 
+   *
    * @param {String} email - The email address to use for the login attempt
    * @param {String} password - The password to use for the login attempt
-   * 
+   *
    * @throws An Error object containing the error message from the API. Defaults to a generic error message if none is returned from the API.
    */
   const login = async (email, password) => {
@@ -48,23 +49,29 @@ const AuthProvider = ({ children }) => {
         }
       );
       setUser(response.data); // Use the API response to set the global Auth Context (So we know which user is logged in and their role/permissions)
-
     } catch (error) {
-      throw new Error(error.response?.data.error || "An error occurred when signing in"); // Re-throw the error so it can be handled by the calling component
+      throw new Error(
+        error.response?.data.error || "An error occurred when signing in"
+      ); // Re-throw the error so it can be handled by the calling component
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post("http://localhost:5000/auth/logout", {}, {
-        withCredentials: true
-      });
+      await axios.post(
+        "http://localhost:5000/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       setUser(null);
     } catch (error) {
-      throw new Error(error.response?.data.error || "An error occurred when signing out");
+      throw new Error(
+        error.response?.data.error || "An error occurred when signing out"
+      );
     }
-
-  }
+  };
 
   useEffect(() => {
     checkAuthStatus();
@@ -72,10 +79,8 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-    {isLoading ? <ThreeCircles /> : children}
-  </AuthContext.Provider>
-  
-
+      {isLoading ? <LoadingSpinnerPage /> : children}
+    </AuthContext.Provider>
   );
 };
 

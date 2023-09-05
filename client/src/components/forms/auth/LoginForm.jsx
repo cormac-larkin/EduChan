@@ -1,12 +1,11 @@
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../authentication/AuthProvider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import {
   Box,
   Grid,
-  Link,
   Snackbar,
   Alert,
   Paper,
@@ -129,8 +128,8 @@ function LoginForm() {
         </Button>
         <Grid container display="flex" justifyContent="center">
           <Grid item>
-            <Link href="#" variant="body2">
-              Don&#39;t have an account? Sign Up
+            <Link to={"/"}>
+              <Typography color={"primary"}>Don&#39;t have an account? Sign Up</Typography>
             </Link>
           </Grid>
         </Grid>

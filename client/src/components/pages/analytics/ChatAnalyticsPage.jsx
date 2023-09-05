@@ -121,7 +121,8 @@ function ChatAnalyticsPage() {
   useEffect(() => {
     fetchAnalyticsData();
     fetchPromptReports();
-    //fetchSentiments();
+    fetchSentiments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loadingAnalytics || loadingPromptReports) {

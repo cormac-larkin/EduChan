@@ -25,6 +25,7 @@ describe("POST /prompts", () => {
       .set("Cookie", [sessionCookie])
       .send({
         content: "Test Prompt 1",
+        roomID: 3
       });
     expect(response.status).toBe(200);
 

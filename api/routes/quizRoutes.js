@@ -8,11 +8,11 @@ const router = Router();
 router.use(verifyAuthStatus); // All '/quiz' endpoints require authorization.
 
 router.post("/", verifyTeacherRole, createQuiz);
-router.get("/:quizID", getQuiz);
-router.post("/:quizID", verifyTeacherRole, addQuestion);
+router.get("/:quizID", getQuiz); 
+router.post("/:quizID", verifyTeacherRole, addQuestion); 
 router.put("/:quizID/questions/:questionID", verifyTeacherRole, editQuestion);
-router.post("/:quizID/attempts", addAttempt);
-router.get("/attempts/:attemptID", getAttempt);
-router.get("/:quizID/report", verifyTeacherRole, getReportByQuiz);
+router.post("/:quizID/attempts", addAttempt); 
+router.get("/attempts/:attemptID", getAttempt); 
+router.get("/:quizID/report", verifyTeacherRole, getReportByQuiz); 
 
 export default router;
